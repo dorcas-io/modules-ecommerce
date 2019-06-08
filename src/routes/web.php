@@ -1,10 +1,11 @@
 <?php
 
-/*Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middleware' => ['web']], function() {
-    Route::get('sales', 'ModulesEcommerceController@index')->name('sales');
-});*/
+Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middleware' => ['web','auth'], 'prefix' => 'mec'], function() {
+    Route::get('ecommerce-main', 'ModulesEcommerceController@index')->name('ecommerce-main');
+    //Route::get('ecommerce-domains', 'ModulesEcommerceController@domains')->name('ecommerce-domains');
+});
 
-
+/*
 Route::group(['middleware' => ['auth'], 'namespace' => 'ECommerce', 'prefix' => 'apps/ecommerce'], function () {
     Route::get('/', 'ECommerce@index')->name('apps.ecommerce');
     
@@ -74,7 +75,7 @@ Route::group(['namespace' => 'Blog', 'middleware' => ['blog_verifier']], functio
         Route::delete('/xhr/posts/{id}', 'Posts@deletePostXhr');
     });
 });
-
+*/
 
 
 ?>
