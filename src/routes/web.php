@@ -2,57 +2,52 @@
 
 Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middleware' => ['web','auth'], 'prefix' => 'mec'], function() {
     Route::get('ecommerce-main', 'ModulesEcommerceController@index')->name('ecommerce-main');
-    //Route::get('ecommerce-domains', 'ModulesEcommerceController@domains')->name('ecommerce-domains');
+    Route::get('ecommerce-domains', 'ModulesEcommerceController@domains')->name('ecommerce-domains');
+    Route::post('ecommerce-domains', 'ModulesEcommerceController@create');
+    Route::delete('/ecommerce-domains-issuances/{id}', 'ModulesEcommerceController@releaseSubdomain');
+    Route::get('/ecommerce-domains-issuances-availability', 'ModulesEcommerceController@checkAvailability');
+    Route::get('/ecommerce-domains-availability', 'ModulesEcommerceController@checkAvailability');
+    Route::delete('/ecommerce-domains/{id}', 'ModulesEcommerceController@releaseDomain');
+    Route::get('/ecommerce-website', 'ModulesEcommerceWebsiteController@index')->name('ecommerce-website');
+    Route::post('/ecommerce-website', 'ModulesEcommerceWebsiteController@post');
+    Route::get('/ecommerce-emails', 'ModulesEcommerceEmailController@index')->name('ecommerce-emails');
+    Route::post('/ecommerce-emails', 'ModulesEcommerceEmailController@post');
+    Route::delete('/ecommerce-emails/{username}', 'ModulesEcommerceEmailController@delete');
+    Route::get('/ecommerce-adverts', 'ModulesEcommerceAdvertsController@index')->name('ecommerce-adverts');
+    Route::post('/ecommerce-adverts', 'ModulesEcommerceAdvertsController@post');
+    Route::get('/ecommerce-blog', 'ModulesEcommerceBlogController@index')->name('ecommerce-blog');
+    Route::post('/ecommerce-blog', 'ModulesEcommerceBlogController@blogSettings');
+    Route::post('/ecommerce-blog-categories', 'ECommerce\Blog@createCategory');
+    Route::delete('/ecommerce-blog-categories/{id}', 'ECommerce\Blog@deleteCategory');
+    Route::put('/ecommerce-blog-categories/{id}', 'ECommerce\Blog@updateCategory');
+
 });
 
 /*
 Route::group(['middleware' => ['auth'], 'namespace' => 'ECommerce', 'prefix' => 'apps/ecommerce'], function () {
-    Route::get('/', 'ECommerce@index')->name('apps.ecommerce');
+
     
     Route::group(['prefix' => 'adverts'], function () {
-        Route::get('/', 'Adverts@index')->name('apps.ecommerce.adverts');
-        Route::post('/', 'Adverts@post');
+        
     });
     
-    Route::group(['prefix' => 'blog', 'namespace' => 'Blog'], function () {
-        Route::get('/', 'Dashboard@index')->name('apps.ecommerce.blog');
-        Route::post('/', 'Dashboard@blogSettings');
-        Route::get('/categories', 'Categories@index')->name('apps.ecommerce.blog.categories');
-    });
     
-    Route::get('/domains', 'Domains\Domains@index')->name('apps.ecommerce.domains');
-    Route::post('/domains', 'Domains\Domains@create');
     Route::group(['middleware' => ['pay_gate']], function () {
         Route::post('/domains/purchase', 'Domains\Domains@purchaseDomain')->name('apps.ecommerce.domains-purchase');
     });
     
-    Route::get('/emails', 'Emails@index')->name('apps.ecommerce.emails');
-    Route::post('/emails', 'Emails@post');
+
     Route::get('/online-store', 'OnlineStore@index')->name('apps.ecommerce.store');
     Route::get('/online-store/dashboard', 'OnlineStore@dashboard')->name('apps.ecommerce.store.dashboard');
     Route::post('/online-store/dashboard', 'OnlineStore@storeSettings');
-    Route::get('/website', 'Website@index')->name('apps.ecommerce.website');
-    Route::post('/website', 'Website@post');
 });
 
 Route::group(['middleware' => ['auth'], 'namespace' => 'Ajax', 'prefix' => 'xhr'], function () {
 
 	Route::delete('/ecommerce/adverts/{id}', 'ECommerce\Adverts@delete');
     
-    Route::post('/ecommerce/blog/categories', 'ECommerce\Blog@createCategory');
-    Route::delete('/ecommerce/blog/categories/{id}', 'ECommerce\Blog@deleteCategory');
-    Route::put('/ecommerce/blog/categories/{id}', 'ECommerce\Blog@updateCategory');
-    
     Route::post('/ecommerce/blog', 'ECommerce\Blog@searchPosts');
     Route::delete('/ecommerce/blog/{id}', 'ECommerce\Blog@deletePost');
-    
-    Route::delete('/ecommerce/domains/issuances/{id}', 'ECommerce\Issuances@releaseSubdomain');
-    Route::get('/ecommerce/domains/issuances/availability', 'ECommerce\Issuances@checkAvailability');
-    
-    Route::get('/ecommerce/domains/availability', 'ECommerce\Domains@checkAvailability');
-    Route::delete('/ecommerce/domains/{id}', 'ECommerce\Domains@releaseDomain');
-    
-    Route::delete('/ecommerce/emails/{username}', 'ECommerce\Emails@delete');
 
 
     });

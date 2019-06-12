@@ -3,31 +3,31 @@ return [
     'ecommerce-domains' => [
     	'title' => 'Domains',
     	'route' => 'ecommerce-domains',
-        'icon' => 'fe fe-user-plus',
+        'icon' => 'fe fe-at-sign',
     ],
     'ecommerce-website' => [
         'title' => 'Website',
         'route' => 'ecommerce-website',
-        'icon' => 'fe fe-users',
+        'icon' => 'fe fe-globe',
     ],
-    'ecommerce-email' => [
+    'ecommerce-emails' => [
     	'title' => 'Email',
-    	'route' => 'ecommerce-email',
-        'icon' => 'fe fe-check-square',
+    	'route' => 'ecommerce-emails',
+        'icon' => 'fe fe-mail',
     ],
     'ecommerce-blog' => [
     	'title' => 'Blog',
     	'route' => 'ecommerce-blog',
-        'icon' => 'fe fe-user-check',
+        'icon' => 'fe fe-file-text',
     ],
     'ecommerce-adverts' => [
     	'title' => 'Adverts',
     	'route' => 'ecommerce-adverts',
-        'icon' => 'fe fe-user-check',
+        'icon' => 'fe fe-grid',
     ],
     'ecommerce-store' => [
     	'title' => 'Online Store',
     	'route' => 'ecommerce-store',
-        'icon' => 'fe fe-user-check',
+        'icon' => 'fe fe-monitor',
     ]
 ];
