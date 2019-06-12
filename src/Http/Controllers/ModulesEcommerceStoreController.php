@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 
 
-class ModulesEcommerceAdvertsController extends Controller {
+class ModulesEcommerceStoreController extends Controller {
 
     public function __construct()
     {
