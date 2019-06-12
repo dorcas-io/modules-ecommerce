@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
 use App\Exceptions\RecordNotFoundException;
 
 
-class ModulesEcommercBlogController extends Controller {
+class ModulesEcommerceBlogController extends Controller {
 
     public function __construct()
     {
@@ -44,7 +44,7 @@ class ModulesEcommercBlogController extends Controller {
         $this->data['submenuAction'] = '
             <div class="dropdown"><button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Blog Actions</button>
                 <div class="dropdown-menu">
-                    <a v-on:click.prevent="newField" class="btn btn-primary btn-block">Add Category</a>
+                    <a href="#" v-on:click.prevent="newField" class="btn btn-primary btn-block">Add Category</a>
                     <a :href="blogUrl" class="dropdown-item" target="_blank">New Post</a>
                 </div>
             </div>

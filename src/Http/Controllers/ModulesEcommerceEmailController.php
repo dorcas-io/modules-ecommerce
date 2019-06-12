@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 
 
-class ModulesEcommercEmailController extends Controller {
+class ModulesEcommerceEmailController extends Controller {
 
     public function __construct()
     {
@@ -38,7 +38,7 @@ class ModulesEcommercEmailController extends Controller {
         $this->data['page']['title'] .= ' &rsaquo; Email Manager';
         $this->data['header']['title'] = 'Email Manager';
         $this->data['selectedSubMenu'] = 'ecommerce-emails';
-        $this->data['submenuAction'] = '<a v-on:click.prevent="createEmail" class="btn btn-primary btn-block">Add Email</a>';
+        $this->data['submenuAction'] = '<a href="#" v-on:click.prevent="createEmail" class="btn btn-primary btn-block">Add Email</a>';
 
         $config = $this->getCompany()->extra_data;
         # get the company configuration data
@@ -53,7 +53,7 @@ class ModulesEcommercEmailController extends Controller {
                 $emails = $whm->listEmails($hosting['domain'], $hosting['username'], 400);
                 # list the email addresses on this domain
             } catch (\Exception $e) {
-                $response = material_ui_html_response([$e->getMessage()])->setType(UiResponse::TYPE_ERROR);
+                $response = tabler_ui_html_response([$e->getMessage()])->setType(UiResponse::TYPE_ERROR);
                 $request->session()->flash('UiResponse', $response);
             }
         }

@@ -1,4 +1,3 @@
-
 <?php
 
 namespace Dorcas\ModulesEcommerce\Http\Controllers;
@@ -14,7 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 
 
-class ModulesEcommercAdvertsController extends Controller {
+class ModulesEcommerceAdvertsController extends Controller {
 
     public function __construct()
     {
@@ -28,7 +27,7 @@ class ModulesEcommercAdvertsController extends Controller {
         ];  
     }
 
-
+    
     /**
      * @param Request $request
      * @param Sdk     $sdk
@@ -37,45 +36,16 @@ class ModulesEcommercAdvertsController extends Controller {
      */
     public function index(Request $request, Sdk $sdk)
     {
+
+        $this->data['page']['title'] .= ' &rsaquo; Adverts Manager';
+        $this->data['header']['title'] = 'Adverts Manager';
+        $this->data['selectedSubMenu'] = 'ecommerce-adverts';
+        $this->data['submenuAction'] = '<a href="#" v-on:click.prevent="createAdvert" class="btn btn-primary btn-block">Add Advert</a>';
+
         $this->setViewUiResponse($request);
-        $subdomain = get_dorcas_subdomain();
-        if (!empty($subdomain)) {
-            $this->data['page']['header']['title'] .= ' (Blog: '.$subdomain.'/blog)';
-        }
-        $postsCount = 0;
-        $query = $sdk->createBlogResource()->addQueryArgument('limit', 1)->send('get');
-        if ($query->isSuccessful()) {
-            $postsCount = $query->meta['pagination']['total'] ?? 0;
-        }
-        $this->data['categories'] = $this->getBlogCategories($sdk);
-        $this->data['subdomain'] = get_dorcas_subdomain($sdk);
-        # set the subdomain
-        if (!empty($this->data['subdomain'])) {
-            $this->data['blogUrl'] = $this->data['subdomain'] . '/blog-admin/new-post?token=' . $sdk->getAuthorizationToken();
-        }
-        $this->data['blogSettings'] = self::getBlogSettings((array) $this->getCompany()->extra_data);
-        # our store settings container
-        $this->data['postsCount'] = $postsCount;
-        return view('ecommerce.blog.dashboard', $this->data);
-    }
-    
-    /**
-     * @param array $configuration
-     *
-     * @return array
-     */
-    public static function getBlogSettings(array $configuration = []): array
-    {
-        $requiredStoreSettings = ['blog_name', 'blog_instagram_id', 'blog_twitter_id', 'blog_facebook_page', 'blog_terms_page'];
-        $settings = $configuration['blog_settings'] ?? [];
-        # our store settings container
-        foreach ($requiredStoreSettings as $key) {
-            if (isset($settings[$key])) {
-                continue;
-            }
-            $settings[$key] = '';
-        }
-        return $settings;
+        $this->data['adverts'] = $this->getAdverts($sdk);
+
+        return view('modules-ecommerce::adverts', $this->data);
     }
     
     /**
@@ -85,45 +55,70 @@ class ModulesEcommercAdvertsController extends Controller {
      * @return \Illuminate\Http\RedirectResponse
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function blogSettings(Request $request, Sdk $sdk)
+    public function post(Request $request, Sdk $sdk)
     {
+        $this->validate($request,[
+            'title' => 'required|string|max:80',
+            'type' => 'required|string',
+            'redirect_url' => 'nullable|string',
+            'is_default' => 'required|string|in:0,1',
+            'image' => 'required_without:advert_id|image'
+        ]);
+        # validate the request
         try {
-            $company = $this->getCompany();
-            $configuration = (array) $company->extra_data;
-            $blogSettings = $configuration['blog_settings'] ?? [];
-            # our store settings container
-            $submitted = $request->only(['blog_name', 'blog_instagram_id', 'blog_twitter_id', 'blog_facebook_page', 'blog_terms_page']);
-            # get the submitted data
-            foreach ($submitted as $key => $value) {
-                if (empty($value)) {
-                    unset($blogSettings[$key]);
-                }
-                $blogSettings[$key] = $value;
+            if (!$request->has('redirect_url')) {
+                $redirectUrl = $request->input('redirect_url');
+                $redirectUrl = starts_with($redirectUrl, ['http', 'https']) ? $redirectUrl : 'http://' . $redirectUrl;
+                $request->request->set('redirect_url', $redirectUrl);
             }
-            $configuration['blog_settings'] = $blogSettings;
-            # add the new store settings configuration
-            $query = $sdk->createCompanyService()->addBodyParam('extra_data', $configuration)->send('PUT');
+            $advertId = $request->has('advert_id') ? $request->input('advert_id') : null;
+            $resource = $sdk->createAdvertResource($advertId);
+            $payload = $request->only(['title', 'type', 'redirect_url', 'is_default']);
+            foreach ($payload as $key => $value) {
+                $resource->addBodyParam($key, $value);
+            }
+            if ($request->has('image')) {
+                $file = $request->file('image');
+                $resource->addMultipartParam('image', file_get_contents($file->getRealPath(), false), $file->getClientOriginalName());
+            }
+            $response = $resource->send('post');
             # send the request
-            if (!$query->isSuccessful()) {
+            if (!$response->isSuccessful()) {
                 # it failed
-                $message = $query->errors[0]['title'] ?? '';
-                throw new \RuntimeException('Failed while updating the blog settings. '.$message);
+                $message = $response->errors[0]['title'] ?? '';
+                throw new \RuntimeException('Failed while '. (empty($advertId) ? 'adding' : 'updating') .' the advert. '.$message);
             }
-            $subdomains = $this->getSubDomains($sdk);
-            if (!empty($subdomains)) {
-                $subdomain = $subdomains->filter(function ($s) {
-                    $domain = $s->domain['data'];
-                    return $domain['domain'] === 'dorcas.ng';
-                })->first();
-                if (!empty($subdomain)) {
-                    Cache::forget('domain_' . $subdomain->prefix);
-                }
-            }
-            $response = (tabler_ui_html_response(['Successfully updated your blog information.']))->setType(UiResponse::TYPE_SUCCESS);
+            $company = $this->getCompany();
+            Cache::forget('adverts.'.$company->id);
+            $response = (tabler_ui_html_response(['Successfully '. (empty($advertId) ? 'added' : 'updated the') .' advert.']))->setType(UiResponse::TYPE_SUCCESS);
         } catch (\Exception $e) {
             $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
         }
         return redirect(url()->current())->with('UiResponse', $response);
+    }
+
+
+    /**
+     * @param Request $request
+     * @param Sdk     $sdk
+     * @param string  $id
+     *
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function delete(Request $request, Sdk $sdk, string $id)
+    {
+        $model = $sdk->createAdvertResource($id);
+        $response = $model->send('delete');
+        # make the request
+        if (!$response->isSuccessful()) {
+            // do something here
+            throw new RecordNotFoundException($response->errors[0]['title'] ?? 'Failed while deleting the advert.');
+        }
+        $company = $request->user()->company(true, true);
+        Cache::forget('adverts.'.$company->id);
+        $this->data = $response->getData();
+        return response()->json($this->data);
     }
 
 }

@@ -234,117 +234,6 @@ class ModulesEcommerceController extends Controller {
     
 
 
-    /**
-     * @param Request $request
-     * @param Sdk     $sdk
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function checkAvailability(Request $request, Sdk $sdk)
-    {
-        $id = $request->query('id');
-        if (empty($id)) {
-            throw new \UnexpectedValueException('You need to provide the subdomain name');
-        }
-        # get the request parameters
-        $query = $sdk->createDomainResource()->addQueryArgument('id', $id);
-        if ($request->has('domain_id')) {
-            $query = $query->addQueryArgument('domain_id', $request->query('domain_id'));
-        }
-        $query = $query->send('get', ['issuances/availability']);
-        # make the request
-        if (!$query->isSuccessful()) {
-            // do something here
-            throw new RecordNotFoundException($query->errors[0]['title'] ?? 'Something went wrong while checking availability of the subdomain.');
-        }
-        return response()->json($query->data);
-    }
-    
-    /**
-     * @param Request $request
-     * @param Sdk     $sdk
-     * @param string  $id
-     *
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function releaseSubdomain(Request $request, Sdk $sdk, string $id)
-    {
-        $query = $sdk->createDomainResource()->send('delete', ['issuances/'.$id]);
-        # make the request
-        if (!$query->isSuccessful()) {
-            // do something here
-            throw new \RuntimeException($query->errors[0]['title'] ?? 'Something went wrong while releasing the subdomain.');
-        }
-        $company = $this->getCompany();
-        Cache::forget('ecommerce.subdomains.'.$company->id);
-        return response()->json($query->getData());
-    }
-
-
-    /**
-     * @param Request $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function checkAvailability(Request $request)
-    {
-        $extension = $request->input('extension', 'com');
-        $manager = $extension === 'com.ng' ? new Upperlink() : new ResellerClubClient();
-        $status = $manager->checkAvailability($request->domain, [$request->extension]);
-        $response = [];
-        foreach ($status as $domain => $info) {
-            $response = $info;
-            break;
-        }
-        return response()->json($response);
-    }
-    
-    /**
-     * @param Request $request
-     * @param Sdk     $sdk
-     * @param string  $id
-     *
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function releaseDomain(Request $request, Sdk $sdk, string $id)
-    {
-        $query = $sdk->createDomainResource($id)->send('delete');
-        # make the request
-        if (!$query->isSuccessful()) {
-            // do something here
-            throw new \RuntimeException($query->errors[0]['title'] ?? 'Something went wrong while deleting the domain.');
-        }
-        $domain = $query->getData();
-        event(new DomainDelete($domain, $sdk->getAuthorizationToken()));
-        # trigger the event
-        $company = $this->getCompany();
-        Cache::forget('ecommerce.domains.'.$company->id);
-        return response()->json($domain);
-    }
-    
-    /**
-     * @param Request $request
-     * @param Sdk     $sdk
-     *
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function registerCustomer(Request $request, Sdk $sdk)
-    {
-        $company = $this->getCompany();
-        # the company
-        $manager = new ResellerClubClient();
-        $customerId = $manager->registerCustomer($request->user(), $company);
-        $extraData = (array) $company->extra_data;
-        if (empty($extraData['reseller_club_customer_id'])) {
-            $extraData['reseller_club_customer_id'] = $customerId;
-            $sdk->createCompanyService()->addBodyParam('extra_data', $extraData)->send('PUT');
-        }
-        return response()->json(['customer_id' => $customerId]);
-    }
-
 
     /**
      * @param Request $request
@@ -415,5 +304,71 @@ class ModulesEcommerceController extends Controller {
         }
         return null;
     }
+
+
+    /**
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkAvailability(Request $request)
+    {
+        $extension = $request->input('extension', 'com');
+        $manager = $extension === 'com.ng' ? new Upperlink() : new ResellerClubClient();
+        $status = $manager->checkAvailability($request->domain, [$request->extension]);
+        $response = [];
+        foreach ($status as $domain => $info) {
+            $response = $info;
+            break;
+        }
+        return response()->json($response);
+    }
+    
+    /**
+     * @param Request $request
+     * @param Sdk     $sdk
+     * @param string  $id
+     *
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function releaseDomain(Request $request, Sdk $sdk, string $id)
+    {
+        $query = $sdk->createDomainResource($id)->send('delete');
+        # make the request
+        if (!$query->isSuccessful()) {
+            // do something here
+            throw new \RuntimeException($query->errors[0]['title'] ?? 'Something went wrong while deleting the domain.');
+        }
+        $domain = $query->getData();
+        event(new DomainDelete($domain, $sdk->getAuthorizationToken()));
+        # trigger the event
+        $company = $this->getCompany();
+        Cache::forget('ecommerce.domains.'.$company->id);
+        return response()->json($domain);
+    }
+    
+    /**
+     * @param Request $request
+     * @param Sdk     $sdk
+     *
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function registerCustomer(Request $request, Sdk $sdk)
+    {
+        $company = $this->getCompany();
+        # the company
+        $manager = new ResellerClubClient();
+        $customerId = $manager->registerCustomer($request->user(), $company);
+        $extraData = (array) $company->extra_data;
+        if (empty($extraData['reseller_club_customer_id'])) {
+            $extraData['reseller_club_customer_id'] = $customerId;
+            $sdk->createCompanyService()->addBodyParam('extra_data', $extraData)->send('PUT');
+        }
+        return response()->json(['customer_id' => $customerId]);
+    }
+
+
 
 }

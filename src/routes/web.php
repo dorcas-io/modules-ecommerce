@@ -17,9 +17,11 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
     Route::post('/ecommerce-adverts', 'ModulesEcommerceAdvertsController@post');
     Route::get('/ecommerce-blog', 'ModulesEcommerceBlogController@index')->name('ecommerce-blog');
     Route::post('/ecommerce-blog', 'ModulesEcommerceBlogController@blogSettings');
-    Route::post('/ecommerce-blog-categories', 'ECommerce\Blog@createCategory');
-    Route::delete('/ecommerce-blog-categories/{id}', 'ECommerce\Blog@deleteCategory');
-    Route::put('/ecommerce-blog-categories/{id}', 'ECommerce\Blog@updateCategory');
+    Route::post('/ecommerce-blog-categories', 'ModulesEcommerceBlogController@createCategory');
+    Route::delete('/ecommerce-blog-categories/{id}', 'ModulesEcommerceBlogController@deleteCategory');
+    Route::put('/ecommerce-blog-categories/{id}', 'ModulesEcommerceBlogController@updateCategory');
+    Route::get('/ecommerce-store', 'OnlineStore@dashboard')->name('ecommerce-store');
+    Route::post('/ecommerce-store', 'OnlineStore@storeSettings');
 
 });
 
@@ -38,8 +40,6 @@ Route::group(['middleware' => ['auth'], 'namespace' => 'ECommerce', 'prefix' => 
     
 
     Route::get('/online-store', 'OnlineStore@index')->name('apps.ecommerce.store');
-    Route::get('/online-store/dashboard', 'OnlineStore@dashboard')->name('apps.ecommerce.store.dashboard');
-    Route::post('/online-store/dashboard', 'OnlineStore@storeSettings');
 });
 
 Route::group(['middleware' => ['auth'], 'namespace' => 'Ajax', 'prefix' => 'xhr'], function () {
