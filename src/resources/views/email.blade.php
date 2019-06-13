@@ -20,7 +20,13 @@
 		                Email Manager
 		            @endslot
 		            You can create one or more email accounts for your domain<br>
-		            You need to have a <strong>registered domain name</strong> before you can proceed.
+		            @if (empty($domains) || $domains->count() === 0)
+		            	<p>You need to have a <strong>registered domain name</strong> before you can proceed.</p>
+		            @elseif (!empty($domains) && $domains->count() > 0 && !$isHostingSetup)
+		                <p>You have secured <strong>{{ $domains->first()->domain }}</strong> as your primary domain name.</p>
+		                <p>Click the button above to setup the web-hosting space (that will host your email content)</p>
+		            @elseif (!empty($domains) && $domains->count() > 0 && $isHostingSetup)
+		            @endif
 		            @slot('buttons')
 		                @if (empty($domains) || $domains->count() === 0)
 		                    <a class="btn btn-primary" href="{{ route('ecommerce-domains') }}">
@@ -56,9 +62,13 @@
             data: {
                 domains: {!! json_encode(!empty($domains) ? $domains : []) !!},
                 emails: {!! json_encode(!empty($emails) ? $emails : []) !!},
-                email: {username: '', domain: '', quota: 25}
+                email: {username: '', domain: '', quota: 25},
+                isHostingRequestProcessing: false
             },
             methods: {
+                requestHosting: function () {
+                    this.isHostingRequestProcessing = true;
+                },
                 createEmail: function () {
                     $('#add-email-modal').modal('show');
                 },

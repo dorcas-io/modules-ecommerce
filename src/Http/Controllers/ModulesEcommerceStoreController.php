@@ -15,6 +15,21 @@ use Illuminate\Support\Collection;
 
 class ModulesEcommerceStoreController extends Controller {
 
+    /**
+     * Field names for the store settings to watch out for.
+     *
+     * @var array
+     */
+    protected $storeSettingsFields = [
+        'store_instagram_id',
+        'store_twitter_id',
+        'store_facebook_page',
+        'store_homepage',
+        'store_terms_page',
+        'store_ga_tracking_id',
+        'store_custom_js'
+    ];
+    
     public function __construct()
     {
         parent::__construct();

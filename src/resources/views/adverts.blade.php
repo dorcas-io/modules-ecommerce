@@ -14,13 +14,15 @@
 	        <div class="row row-cards row-deck" v-show="adverts !== null && adverts.length > 0">
 	            <!-- <advert-card v-for="(ad, index) in adverts" :key="ad.id" :advert="ad" :index="index" v-on:edit-advert="editAdvert" v-on:delete-advert="deleteAdvert"></advert-card> -->
 
-	              <div class="col-sm-6 col-xl-3" v-for="(ad, index) in adverts" :key="ad.id" :advert="ad" :index="index">
+	              <div class="col-md-6" v-for="(ad, index) in adverts" :key="ad.id" :advert="ad" :index="index">
 	                <div class="card">
-	                  <a href="#"><img class="card-img-top" style="display: block !important;" v-bind:src="ad.image_url" v-bind:alt="ad.title + ' image'"></a>
+	                  <a href="#"><img class="card-img-top" style="height: auto !important; width:auto !important; max-width: 100% !important; max-height: 150px !important;" v-bind:src="ad.image_url" v-bind:alt="ad.title + ' image'"></a>
 	                  <div class="card-body d-flex flex-column">
 	                    <h4><a href="#">@{{ ad.title }}</a></h4>
-	                    <div class="d-flex align-items-center pt-5 mt-auto">
-
+	                    <div class="d-flex align-items-center">
+	                    	<a v-if="typeof ad.redirect_url !== 'undefined' && ad.redirect_url !== null" v-bind:href="ad.redirect_url" target="_blank" class="btn btn-primary btn-sm">Open Link</a>&nbsp;
+	                    	<a href="#" class="btn btn-secondary btn-sm" v-on:click.prevent="editAdvert(index)">Edit</a>&nbsp;
+	                    	<a href="#" class="btn btn-danger btn-sm" v-on:click.prevent="deleteAdvert(index)">Delete</a>
 	                    </div>
 	                  </div>
 	                </div>
@@ -98,7 +100,7 @@
                         confirmButtonText: "Yes, delete it!",
 		                showLoaderOnConfirm: true,
 		                preConfirm: (advert_delete) => {
-	                        return axios.delete("/mec/ecommerce/adverts/" + context.advert.id)
+	                        return axios.delete("/mec/ecommerce-adverts/" + context.advert.id)
 	                            .then(function (response) {
 	                                console.log(response);
 	                                context.adverts.splice(index, 1);

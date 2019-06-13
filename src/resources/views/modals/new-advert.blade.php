@@ -43,7 +43,7 @@
                     <div class="col-md-12 form-group">
                         <div class="form-label">Ad Image</div>
                         <div class="custom-file">
-                            <input type="file" name="image" id="ad-image" accept="image/*" class="custom-file-input" name="example-file-input-custom">
+                            <input type="file" name="image" id="ad-image" accept="image/*" class="custom-file-input">
                             <label class="custom-file-label">Choose Image</label>
                             <small>We recommend a <strong>@{{ recommendedDim }}</strong> image, or similar</small>
                         </div>
@@ -53,11 +53,11 @@
                     </div>
                 </div>
             </fieldset>
+            <input type="hidden" name="advert_id" id="ad-advert-id" :value="advert.id" v-if="typeof advert.id !== 'undefined'" />
         </form>
 
       </div>
       <div class="modal-footer">
-            <input type="hidden" name="advert_id" id="ad-advert-id" :value="advert.id" v-if="typeof advert.id !== 'undefined'" />
         <button type="submit" form="form-add-advert" class="btn btn-primary"  name="save_ad" value="1" >@{{ typeof advert.id !== 'undefined' ? 'Update Advert' : 'Create Ad' }}</button>
       </div>
     </div>

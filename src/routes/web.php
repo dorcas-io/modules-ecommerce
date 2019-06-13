@@ -5,7 +5,7 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
     Route::get('ecommerce-domains', 'ModulesEcommerceController@domains')->name('ecommerce-domains');
     Route::post('ecommerce-domains', 'ModulesEcommerceController@create');
     Route::delete('/ecommerce-domains-issuances/{id}', 'ModulesEcommerceController@releaseSubdomain');
-    Route::get('/ecommerce-domains-issuances-availability', 'ModulesEcommerceController@checkAvailability');
+    Route::get('/ecommerce-domains-issuances-availability', 'ModulesEcommerceController@checkAvailabilitySubdomain');
     Route::get('/ecommerce-domains-availability', 'ModulesEcommerceController@checkAvailability');
     Route::delete('/ecommerce-domains/{id}', 'ModulesEcommerceController@releaseDomain');
     Route::get('/ecommerce-website', 'ModulesEcommerceWebsiteController@index')->name('ecommerce-website');
@@ -15,13 +15,14 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
     Route::delete('/ecommerce-emails/{username}', 'ModulesEcommerceEmailController@delete');
     Route::get('/ecommerce-adverts', 'ModulesEcommerceAdvertsController@index')->name('ecommerce-adverts');
     Route::post('/ecommerce-adverts', 'ModulesEcommerceAdvertsController@post');
+    Route::delete('/ecommerce-adverts/{id}', 'ModulesEcommerceAdvertsController@delete');
     Route::get('/ecommerce-blog', 'ModulesEcommerceBlogController@index')->name('ecommerce-blog');
     Route::post('/ecommerce-blog', 'ModulesEcommerceBlogController@blogSettings');
     Route::post('/ecommerce-blog-categories', 'ModulesEcommerceBlogController@createCategory');
     Route::delete('/ecommerce-blog-categories/{id}', 'ModulesEcommerceBlogController@deleteCategory');
     Route::put('/ecommerce-blog-categories/{id}', 'ModulesEcommerceBlogController@updateCategory');
-    Route::get('/ecommerce-store', 'OnlineStore@dashboard')->name('ecommerce-store');
-    Route::post('/ecommerce-store', 'OnlineStore@storeSettings');
+    Route::get('/ecommerce-store', 'ModulesEcommerceStoreController@index')->name('ecommerce-store');
+    Route::post('/ecommerce-store', 'ModulesEcommerceStoreController@storeSettings');
 
 });
 

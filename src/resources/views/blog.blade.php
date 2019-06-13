@@ -11,7 +11,7 @@
     <div class="col-md-9 col-xl-9" id="ecommerce-blog">
 
 	    <div class="row row-cards row-deck" id="blog-statistics">
-	    	<div class="col-6 col-sm-4 col-lg-2">
+	    	<div class="col-md-12 col-lg-4">
 	    		<div class="card p-3">
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md {{ empty($subdomain) ? 'bg-red' : 'bg-green' }} mr-3"><i class="fe fe-grid"></i></span>
@@ -22,7 +22,7 @@
 	    			</div>
 	    		</div>
 	    	</div>
-	    	<div class="col-6 col-sm-4 col-lg-2">
+	    	<div class="col-md-12 col-lg-4">
 	    		<div class="card p-3">
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
@@ -33,7 +33,7 @@
 	    			</div>
 	    		</div>
 	    	</div>
-	    	<div class="col-6 col-sm-4 col-lg-2">
+	    	<div class="col-md-12 col-lg-4">
 	    		<div class="card p-3">
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
@@ -50,8 +50,8 @@
 
         <div class="row col-md-12">
             @if (!empty($subdomain))
-                <div class="col-md-6">
-                    <form action="" method="post" class="col s12">
+                <div class="col-md-12 col-lg-6">
+                    <form action="" method="post">
                         {{ csrf_field() }}
                             <div class="row">
                                 <div class="col-md-12 form-group">
@@ -89,12 +89,12 @@
                             <button type="submit" class="btn btn-primary btn-block">
                                 Save Settings
                             </button>
+                            <div>&nbsp;</div>
                     </form>
                 </div>
             @endif
-            <div class="col-md-6">
+            <div class="col-md-12 col-lg-6">
                 <div class="row">
-                    <h5>Categories</h5>
                     <!-- <blog-category v-for="(category, index) in categories" class="m6 l6" :key="category.id"
                                    :index="index" :category="category"
                                    v-bind:show-delete="true" v-on:update="update"
@@ -106,37 +106,25 @@
 	                        <h3 class="card-title">Categories</h3>
 	                    </div>
 	                    <div class="card-body">
-			                <div class="table-responsive" v-if="categories.length > 0">
+			                <div class="table-responsive" v-if="categories.length > 0 && !categories_fetching">
 			                    <table class="table card-table table-striped table-vcenter">
 			                        <tbody>
-			                            <tr v-for="category in categories" :key="category.id">
+			                            <tr v-for="(category, index) in categories" :key="category.id" :category="category" :index="index">
 			                                <td>
-	                                            <p>@{{ category.name }}</p>
-	                                            <small class="text-muted">@{{ category.posts_count }}</small>
+	                                            <p>@{{ category.name }} (@{{ category.posts_count }})</p>
 	                                        </td>
 			                                <td>
-			                                	<a href="#" v-on:click.prevent="edit" class="btn btn-sm btn-outline-secondary ml-3">Edit</a>
-			                                	<a href="#" v-on:click.prevent="deleteField" class="btn btn-sm btn-outline-danger ml-3">Delete</a>
+			                                	<a href="#" v-on:click.prevent="editCategory(index)" class="btn btn-sm btn-outline-secondary ml-3">Edit</a>
+			                                	<a href="#" v-on:click.prevent="deleteCategory(index)" class="btn btn-sm btn-outline-danger ml-3">Delete</a>
 			                                </td>
 			                            </tr>
 			                        </tbody>
 			                    </table>
 			                </div>
-						    <div class="row row-cards row-deck" v-if="applications.length === 0 && !apps_fetching">
-						        <div class="col-sm-12">
-						            @component('layouts.blocks.tabler.empty-card')
-						                @slot('buttons')
-						                    <div class="btn-list text-center">
-						                        <a href="{{ safe_href_route('app-store-main') ? route('app-store-main').'#apps_apps-store' : '#' }}" class="btn btn-primary">Explore App Store</a>
-						                    </div>
-						                @endslot
-						                You have no Apps installed
-						            @endcomponent
-						        </div>
-						    </div>
-	                        <div class="row" v-if="applications.length === 0 && apps_fetching">
+						    
+	                        <div class="row" v-if="categories.length === 0 && categories_fetching">
 	                          <div class="loader"></div>
-	                          <div>Loading Apps</div>
+	                          <div>Loading Blog Categories</div>
 	                        </div>
 
 	                    </div>
@@ -144,7 +132,7 @@
 
 
 
-                    <div class="col s12" v-if="categories.length  === 0">
+                    <div class="col s12" v-if="categories.length  === 0 && !categories_fetching">
 				        @component('layouts.blocks.tabler.empty-fullpage')
 				            @slot('title')
 				                No Blog Categories
@@ -188,48 +176,54 @@
 @section('body_js')
     <script type="text/javascript">
         function addCategory() {
-            swal({
+            Swal.fire({
                     title: "New Category",
                     text: "Enter the name for the category:",
-                    type: "input",
+                    input: 'text',
+                    inputAttributes: {
+                    	autocapitalize: 'off'
+                    },
                     showCancelButton: true,
-                    closeOnConfirm: false,
                     animation: "slide-from-top",
                     showLoaderOnConfirm: true,
-                    inputPlaceholder: "e.g. Stationery"
-                },
-                function(inputValue){
-                    if (inputValue === false) return false;
-                    if (inputValue === "") {
-                        swal.showInputError("You need to write something!");
-                        return false
-                    }
-                    axios.post("/mec/ecommerce-blog-categories", {
-                        name: inputValue
-                    }).then(function (response) {
-                        console.log(response);
-                        vm.categories.push(response.data);
-                        return swal("Success", "The blog category was successfully created.", "success");
-                    })
-                        .catch(function (error) {
-                            var message = '';
-                            if (error.response) {
-                                // The request was made and the server responded with a status code
-                                // that falls out of the range of 2xx
-                                var e = error.response.data.errors[0];
-                                message = e.title;
-                            } else if (error.request) {
-                                // The request was made but no response was received
-                                // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                                // http.ClientRequest in node.js
-                                message = 'The request was made but no response was received';
-                            } else {
-                                // Something happened in setting up the request that triggered an Error
-                                message = error.message;
-                            }
-                            return swal("Oops!", message, "warning");
-                        });
-                });
+                    inputPlaceholder: "e.g. News Update",
+	                showLoaderOnConfirm: true,
+	                preConfirm: (inputValue) => {
+	                    if (inputValue === false) return false;
+	                    if (inputValue === "") {
+	                        //swal.showInputError("You need to write something!");
+	                        return false
+	                    }
+	                    return axios.post("/mec/ecommerce-blog-categories", {
+	                        name: inputValue
+	                    }).then(function (response) {
+	                        console.log(response);
+	                        vm.categories.push(response.data);
+	                        return swal("Success", "The blog category was successfully created.", "success");
+	                    })
+	                        .catch(function (error) {
+	                            var message = '';
+	                            if (error.response) {
+	                                // The request was made and the server responded with a status code
+	                                // that falls out of the range of 2xx
+	                                //var e = error.response.data.errors[0];
+	                                //message = e.title;
+	                                var e = error.response;
+	                                message = e.data.message;
+	                            } else if (error.request) {
+	                                // The request was made but no response was received
+	                                // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+	                                // http.ClientRequest in node.js
+	                                message = 'The request was made but no response was received';
+	                            } else {
+	                                // Something happened in setting up the request that triggered an Error
+	                                message = error.message;
+	                            }
+	                            return swal("Oops!", message, "warning");
+	                        });
+	                },
+	                allowOutsideClick: () => !Swal.isLoading()
+	            });
         }
 
         var vm = new Vue({
@@ -237,105 +231,125 @@
             data: {
                 blog_owner: {!! json_encode($business) !!},
                 blog_settings: {!! json_encode($blogSettings) !!},
-                categories: {!! json_encode($categories ?: [])  !!}
+                categories: {!! json_encode($categories ?: [])  !!},
+                categories_fetching: false
             },
             methods: {
-
-		        edit: function () {
+		        editCategory: function (category_index) {
 		            var context = this;
-		            swal({
+		            let category = typeof this.categories[category_index] !== 'undefined' ? this.categories[category_index] : null
+		            if (category === null) {
+		            	return
+		            }
+		            Swal.fire({
 		                    title: "Update Category",
-		                    text: "Enter new name [" + context.category.name + "]:",
-		                    type: "input",
+		                    text: "Enter new name [" + category.name + "]:",
+		                    input: 'text',
+		                    inputAttributes: {
+		                    	autocapitalize: 'off'
+		                    },
 		                    showCancelButton: true,
-		                    closeOnConfirm: false,
 		                    animation: "slide-from-top",
 		                    showLoaderOnConfirm: true,
-		                    inputPlaceholder: "Custom Field Name"
-		                },
-		                function(inputValue){
-		                    if (inputValue === false) return false;
-		                    if (inputValue === "") {
-		                        swal.showInputError("You need to write something!");
-		                        return false
-		                    }
-		                    axios.put("/xhr/ecommerce/blog/categories/"+context.category.id, {
-		                        name: inputValue,
-		                        update_slug: true
-		                    }).then(function (response) {
-		                        console.log(response);
-		                        context.$emit('update', context.index, response.data);
-		                        return swal("Success", "The category name was successfully updated.", "success");
-		                    })
-		                        .catch(function (error) {
-		                            var message = '';
-		                            if (error.response) {
-		                                // The request was made and the server responded with a status code
-		                                // that falls out of the range of 2xx
-		                                var e = error.response.data.errors[0];
-		                                message = e.title;
-		                            } else if (error.request) {
-		                                // The request was made but no response was received
-		                                // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-		                                // http.ClientRequest in node.js
-		                                message = 'The request was made but no response was received';
-		                            } else {
-		                                // Something happened in setting up the request that triggered an Error
-		                                message = error.message;
-		                            }
-		                            return swal("Oops!", message, "warning");
-		                        });
-		                });
+		                    inputPlaceholder: "New Category Name",
+			                showLoaderOnConfirm: true,
+			                preConfirm: (inputValue) => {
+			                    if (inputValue === false) return false;
+			                    if (inputValue === "") {
+			                        //swal.showInputError("You need to write something!");
+			                        return false
+			                    }
+			                    return axios.put("/mec/ecommerce-blog-categories/"+category.id, {
+			                        name: inputValue,
+			                        update_slug: true
+			                    }).then(function (response) {
+			                        //console.log(response);
+			                        context.update(category_index, response.data);
+			                        return swal("Success", "The category name was successfully updated.", "success");
+			                    })
+			                        .catch(function (error) {
+			                            var message = '';
+			                            if (error.response) {
+			                                // The request was made and the server responded with a status code
+			                                // that falls out of the range of 2xx
+			                                //var e = error.response.data.errors[0];
+			                                //message = e.title;
+			                                var e = error.response;
+			                                message = e.data.message;
+			                            } else if (error.request) {
+			                                // The request was made but no response was received
+			                                // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+			                                // http.ClientRequest in node.js
+			                                message = 'The request was made but no response was received';
+			                            } else {
+			                                // Something happened in setting up the request that triggered an Error
+			                                message = error.message;
+			                            }
+			                            return swal("Oops!", message, "warning");
+			                        });
+			                },
+			                allowOutsideClick: () => !Swal.isLoading()
+			            });
 		        },
-		        deleteField: function () {
+		        deleteCategory: function (category_index) {
 		            var context = this;
-		            swal({
+		            let category = typeof this.categories[category_index] !== 'undefined' ? this.categories[category_index] : null
+		            if (category === null) {
+		            	return
+		            }
+		            if (category.posts_count>0) {
+		            	return swal("Oops!", 'This category contains '+category.posts_count+' post(s). Consider removing them first.', "warning");
+		            }
+		            Swal.fire({
 		                title: "Are you sure?",
-		                text: "You are about to delete the category (" + context.category.name + ").",
+		                text: "You are about to delete the category (" + category.name + ").",
 		                type: "warning",
 		                showCancelButton: true,
 		                confirmButtonColor: "#DD6B55",
 		                confirmButtonText: "Yes, delete it!",
-		                closeOnConfirm: false,
-		                showLoaderOnConfirm: true
-		            }, function() {
-		                axios.delete("/xhr/ecommerce/blog/categories/" + context.category.id)
-		                    .then(function (response) {
-		                        console.log(response);
-		                        context.$emit('remove', context.index);
-		                        return swal("Deleted!", "The category was successfully deleted.", "success");
-		                    })
-		                    .catch(function (error) {
-		                        var message = '';
-		                        if (error.response) {
-		                            // The request was made and the server responded with a status code
-		                            // that falls out of the range of 2xx
-		                            var e = error.response.data.errors[0];
-		                            message = e.title;
-		                        } else if (error.request) {
-		                            // The request was made but no response was received
-		                            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-		                            // http.ClientRequest in node.js
-		                            message = 'The request was made but no response was received';
-		                        } else {
-		                            // Something happened in setting up the request that triggered an Error
-		                            message = error.message;
-		                        }
-		                        return swal("Delete Failed", message, "warning");
-		                    });
+		                showLoaderOnConfirm: true,
+		                preConfirm: (delete_blog_category) => {
+			                return axios.delete("/xhr/ecommerce/blog/categories/" + category.id)
+			                    .then(function (response) {
+			                        //console.log(response);
+			                        context.decrement(category_index);
+			                        return swal("Deleted!", "The category was successfully deleted.", "success");
+			                    })
+			                    .catch(function (error) {
+			                        var message = '';
+			                        if (error.response) {
+			                            // The request was made and the server responded with a status code
+			                            // that falls out of the range of 2xx
+			                            //var e = error.response.data.errors[0];
+			                            //message = e.title;
+			                            var e = error.response;
+			                            message = e.data.message;
+			                        } else if (error.request) {
+			                            // The request was made but no response was received
+			                            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+			                            // http.ClientRequest in node.js
+			                            message = 'The request was made but no response was received';
+			                        } else {
+			                            // Something happened in setting up the request that triggered an Error
+			                            message = error.message;
+			                        }
+			                        return swal("Delete Failed", message, "warning");
+			                    });
+		                },
+		                allowOutsideClick: () => !Swal.isLoading()
 		            });
 		        },
 
 
                 decrement: function (index) {
-                    console.log('Removing: ' + index);
+                    //console.log('Removing: ' + index);
                     this.categories.splice(index, 1);
                 },
                 newCategory: function () {
                     addCategory();
                 },
                 update: function (index, category) {
-                    console.log('Updating: ' + index);
+                    //console.log('Updating: ' + index);
                     this.categories.splice(index, 1, category);
                 }
             }
@@ -345,11 +359,10 @@
         new Vue({
             el: '#sub-menu-action',
             data: {
-            	blogUrl: {{ $blogUrl or '#' }}
             },
             methods: {
                 newField: function () {
-                    addCategory();
+                    addCategory()
                 }
             }
         });

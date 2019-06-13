@@ -48,6 +48,15 @@ class ModulesEcommerceWebsiteController extends Controller {
         $company = $this->getCompany();
         $config = (array) $company->extra_data;
         $this->data['domains'] = $domains = $this->getDomains($sdk);
+        $domain = get_dorcas_domain();
+        $subdomains = $this->getSubDomains($sdk);
+        if (!empty($subdomains)) {
+            $this->data['subdomains'] = $this->getSubDomains($sdk)->filter(function ($subdomain) use ($domain) {
+                return $subdomain->domain['data']['domain'] === $domain;
+            });
+        } else {
+            $this->data['subdomains'] = [];
+        }
         $this->data['isHostingSetup'] = !empty($config['hosting']) && !empty($domains) && $domains->count() > 0;
 
         return view('modules-ecommerce::website', $this->data);

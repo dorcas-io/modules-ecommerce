@@ -1,4 +1,3 @@
-
 <?php
 
 namespace Dorcas\ModulesEcommerce\Http\Controllers;
@@ -41,20 +40,12 @@ class ModulesEcommerceBlogController extends Controller {
         $this->data['page']['title'] .= ' &rsaquo; Blog Manager';
         $this->data['header']['title'] = 'Blog Manager';
         $this->data['selectedSubMenu'] = 'ecommerce-blog';
-        $this->data['submenuAction'] = '
-            <div class="dropdown"><button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Blog Actions</button>
-                <div class="dropdown-menu">
-                    <a href="#" v-on:click.prevent="newField" class="btn btn-primary btn-block">Add Category</a>
-                    <a :href="blogUrl" class="dropdown-item" target="_blank">New Post</a>
-                </div>
-            </div>
-        ';
 
 
         $this->setViewUiResponse($request);
         $subdomain = get_dorcas_subdomain();
         if (!empty($subdomain)) {
-            $this->data['page']['header']['title'] .= ' (Blog: '.$subdomain.'/blog)';
+            $this->data['header']['title'] .= ': '.$subdomain.'/blog';
         }
         $postsCount = 0;
         $query = $sdk->createBlogResource()->addQueryArgument('limit', 1)->send('get');
@@ -70,6 +61,14 @@ class ModulesEcommerceBlogController extends Controller {
         $this->data['blogSettings'] = self::getBlogSettings((array) $this->getCompany()->extra_data);
         # our store settings container
         $this->data['postsCount'] = $postsCount;
+        $this->data['submenuAction'] = '
+            <div class="dropdown"><button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Blog Actions</button>
+                <div class="dropdown-menu">
+                    <a href="#" v-on:click.prevent="newField" class="dropdown-item">Add Category</a>
+                    <a href="'.$this->data['blogUrl'].'" class="dropdown-item" target="_blank">New Post</a>
+                </div>
+            </div>
+        ';
         return view('modules-ecommerce::blog', $this->data);
     }
     

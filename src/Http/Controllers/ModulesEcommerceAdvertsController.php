@@ -65,6 +65,7 @@ class ModulesEcommerceAdvertsController extends Controller {
             'image' => 'required_without:advert_id|image'
         ]);
         # validate the request
+        //dd($request);
         try {
             if (!$request->has('redirect_url')) {
                 $redirectUrl = $request->input('redirect_url');

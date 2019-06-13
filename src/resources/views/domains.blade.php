@@ -30,6 +30,7 @@
 						</div>
 						<div class="card-footer">
 							<a class="btn btn-primary btn-sm" target="_blank" v-bind:href="'https://' + subdomain.prefix + '.' + subdomain.domain.data.domain">Visit</a>
+							&nbsp;
 							<a href="#" class="btn btn-warning btn-sm" v-on:click.prevent="releaseDomain(index)">Release</a>
 						</div>
 					</div>
@@ -55,6 +56,7 @@
 						</div>
 						<div class="card-footer">
 							<a class="btn btn-primary btn-sm" target="_blank" v-bind:href="'http://www.' + domain.domain">Visit</a>
+							&nbsp;
 							<a href="#" class="btn btn-danger btn-sm" v-on:click.prevent="removeDomain(index)">Release</a>
 						</div>
 					</div>
@@ -91,6 +93,7 @@
                             <a href="#" class="btn btn-info btn-sm" data-toggle="modal" data-target="#buy-domain-modal" v-if="domains.length == 0">
                                 Buy New Domain
                             </a>
+                            &nbsp;
                             <a href="#" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#add-domain-modal" v-if="domains.length == 0">
                                 Add Existing Domain
                             </a>

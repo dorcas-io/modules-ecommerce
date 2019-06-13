@@ -11,7 +11,7 @@
     <div class="col-md-9 col-xl-9" id="ecommerce-store">
 
 	    <div class="row row-cards row-deck" id="store-statistics">
-	    	<div class="col-6 col-sm-4 col-lg-2">
+	    	<div class="col-md-12 col-lg-4">
 	    		<div class="card p-3">
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md {{ empty($subdomain) ? 'bg-red' : 'bg-green' }} mr-3"><i class="fe fe-grid"></i></span>
@@ -22,7 +22,7 @@
 	    			</div>
 	    		</div>
 	    	</div>
-	    	<div class="col-6 col-sm-4 col-lg-2">
+	    	<div class="col-md-12 col-lg-4">
 	    		<div class="card p-3">
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
@@ -33,7 +33,7 @@
 	    			</div>
 	    		</div>
 	    	</div>
-	    	<div class="col-6 col-sm-4 col-lg-2">
+	    	<div class="col-md-12 col-lg-4">
 	    		<div class="card p-3">
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
@@ -50,7 +50,7 @@
 
         <div class="row col-md-12">
             @if (!empty($subdomain))
-                <div class="col-md-6">
+                <div class="col-md-12 col-lg-6">
                     <form action="" method="post" class="col s12">
                         {{ csrf_field() }}
                             <div class="row">
@@ -103,21 +103,21 @@
                     </form>
                 </div>
             @endif
-            <div class="col-md-6">
+            <div class="col-md-12 col-lg-6">
 		        @component('layouts.blocks.tabler.empty-fullpage')
 		            @slot('title')
 		                Setup Online Payment
 		            @endslot
-		            To integrate online payment for your store, you need to integrate one of our payment partners.<br>
-		            You need to create a vendor account, and install the appropriate integration from the "Integration" section.
+		            To integrate online payment for your store, you need to integrate one of our payment partners.<br><br/>
+		            You need to create a vendor account, and install the appropriate integration from the "Integration" section.<br/><br/>     
+                    <a class="btn btn-primary btn-sm" href="https://dorcas.ravepay.co/auth/" target="_blank">
+                        Create Vendor Account
+                    </a>
+                    &nbsp;
+                    <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
+                        Add Integration
+                    </a>
 		            @slot('buttons')
-                        <a class="btn btn-primary btn-sm" href="https://dorcas.ravepay.co/auth/" target="_blank">
-                            Create Vendor Account
-                        </a>
-                        &nbsp;
-                        <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
-                            Add Integration
-                        </a>
 		            @endslot
 		        @endcomponent
             </div>
