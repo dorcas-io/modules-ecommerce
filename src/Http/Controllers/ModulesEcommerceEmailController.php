@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 
+use Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceWebsiteController as Website;
 
 class ModulesEcommerceEmailController extends Controller {
 
@@ -38,7 +39,7 @@ class ModulesEcommerceEmailController extends Controller {
         $this->data['page']['title'] .= ' &rsaquo; Email Manager';
         $this->data['header']['title'] = 'Email Manager';
         $this->data['selectedSubMenu'] = 'ecommerce-emails';
-        //$this->data['submenuAction'] = '<a href="#" v-on:click.prevent="createEmail" class="btn btn-primary btn-block">Add Email</a>';
+        $this->data['submenuAction'] = '<a id="create_email" href="#" v-on:click.prevent="createEmail" class="btn btn-primary btn-block">Add Email</a>';
 
         $config = $this->getCompany()->extra_data;
         # get the company configuration data

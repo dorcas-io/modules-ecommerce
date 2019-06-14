@@ -11,8 +11,8 @@
     <div class="col-md-9 col-xl-9">
 
 	    <div class="row container" id="ecommerce-emails">
-	        <div class="row mt-3" v-if="emails.length > 0">
-	            <webmail-account class="col s12 m4" v-for="(email, index) in emails" :key="email.user" :email="email" :index="index" v-on:delete-email="deleteEmail"></webmail-account>
+	        <div class="row col-md-12" v-if="emails.length > 0">
+	            <webmail-account class="" v-for="(email, index) in emails" :key="email.user" :email="email" :index="index" v-on:delete-email="deleteEmail"></webmail-account>
 	        </div>
 	        <div class="col-md-12" v-if="emails.length === 0">
 		        @component('layouts.blocks.tabler.empty-fullpage')
@@ -47,7 +47,7 @@
 		            @endslot
 		        @endcomponent
 	        </div>
-	        @include('ecommerce.modals.new-email')
+	        @include('modules-ecommerce::modals.new-email')
 	    </div>
     </div>
 
@@ -62,14 +62,25 @@
             data: {
                 domains: {!! json_encode(!empty($domains) ? $domains : []) !!},
                 emails: {!! json_encode(!empty($emails) ? $emails : []) !!},
-                email: {username: '', domain: '', quota: 25},
+                email: {username: '', domain: '', quota: 100},
                 isHostingRequestProcessing: false
+            },
+            mounted: function() {
+            	this.enableCreateEmail();
+            },
+            watch: {
+                create_email: function () {
+            		if (this.emails.length===0) {
+            			$('#create_email').hide()
+            		}
+                }
             },
             methods: {
                 requestHosting: function () {
                     this.isHostingRequestProcessing = true;
                 },
                 createEmail: function () {
+                	//console.log('email')
                     $('#add-email-modal').modal('show');
                 },
                 deleteEmail: function (index) {
@@ -89,7 +100,7 @@
 		                preConfirm: (email_delete) => {
 	                        return axios.delete("/mec/ecommerce-emails/" + email.user)
 	                            .then(function (response) {
-	                                console.log(response);
+	                                //console.log(response);
 	                                context.emails.splice(index, 1);
 	                                return swal("Deleted!", "The email was successfully deleted.", "success");
 	                            })
@@ -119,7 +130,12 @@
 
 
 
-                }
+                },
+                enableCreateEmail: function() {
+            		if (this.emails.length===0) {
+            			$('#create_email').hide()
+            		}
+            	}
             }
         });
 
