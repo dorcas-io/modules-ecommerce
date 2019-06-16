@@ -30,17 +30,11 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
 Route::group(['middleware' => ['auth'], 'namespace' => 'ECommerce', 'prefix' => 'apps/ecommerce'], function () {
 
     
-    Route::group(['prefix' => 'adverts'], function () {
-        
-    });
-    
     
     Route::group(['middleware' => ['pay_gate']], function () {
         Route::post('/domains/purchase', 'Domains\Domains@purchaseDomain')->name('apps.ecommerce.domains-purchase');
     });
     
-
-    Route::get('/online-store', 'OnlineStore@index')->name('apps.ecommerce.store');
 });
 
 Route::group(['middleware' => ['auth'], 'namespace' => 'Ajax', 'prefix' => 'xhr'], function () {

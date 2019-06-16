@@ -23,6 +23,8 @@ use App\Events\ECommerce\DomainDelete;
 
 use Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceWebsiteController as Website;
 
+use App\Http\Controllers\HubController as HubControl;
+
 
 class ModulesEcommerceController extends Controller {
 
@@ -78,6 +80,8 @@ class ModulesEcommerceController extends Controller {
                 return starts_with($key, 'nameserver') && !empty($entry);
             })->values()->sort();
         }
+        //get wallet
+        $this->data['wallet'] = (new HubControl)->getWallet();
 
         return view('modules-ecommerce::domains', $this->data);
     }
@@ -139,12 +143,12 @@ class ModulesEcommerceController extends Controller {
         
             } elseif ($request->has('purchase_domain')) {
                 # purchase a domain
-                $planCost = PaidPlanGate::checkPricingOnCompanyPlan($this->getCompany());
+                /*$planCost = PaidPlanGate::checkPricingOnCompanyPlan($this->getCompany());
                 # get the cost of the company's plan
                 if ($planCost === null || $planCost <= 0) {
                     # we have no plan pricing, or it's a free plan
                     throw new AuthorizationException('This feature is only available on the paid plans.');
-                }
+                }*/
                 $hostingManager = new HostingManager($sdk);
                 $availableServers = $hostingManager->getCurrentServerStatus()->filter(function ($server) {
                     return $server->remaining_spots > 0;

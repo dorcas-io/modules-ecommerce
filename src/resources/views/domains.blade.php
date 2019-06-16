@@ -66,11 +66,11 @@
                         @slot('title')
                             Domains &amp; Hosting Setup
                         @endslot
-                        @if (!$isHostingSetup && (empty($domains) || $domains->count() === 0))
+                        @if ((empty($domains) || $domains->count() === 0) && !$isHostingSetup)
                             To begin your e-commerce setup, you'll need to either use a domain name you already own OR buy a new one.
-                        @elseif (!$isHostingSetup && !empty($domains) && $domains->count() > 0)
+                        @elseif (!empty($domains) && $domains->count() > 0 && !$isHostingSetup)
                             To begin your web-hosting setup, click the button above
-                        @elseif ($isHostingSetup && !empty($nameservers))
+                        @elseif (!empty($domains) && $domains->count() > 0 && $isHostingSetup && !empty($nameservers))
                             If you added a domain you already own, you will need to set the following nameserver
                                 entries in your domain's DNS.<br>
                             @foreach ($nameservers as $ns)
@@ -81,7 +81,7 @@
                             has already been done for you.
                         @endif
                         @slot('buttons')
-                            @if ($isOnPaidPlan && !$isHostingSetup && !empty($domains) && $domains->count() > 0)
+                            @if (!empty($domains) && $domains->count() > 0 && !$isHostingSetup && $isOnPaidPlan)
                                 <form action="" method="post">
                                     {{ csrf_field() }}
                                     <input type="hidden" name="domain" value="{{ $domains->first()->domain }}" />
@@ -140,12 +140,12 @@
                     axios.get("/mec/ecommerce-domains-issuances-availability", {
                         params: {id: context.actual_domain}
                     }).then(function (response) {
-                        console.log(response);
+                        //console.log(response);
                         context.is_querying = false;
                         context.is_queried = true;
                         context.is_available = response.data.is_available;
                         //Materialize.toast(context.is_available ? 'The subdomain is available' : 'The subdomain is unavailable', 4000);
-                        $('#domain_result').html(context.is_available ? 'The subdomain is available' : 'The subdomain is unavailable');
+                        $('#domain_result').html(context.is_available ? 'The subdomain is available FREE of charge' : 'The subdomain is unavailable');
                     })
                         .catch(function (error) {
                             var message = '';
@@ -198,7 +198,7 @@
 		                preConfirm: (domain_release) => {
 		                    return axios.delete("/mec/ecommerce-domains-issuances/" + subdomain.id)
 		                        .then(function (response) {
-		                            console.log(response);
+		                            //console.log(response);
 		                            context.domains.splice(index, 1);
 		                            return swal("Released!", "The domain was successfully released.", "success");
 		                        })
@@ -303,11 +303,19 @@
                 extension: 'com',
                 is_available: false,
                 is_queried: false,
-                is_querying: false
+                is_querying: false,
+                wallet:  {!! json_encode($wallet) !!},
+                domain_amount: 0
+            },
+            mounted: function() {
+                //console.log(headerAuthVue.loggedInUserCompany.extra_data.wallet.NGN.balance)
             },
             computed: {
                 actual_domain: function () {
                     return this.domain.replace(' ', '').toLowerCase().trim() + '.' + this.extension;
+                },
+                wallet_balance: function() {
+                    return typeof headerAuthVue.loggedInUserCompany.extra_data.wallet.NGN.balance !== undefined ? headerAuthVue.loggedInUserCompany.extra_data.wallet.NGN.balance : 0
                 }
             },
             watch: {
@@ -318,6 +326,12 @@
                 }
             },
             methods: {
+                payForDomain: function() {
+                    console.log("buy"+this.domain_amount)
+                },
+                numberWithCommas: function (x) {
+                    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                },
                 checkAvailability: function () {
                     var context = this;
                     this.is_querying =  true;
@@ -325,16 +339,22 @@
                         params: {domain: context.domain, extension: context.extension}
                     }).then(function (response) {
                         console.log(response);
+                        if (context.extension==".com") {
+                            this.domain_amount = 5000;
+                        } else if (context.extension==".com.ng") {
+                            this.domain_amount = 2000;
+                        }
                         context.is_querying = false;
                         context.is_queried = true;
                         context.is_available = response.data.is_available;
                         //Materialize.toast(context.is_available ? 'The domain is available' : 'The domain is not available', 4000);
                         if (context.is_available) {
-                        	swal("Status", 'The domain is available', "success");
+                        	swal("Status", 'The domain is available at NGN'+this.numberWithCommas(this.domain_amount), "success");
                         } else {
                         	swal("Status", 'The domain is not available', "warning");
                         }
                     }).catch(function (error) {
+                        console.log(error)
                             var message = '';
                             if (error.response) {
                                 // The request was made and the server responded with a status code
@@ -354,7 +374,7 @@
                             }
                             context.is_querying = false;
                             //Materialize.toast('Error: '+message, 4000);
-                        	swal("Error", message, "warning");
+                        	swal("Error Checking Domain Availability", message, "warning");
                         });
                 },
                 removeStatus: function () {
