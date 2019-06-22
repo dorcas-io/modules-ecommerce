@@ -305,10 +305,13 @@
                 is_queried: false,
                 is_querying: false,
                 wallet:  {!! json_encode($wallet) !!},
-                domain_amount: 0
+                domain_amount: 50,
+                is_purchasing: false
             },
             mounted: function() {
                 //console.log(headerAuthVue.loggedInUserCompany.extra_data.wallet.NGN.balance)
+                this.purchaseDomainOnPayment();
+                console.log(this.wallet_balance);
             },
             computed: {
                 actual_domain: function () {
@@ -316,6 +319,9 @@
                 },
                 wallet_balance: function() {
                     return typeof headerAuthVue.loggedInUserCompany.extra_data.wallet.NGN.balance !== undefined ? headerAuthVue.loggedInUserCompany.extra_data.wallet.NGN.balance : 0
+                },
+                valid_domain_entry: function () {
+                    return this.domain !== '';
                 }
             },
             watch: {
@@ -326,8 +332,32 @@
                 }
             },
             methods: {
+                purchaseDomainOnPayment() {
+                    //open Tab
+                    console.log('purchaseing on')
+                    var url = document.location.toString();
+                    if (url.match('purchase_domain_valid')) {
+                    console.log('opening tab')
+                        $('.nav-tabs a[href="#custom_domains"]').tab('show');
+                        $('#buy-domain-modal').modal('show');
+                        let url_data = url.split('__')[1]
+                        this.domain = url_data.split('_')[0];
+                        this.extension = url_data.split('_')[1];
+                        this.checkAvailability();
+                    }
+                },
                 payForDomain: function() {
-                    console.log("buy"+this.domain_amount)
+                    //console.log("buy"+this.domain_amount);
+                    if (this.extension=="com") {
+                        this.domain_amount = 5000;
+                    } else if (this.extension=="com.ng") {
+                        this.domain_amount = 2000;
+                    }
+                    let domain_plus_extension = this.domain + '_' + this.extension;
+                    let fund_amount = this.domain_amount - this.wallet_balance;
+                    let item = { display_name : 'Hub Item', fund_amount: 'domain_purchase', value: this.domain + '.' + this.extension }
+                    this.is_purchasing = true;
+                    assistantVue.showPaystackDialog(fund_amount, item, '{{ url()->current() }}'+ '?purchase_domain_valid__' + domain_plus_extension);
                 },
                 numberWithCommas: function (x) {
                     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -339,15 +369,19 @@
                         params: {domain: context.domain, extension: context.extension}
                     }).then(function (response) {
                         console.log(response);
-                        if (context.extension==".com") {
+                        if (context.extension=="com") {
                             this.domain_amount = 5000;
-                        } else if (context.extension==".com.ng") {
+                        } else if (context.extension=="com.ng") {
                             this.domain_amount = 2000;
                         }
                         context.is_querying = false;
                         context.is_queried = true;
                         context.is_available = response.data.is_available;
                         //Materialize.toast(context.is_available ? 'The domain is available' : 'The domain is not available', 4000);
+                        let balance_msg = '';
+                        if (context.wallet_balance<context.domain_amount) {
+                            balance_msg = 'You need to top up your Wallet balance with at-least NGN' + (this.domain_amount - this.wallet_balance);
+                        }
                         if (context.is_available) {
                         	swal("Status", 'The domain is available at NGN'+this.numberWithCommas(this.domain_amount), "success");
                         } else {

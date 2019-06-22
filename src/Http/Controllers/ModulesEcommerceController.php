@@ -421,5 +421,28 @@ class ModulesEcommerceController extends Controller {
         return response()->json($query->data);
     }
 
+    /**
+     * @param Request $request
+     * @param Sdk     $sdk
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function verifyTransaction(Request $request, Sdk $sdk)
+    {
+        try {
+            $paystack = new \Yabacon\Paystack(config('services.paystack.secret_key'));
+            $txn = $paystack->transaction->verify([
+                'reference'=> $request->reference
+            ]);
+
+            $amount_added = $txn->data->amount / 100;
+
+            $add = (new HubControl)->incrementWallet($request, $sdk, $amount_added);
+            
+            return (new HubControl)->verifyTransaction($request, $sdk);
+        } catch (\Exception $e) {
+            throw new \Exception("Domain Transaction Error: ". $e->getMessage());
+        }
+    }
 
 }

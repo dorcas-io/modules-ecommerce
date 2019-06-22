@@ -40,8 +40,8 @@
       </div>
       <div class="modal-footer">
           <a href="#" v-on:click.prevent="checkAvailability()" class="btn btn-primary" :class="{'btn-loading': is_querying }">Check Availability</a>
-          <button type="submit" form="form-buy-domain" class="btn btn-success" name="purchase_domain" value="1" v-if="is_available && wallet_balance >= domain_amount">Purchase</button>
-          <button class="btn btn-success" name="add_balance" v-on:click.prevent="payForDomain()" v-if="is_available && wallet_balance < domain_amount">Purchase</button>
+          <button type="submit" form="form-buy-domain" class="btn btn-success" name="purchase_domain" value="1" v-if="wallet_balance >= domain_amount">Purchase Domain</button><!--is_available && -->
+          <button class="btn btn-success" name="add_balance" :class="{'btn-loading': is_purchasing }" v-on:click.prevent="payForDomain()" v-if="is_available && valid_domain_entry && wallet_balance < domain_amount">Add Funds to Buy Domain</button><!-- -->
       </div>
     </div>
   </div>
