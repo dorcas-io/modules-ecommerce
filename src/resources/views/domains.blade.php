@@ -311,7 +311,7 @@
             mounted: function() {
                 //console.log(headerAuthVue.loggedInUserCompany.extra_data.wallet.NGN.balance)
                 this.purchaseDomainOnPayment();
-                console.log(this.wallet_balance);
+                //console.log(this.wallet_balance);
             },
             computed: {
                 actual_domain: function () {
@@ -334,10 +334,8 @@
             methods: {
                 purchaseDomainOnPayment() {
                     //open Tab
-                    console.log('purchaseing on')
                     var url = document.location.toString();
                     if (url.match('purchase_domain_valid')) {
-                    console.log('opening tab')
                         $('.nav-tabs a[href="#custom_domains"]').tab('show');
                         $('#buy-domain-modal').modal('show');
                         let url_data = url.split('__')[1]
