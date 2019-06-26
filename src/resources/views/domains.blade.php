@@ -353,7 +353,7 @@
                     }
                     let domain_plus_extension = this.domain + '_' + this.extension;
                     let fund_amount = this.domain_amount - this.wallet_balance;
-                    let item = { display_name : 'Hub Item', fund_amount: 'domain_purchase', value: this.domain + '.' + this.extension }
+                    let item = { display_name : 'Hub Item', variable_name: 'domain_purchase', value: this.domain + '.' + this.extension }
                     this.is_purchasing = true;
                     assistantVue.showPaystackDialog(fund_amount, item, '{{ url()->current() }}'+ '?purchase_domain_valid__' + domain_plus_extension);
                 },
