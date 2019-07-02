@@ -305,7 +305,8 @@
                 is_queried: false,
                 is_querying: false,
                 wallet:  {!! json_encode($wallet) !!},
-                domain_amount: 50,
+                domain_amount: 2000,
+                domain_amount_formatted: '',
                 is_purchasing: false
             },
             mounted: function() {
@@ -361,27 +362,31 @@
                     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 },
                 checkAvailability: function () {
+                    //console.log(this.numberWithCommas(this.domain_amount));
                     var context = this;
                     this.is_querying =  true;
+                    if (context.extension=="com") {
+                        this.domain_amount = 5000;
+                        this.domain_amount_formatted = "5,000";
+                    } else if (context.extension=="com.ng") {
+                        this.domain_amount = 2000;
+                        this.domain_amount_formatted = "2,000";
+                    }
                     axios.get("/mec/ecommerce-domains-availability", {
                         params: {domain: context.domain, extension: context.extension}
                     }).then(function (response) {
                         console.log(response);
-                        if (context.extension=="com") {
-                            this.domain_amount = 5000;
-                        } else if (context.extension=="com.ng") {
-                            this.domain_amount = 2000;
-                        }
                         context.is_querying = false;
                         context.is_queried = true;
                         context.is_available = response.data.is_available;
                         //Materialize.toast(context.is_available ? 'The domain is available' : 'The domain is not available', 4000);
-                        let balance_msg = '';
+                        let balance_msg = 'You can go ahead to purchase and secure it.';
                         if (context.wallet_balance<context.domain_amount) {
-                            balance_msg = 'You need to top up your Wallet balance with at-least NGN' + (this.domain_amount - this.wallet_balance);
+                            let topup = this.domain_amount - this.wallet_balance
+                            balance_msg = 'You need to top up your Wallet balance with at-least NGN' + topup + ' after which you can purchase and secure it';
                         }
                         if (context.is_available) {
-                        	swal("Status", 'The domain is available at NGN'+this.numberWithCommas(this.domain_amount), "success");
+                        	swal("Status", 'The domain is available at NGN' + context.domain_amount_formatted + '. ' + balance_msg, "success");
                         } else {
                         	swal("Status", 'The domain is not available', "warning");
                         }
