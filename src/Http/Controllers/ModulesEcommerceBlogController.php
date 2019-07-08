@@ -57,6 +57,7 @@ class ModulesEcommerceBlogController extends Controller {
         # set the subdomain
         if (!empty($this->data['subdomain'])) {
             $this->data['blogUrl'] = $this->data['subdomain'] . '/blog-admin/new-post?token=' . $sdk->getAuthorizationToken();
+            $this->data['blogPosts'] = $this->data['subdomain'] . '/blog/posts';
         }
         $this->data['blogSettings'] = self::getBlogSettings((array) $this->getCompany()->extra_data);
         # our store settings container
@@ -64,9 +65,12 @@ class ModulesEcommerceBlogController extends Controller {
         $this->data['submenuAction'] = '
             <div class="dropdown"><button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Blog Actions</button>
                 <div class="dropdown-menu">
-                    <a href="#" v-on:click.prevent="newField" class="dropdown-item">Add Category</a>
-                    <a href="'.$this->data['blogUrl'].'" class="dropdown-item" target="_blank">New Post</a>
-                </div>
+                    <a href="#" v-on:click.prevent="newField" class="dropdown-item">Add Category</a>';
+        if (!empty($this->data['subdomain'])) {
+            $this->data['submenuAction'] .= '<a href="'.$this->data['blogUrl'].'" class="dropdown-item" target="_blank">New Post</a>';
+            $this->data['submenuAction'] .= '<a href="'.$this->data['blogPosts'].'" class="dropdown-item" target="_blank">View Posts</a>';
+        }
+        $this->data['submenuAction'] .= '</div>
             </div>
         ';
         return view('modules-ecommerce::blog', $this->data);

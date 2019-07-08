@@ -384,7 +384,7 @@
                         let balance_msg = 'You can go ahead to purchase and secure it.';
                         if (context.wallet_balance<context.domain_amount) {
                             let topup = this.domain_amount - this.wallet_balance
-                            balance_msg = 'You need to top up your Wallet balance with at-least NGN' + topup.toString() + ' after which you can purchase and secure it';
+                            balance_msg = 'You need to top up your Wallet balance with NGN' + context.numberWithCommas(topup) + ' after which you can purchase and secure it';
                         }
                         if (context.is_available) {
                         	swal("Status", 'The domain is available at NGN' + context.domain_amount_formatted + '. ' + balance_msg, "success");
