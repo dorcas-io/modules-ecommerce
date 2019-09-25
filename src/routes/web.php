@@ -58,7 +58,7 @@ Route::group(['namespace' => 'Blog', 'middleware' => ['blog_verifier']], functio
         Route::get('/categories/{id}', 'Home@index')->name('blog.categories.single');
     });
     
-    Route::group(['prefix' => 'blog-admin', 'middleware' => ['auth']], function () {
+    Route::group(['prefix' => 'admin-blog', 'middleware' => ['auth']], function () {
         Route::get('/new-post', 'Posts@newPost')->name('blog.admin.new-post');
         Route::post('/new-post', 'Posts@createPost');
         Route::get('/{id}/edit', 'Posts@editPost')->name('blog.admin.edit-post');
