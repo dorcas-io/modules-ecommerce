@@ -63,6 +63,17 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['productCount'] = $query->isSuccessful() ? $query->meta['pagination']['total'] ?? 0 : 0;
         $this->data['subdomain'] = get_dorcas_subdomain($sdk);
         # set the subdomain
+        if (!empty($this->data['subdomain'])) {
+            $storeUrl = $this->data['subdomain'] . '/store';
+            $this->data['submenuAction'] = '
+                <div class="dropdown"><button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Store Actions</button>
+                    <div class="dropdown-menu">
+                        <a href="'.$storeUrl.'" class="dropdown-item" target="_blank">View Store</a>
+                    </div>
+                </div>
+            ';
+        }
+
         return view('modules-ecommerce::store', $this->data);
     }
     
