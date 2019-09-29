@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Dorcas\Hub\Utilities\UiResponse\UiResponse;
 use App\Exceptions\DeletingFailedException;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceBlogController as Dashboard;
 
