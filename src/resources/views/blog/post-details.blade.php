@@ -1,4 +1,4 @@
-@extends('blog.layouts.blog')
+@extends('modules-ecommerce::blog.layouts.blog')
 @section('head_meta')
     <meta property="og:site_name" content="Dorcas Hub" />
     <meta property="og:url" content="{{ route('blog.posts.details', [$post->slug]) }}" />

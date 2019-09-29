@@ -1,4 +1,4 @@
-@extends('blog.layouts.blog')
+@extends('modules-ecommerce::blog.layouts.blog')
 @section('head_css')
 
 @endsection

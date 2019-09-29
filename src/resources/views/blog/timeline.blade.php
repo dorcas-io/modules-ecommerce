@@ -1,4 +1,4 @@
-@extends('blog.layouts.blog')
+@extends('modules-ecommerce::blog.layouts.blog')
 @section('body_main_content_container_body')
     <div class="nobottommargin col_last" v-bind:class="{'postcontent': blog_categories.length > 0}">
         <div class="progress" v-if="is_posting">
