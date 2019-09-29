@@ -29,7 +29,7 @@ class ModulesEcommerceBlog extends Controller {
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index(Request $request, string $slug = null)
+    public function index(Request $request, Sdk $sdk, string $slug = null)
     {
         $blogOwner = $this->getCompanyViaDomain();
         # get the store owner
