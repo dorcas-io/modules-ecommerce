@@ -51,7 +51,7 @@ class ModulesEcommerceBlog extends Controller {
             $this->data['blogName'] = $blogOwner->name . " Blog";
         }
 
-        return view('blog.timeline', $this->data);
+        return view('modules-ecommerce::blog.timeline', $this->data);
     }
     
     /**
@@ -90,7 +90,7 @@ class ModulesEcommerceBlog extends Controller {
         $this->data['post'] = $post = $query->getData(true);
         $this->data['page']['title'] = $post->title . ' | Blog';
         $this->data['page']['header']['title'] = $post->title;
-        return view('blog.post-details', $this->data);
+        return view('modules-ecommerce::blog.post-details', $this->data);
     }
 
     /**
@@ -112,7 +112,7 @@ class ModulesEcommerceBlog extends Controller {
     
         $this->setViewUiResponse($request);
         $this->data['categories'] = $this->getBlogCategories($sdk);
-        return view('blog.new-post', $this->data);
+        return view('modules-ecommerce::blog.new-post', $this->data);
     }
     
     /**
@@ -198,7 +198,7 @@ class ModulesEcommerceBlog extends Controller {
         $this->setViewUiResponse($request);
         $this->data['categories'] = $this->getBlogCategories($sdk);
         $this->data['post'] = $this->getPost($sdk, $id);
-        return view('blog.new-post', $this->data);
+        return view('modules-ecommerce::blog.new-post', $this->data);
     }
     
     /**
