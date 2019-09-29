@@ -47,6 +47,7 @@ class ModulesEcommerceBlog extends Controller {
         $settings = Dashboard::getBlogSettings((array) $blogOwner->extra_data);
         $this->data['blogSettings'] = $settings;
         $this->data['blogOwner2'] = $blogOwner2;
+        $this->data['blogCategories'] = $this->getBlogCategories($sdk);
 
 
         if ($request->session()->has('dorcas_referrer')) {
