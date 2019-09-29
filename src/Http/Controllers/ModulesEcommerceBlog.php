@@ -43,14 +43,15 @@ class ModulesEcommerceBlog extends Controller {
 
         ///why do I  have  to  mannually add blogname  and blog settins
 
-        $domain = $request->session()->get('domain');
-        $blogOwner2 = (object) $domain->owner['data'];
-        $settings = Dashboard::getBlogSettings((array) $blogOwner->extra_data);
-        $this->data['blogSettings'] = $settings;
-        $this->data['blogOwner2'] = $blogOwner2;
-        $blogOwner = $this->getCompanyViaDomain();
+        //$domain = $request->session()->get('domain');
+        //$blogOwner2 = (object) $domain->owner['data'];
+        //$settings = Dashboard::getBlogSettings((array) $blogOwner->extra_data);
+        //$this->data['blogSettings'] = $settings;
+
         # get the blog owner
-        $this->data['blogCategories'] = $this->listBlogCategories($sdk, $blogOwner);
+        //$this->data['blogCategories'] = $this->listBlogCategories($sdk, $blogOwner);
+
+        $this->blogViewComposer($this->data, $request, $sdk, $blogOwner);
 
         if ($request->session()->has('dorcas_referrer')) {
             $referrer =  $request->session()->get('dorcas_referrer', ["mode" => "", "value" => ""]);
@@ -99,6 +100,9 @@ class ModulesEcommerceBlog extends Controller {
         if (!$query->isSuccessful()) {
             abort(500, $query->getErrors()[0]['title'] ?? 'Something went wrong while fetching the blog post.');
         }
+
+        $this->blogViewComposer($this->data, $request, $sdk, $blogOwner);
+        
         $this->data['post'] = $post = $query->getData(true);
         $this->data['page']['title'] = $post->title . ' | Blog';
         $this->data['page']['header']['title'] = $post->title;
@@ -260,9 +264,17 @@ class ModulesEcommerceBlog extends Controller {
         return $response->getData(true);
     }
 
-    private function listBlogCategories(Sdk $sdk, $company) {
-        //$company = (new Controller())->getCompanyViaDomain();
-        //$sdk = app(Sdk::class);
+    public function redirectRoute(Request $request)
+    {
+        return '';
+    }
+
+    private function blogViewComposer(&$viewData, Request $request, Sdk $sdk, $company) {
+
+        $domain = $request->session()->get('domain');
+        $user = $request->user();
+
+        //add blogCategories
         $categories = Cache::remember('business.blog-categories.'.$company->id, 30, function () use ($sdk, $company) {
             $query = $sdk->createBlogResource()->send('GET', [$company->id, 'categories']);
             # get the response
@@ -273,13 +285,36 @@ class ModulesEcommerceBlog extends Controller {
                 return (object) $category;
             });
         });
+        $viewData["blogCategories"] = $categories;
 
-        return $categories;
-    }
+        //add  blogOwner
+        $viewData["blogOwner"] = $company;
 
-    public function redirectRoute(Request $request)
-    {
-        return '';
+        //add blogDomain
+        //$blogDomain = 'https://'.$domain->prefix . '.' . $domain->domain['data']['domain'].'/blog';
+        $blogDomain = 'https://'.$domain->prefix . '.blog.' . $domain->domain['data']['domain'].'/';
+        $viewData["blogDomain"] = $blogDomain;
+
+        //add blogSettings & blogName
+        $settings = Dashboard::getBlogSettings((array) $company->extra_data);
+        $viewData["blogSettings"] = $settings;
+        $defaultBlogName = $company->name . ' Blog';
+        $viewData["blogName"] = !empty($settings['blog_name']) ? $settings['blog_name'] : $defaultBlogName;
+
+        //add blogAdministrator & partner
+        $blogOwner = (object) $domain->owner['data'];
+        $blogAdministrator = !empty($user) && $user->company['data']['id'] === $blogOwner->id ? $user : null;
+        $firstUser = !empty($blogOwner->users['data']) && !empty($blogOwner->users['data'][0]) ? (object) $blogOwner->users['data'][0] : null;
+        $partner = !empty($firstUser) && !empty($firstUser->partner['data']) ? (object) $firstUser->partner['data'] : null;
+
+        if (!empty($blogAdministrator)) {
+            $viewData["blogAdministrator"] = $blogAdministrator;
+        }
+        if (!empty($partner)) {
+            $viewData["partnerHubConfig"] = $partner->extra_data['hubConfig'] ?? [];
+        }
+
+
     }
 
 
