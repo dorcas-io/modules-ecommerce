@@ -47,8 +47,9 @@ class ModulesEcommerceBlog extends Controller {
         $settings = Dashboard::getBlogSettings((array) $blogOwner->extra_data);
         $this->data['blogSettings'] = $settings;
         $this->data['blogOwner2'] = $blogOwner2;
-        $this->data['blogCategories'] = $this->getBlogCategories($sdk);
-
+        $blogOwner = $this->getCompanyViaDomain();
+        # get the blog owner
+        $this->data['blogCategories'] = $this->listBlogCategories($sdk, $blogOwner);
 
         if ($request->session()->has('dorcas_referrer')) {
             $referrer =  $request->session()->get('dorcas_referrer', ["mode" => "", "value" => ""]);
@@ -256,6 +257,23 @@ class ModulesEcommerceBlog extends Controller {
             throw new DeletingFailedException($query->errors[0]['title'] ?? 'Could not load the selected post.');
         }
         return $response->getData(true);
+    }
+
+    private function listBlogCategories(Sdk $sdk, $company) {
+        //$company = (new Controller())->getCompanyViaDomain();
+        //$sdk = app(Sdk::class);
+        $categories = Cache::remember('business.blog-categories.'.$company->id, 30, function () use ($sdk, $company) {
+            $query = $sdk->createBlogResource()->send('GET', [$company->id, 'categories']);
+            # get the response
+            if (!$query->isSuccessful() || empty($query->getData())) {
+                return null;
+            }
+            return collect($query->getData())->map(function ($category) {
+                return (object) $category;
+            });
+        });
+
+        return $categories;
     }
 
     public function redirectRoute(Request $request)
