@@ -1,4 +1,16 @@
 <?php
+use GuzzleHttp\Psr7\Uri;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
+$request = app()->make('request');
+$currentHost = $request->header('host');
+$defaultUri = new Uri(config('app.url'));
+try {
+    $domainInfo = (new App\Http\Middleware\ResolveCustomSubdomain())->splitHost($currentHost);
+} catch (RuntimeException $e) {
+    $domainInfo = null;
+}
 
 Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middleware' => ['web','auth'], 'prefix' => 'mec'], function() {
     Route::get('ecommerce-main', 'ModulesEcommerceController@index')->name('ecommerce-main');
@@ -27,6 +39,69 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
     Route::post('/payment-verify', 'ModulesEcommerceController@verifyTransaction');
 
 });
+
+
+
+
+$blogSubDomain = !empty($domainInfo) && $domainInfo->getService() === 'blog' ?
+    $currentHost : 'blog' . $defaultUri->getHost();
+
+
+Route::prefix('blog')->group(function () {
+    Route::get('/', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceBlog@redirectRoute');
+    Route::get('/posts/{id?}', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceBlog@redirectRoute');
+    Route::get('/categories/{id?}', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceBlog@redirectRoute');
+    Route::get('/new-post', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceBlog@redirectRoute');
+});
+
+Route::domain($blogSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controllers')->middleware(['blog_verifier'])->group(function () {
+
+    Route::get('/', 'ModulesEcommerceBlog@index')->name('blog');
+    Route::get('/posts', 'ModulesEcommerceBlog@index')->name('blog.posts');
+    Route::get('/posts/{id}', 'ModulesEcommerceBlog@postDetails')->name('blog.posts.details');
+    Route::get('/categories', 'ModulesEcommerceBlog@categories')->name('blog.categories');
+    Route::get('/categories/{id}', 'ModulesEcommerceBlog@index')->name('blog.categories.single');
+
+    Route::get('/admin-blog/new-post', 'ModulesEcommerceBlog@newPost')->name('blog.admin.new-post');
+    Route::post('/admin-blog/new-post', 'ModulesEcommerceBlog@createPost');
+    Route::get('/admin-blog/{id}/edit', 'ModulesEcommerceBlog@editPost')->name('blog.admin.edit-post');
+    Route::post('/admin-blog/{id}/edit', 'ModulesEcommerceBlog@updatePost');
+    
+    Route::delete('/admin-blog/xhr/posts/{id}', 'ModulesEcommerceBlog@deletePostXhr');
+
+    Route::get('/{referralData}', function($referralData)
+    {
+        if (substr_count($referralData, "/") > 0) {
+            $values = explode("/", $referralData);
+            if ($values[0]=="r") {
+                $referrer = [];
+                $referrer["value"] = $values[1];
+                if (ctype_digit($values[1])) {
+                    $referrer["mode"] = "id";
+                    //return $referrer;
+                    $app = app();
+                    $controller = $app->make('Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceBlog');
+                    $request = $app->make('request');
+                    $request->session()->put('dorcas_referrer', $referrer);
+                    return $controller->callAction('index', $parameters = array($request));
+                } elseif (!ctype_digit($values[1])  && !is_numeric($values[1])) {
+                    $referrer["mode"] = "username";
+                    //return $referrer;
+                    $app = app();
+                    $controller = $app->make('Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceBlog');
+                    $request = $app->make('request');
+                    $request->session()->put('dorcas_referrer', $referrer);
+                    return $controller->callAction('index', $parameters = array($request));
+                }
+            }
+        }
+    })->where('referralData', '.*');
+
+
+});
+
+
+
 
 /*
 Route::group(['middleware' => ['auth'], 'namespace' => 'ECommerce', 'prefix' => 'apps/ecommerce'], function () {
