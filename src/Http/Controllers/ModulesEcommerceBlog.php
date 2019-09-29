@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Dorcas\Hub\Utilities\UiResponse\UiResponse;
 use App\Exceptions\DeletingFailedException;
 use Carbon\Carbon;
-
+use Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceBlogController as Dashboard;
 
 class ModulesEcommerceBlog extends Controller {
 
@@ -39,6 +39,15 @@ class ModulesEcommerceBlog extends Controller {
         $this->data['categorySlug'] = $slug;
         $this->data['defaultSearch'] = $request->get('q', '');
         $this->data['blogOwner'] = $blogOwner;
+
+        ///why do I  have  to  mannually add blogname  and blog settins
+
+        $domain = $request->session()->get('domain');
+        $blogOwner2 = (object) $domain->owner['data'];
+        $settings = Dashboard::getBlogSettings((array) $blogOwner->extra_data);
+        $this->data['blogSettings'] = $settings;
+        $this->data['blogOwner2'] = $blogOwner2;
+
 
         if ($request->session()->has('dorcas_referrer')) {
             $referrer =  $request->session()->get('dorcas_referrer', ["mode" => "", "value" => ""]);
