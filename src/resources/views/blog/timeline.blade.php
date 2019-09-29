@@ -8,8 +8,8 @@
             </div>
         </div>
         <div id="posts" class="post-timeline clearfix" v-if="posts.length > 0">
-            <blog-post2 v-for="(post, index) in posts" :key="post.id" :post="post" :index="index"
-                       :show-admin-buttons="showAdminButtons" v-on:delete-post="deletePost"></blog-post2>
+            <blog-main-post v-for="(post, index) in posts" :key="post.id" :post="post" :index="index"
+                       :show-admin-buttons="showAdminButtons" v-on:delete-post="deletePost"></blog-main-post>
 
             <div class="col_full">
                 <!--TODO: Handle situations where the number of pages > 10; we need to limit the pages displayed in those cases -->
@@ -184,7 +184,7 @@
         });
 
 
-Vue.component('blog-post2', {
+Vue.component('blog-main-post', {
     template: '<div class="entry clearfix">' +
     '                <div class="entry-timeline">' +
     '                    @{{ date_day }}<span>@{{ date_month }}</span>' +
@@ -194,17 +194,17 @@ Vue.component('blog-post2', {
     '                    <a v-if="typeof media.id !== \'undefined\'" v-bind:href="media.url" data-lightbox="image"><img class="image_fade" v-bind:src="media.url" :alt="media.title || \'Post Image\'"></a>' +
     '                </div>' +
     '                <div class="entry-title">' +
-    '                    <h2><a v-bind:href="\'/posts/\' + post.slug">{{ post.title }}</a></h2>' +
+    '                    <h2><a v-bind:href="\'/posts/\' + post.slug">@{{ post.title }}</a></h2>' +
     '                </div>' +
     '                <ul class="entry-meta clearfix">' +
-    '                    <li><a href="#"><i class="icon-user"></i> {{ posted_by.firstname + " " + posted_by.lastname }}</a></li>' +
-    '                    <li v-if="post.categories.data.length  > 0"><i class="icon-folder-open"></i><a v-for="(category, index) in post.categories.data" :key="category.id" v-if="index < 2" v-bind:href="\'/categories/\' + category.slug">{{ index > 0 ? ", " : "" }}{{ category.name }}</a></li>' +
+    '                    <li><a href="#"><i class="icon-user"></i> @{{ posted_by.firstname + " " + posted_by.lastname }}</a></li>' +
+    '                    <li v-if="post.categories.data.length  > 0"><i class="icon-folder-open"></i><a v-for="(category, index) in post.categories.data" :key="category.id" v-if="index < 2" v-bind:href="\'/categories/\' + category.slug">@{{ index > 0 ? ", " : "" }}@{{ category.name }}</a></li>' +
     '                    <li v-if="typeof media.id !== \'undefined\'"><a href="#"><i class="icon-camera-retro"></i></a></li>' +
     '                    <li v-if="showAdminButtons"><a v-bind:href="\'/admin-blog/\' + post.id + \'/edit\'"><i class="icon-edit"></i> Edit</a></li>' +
     '                    <li v-if="showAdminButtons"><a href="#" v-on:click.prevent="deletePost" class="text-danger"><i class="icon-trash"></i> Delete</a></li>' +
     '                </ul>' +
     '                <div class="entry-content">' +
-    '                    <p>{{ post.summary === null ? "Click Read More to get more details" : post.summary }}</p>' +
+    '                    <p>@{{ post.summary === null ? "Click Read More to get more details" : post.summary }}</p>' +
     '                    <a v-bind:href="\'/posts/\' + post.slug" class="more-link">Read More</a>' +
     '                </div>' +
     '            </div>',
