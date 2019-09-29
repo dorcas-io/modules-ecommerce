@@ -11,7 +11,7 @@
         </div>
     </div>
     <div class="col_three_fourth col_last">
-        @include('blog.layouts.blocks.ui-response-alert')
+        @include('modules-ecommerce::blog.layouts.blocks.ui-response-alert')
         <h3>@{{ title }}</h3>
         <form action="" method="post" enctype="multipart/form-data">
             {{ csrf_field() }}
