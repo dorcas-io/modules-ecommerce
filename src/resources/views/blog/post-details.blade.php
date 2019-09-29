@@ -64,9 +64,9 @@
             <h4>Related Posts:</h4>
             <div class="related-posts clearfix">
                 <div class="col_full nobottommargin">
-                    <suggestion-blog-post v-for="(sPost, index) in posts" :key="sPost.id"
+                    <suggestion-blog-post2 v-for="(sPost, index) in posts" :key="sPost.id"
                                           v-if="index < 6 && sPost.id !== post.id" :post="sPost"
-                                          :index="index" :show-admin-buttons="showAdminButtons"></suggestion-blog-post>
+                                          :index="index" :show-admin-buttons="showAdminButtons"></suggestion-blog-post2>
                 </div>
             </div> -->
         </div>
@@ -80,7 +80,7 @@
             <div class="widget clearfix" v-if="blog_categories.length > 0">
                 <h4>Tag Cloud</h4>
                 <div class="tagcloud">
-                    <a :href="'/blog/categories/' + cat.slug" v-for="cat in blog_categories" :key="cat.id">@{{ cat.name }}</a>
+                    <a :href="'/categories/' + cat.slug" v-for="cat in blog_categories" :key="cat.id">@{{ cat.name }}</a>
                 </div>
             </div>
         </div>
@@ -204,5 +204,68 @@
                 }
             }
         });
+
+Vue.component('suggestion-blog-post2', {
+    template: '<div class="mpost clearfix">' +
+    '                <div class="entry-image">' +
+    '                    <a v-if="typeof media.id !== \'undefined\'" v-bind:href="media.url" data-lightbox="image"><img class="image_fade" v-bind:src="media.url" :alt="media.title || \'Post Image\'"></a>' +
+    '                </div>' +
+    '                <div class="entry-c">' +
+    '                    <div class="entry-title">' +
+    '                        <h4><a v-bind:href="\'/posts/\' + post.slug">{{ post.title }}</a></h4>' +
+    '                    </div>' +
+    '                    <ul class="entry-meta clearfix">' +
+    '                        <li><i class="icon-calendar3"></i> {{ posted_at.format("DD MMM, YYYY") }}</li>' +
+    '                        <li v-if="showAdminButtons"><a v-bind:href="\'/admin-blog/\' + post.id + \'/edit\'"><i class="icon-edit"></i> Edit</a></li>' +
+    '                    </ul>' +
+    '                    <div class="entry-content">' +
+    '                        <p>{{ post.summary === null ? "Click Read More to get more details" : post.summary.substr(0, 50) }}</p>' +
+    '                    </div>' +
+    '                </div>' +
+    '            </div>',
+    data: function () {
+        return {
+            media: {},
+            image_url: null,
+            video_url: null
+        };
+    },
+    props: {
+        post: {
+            type: Object,
+            required: true
+        },
+        index: {
+            type: Number,
+            required: true
+        },
+        showAdminButtons: {
+            type: Boolean,
+            required: false,
+            default: function () {
+                return false;
+            }
+        }
+    },
+    computed: {
+        posted_at: function () {
+            var date = typeof this.post.publish_at !== 'undefined' && this.post.publish_at !== null ?
+                this.post.publish_at : this.post.created_at;
+            return moment(date);
+        }
+    },
+    mounted: function () {
+        if (typeof this.post.media !== 'undefined' && typeof this.post.media.data !== 'undefined') {
+            this.media = this.post.media.data;
+            this.image_url = this.media.url;
+        }
+    },
+    methods: {
+        deletePost: function () {
+            this.$emit('delete-post', this.index);
+        }
+    }
+});
+
     </script>
 @endsection

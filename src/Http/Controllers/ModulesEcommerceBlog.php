@@ -102,7 +102,7 @@ class ModulesEcommerceBlog extends Controller {
         }
 
         $this->blogViewComposer($this->data, $request, $sdk, $blogOwner);
-        
+
         $this->data['post'] = $post = $query->getData(true);
         $this->data['page']['title'] = $post->title . ' | Blog';
         $this->data['page']['header']['title'] = $post->title;
@@ -125,6 +125,8 @@ class ModulesEcommerceBlog extends Controller {
                 ['text' => 'New Post', 'href' => route('blog.admin.new-post'), 'isActive' => true],
             ]
         ];
+
+        $this->blogViewComposer($this->data, $request, $sdk, $blogOwner);
     
         $this->setViewUiResponse($request);
         $this->data['categories'] = $this->getBlogCategories($sdk);
@@ -210,6 +212,8 @@ class ModulesEcommerceBlog extends Controller {
                 ['text' => 'Edit Post', 'href' => route('blog.admin.new-post'), 'isActive' => true],
             ]
         ];
+
+        $this->blogViewComposer($this->data, $request, $sdk, $blogOwner);
     
         $this->setViewUiResponse($request);
         $this->data['categories'] = $this->getBlogCategories($sdk);
