@@ -187,7 +187,7 @@
 Vue.component('blog-post2', {
     template: '<div class="entry clearfix">' +
     '                <div class="entry-timeline">' +
-    '                    {{ date_day }}<span>{{ date_month }}</span>' +
+    '                    @{{ date_day }}<span>@{{ date_month }}</span>' +
     '                    <div class="timeline-divider"></div>' +
     '                </div>' +
     '                <div class="entry-image">' +
