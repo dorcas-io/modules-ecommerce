@@ -54,7 +54,7 @@ Route::prefix('blog')->group(function () {
     Route::get('/new-post', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceBlog@redirectRoute');
 });
 
-Route::domain($blogSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controllers')->middleware(['blog_verifier'])->group(function () {
+Route::domain($blogSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controllers')->middleware(['web','blog_verifier'])->group(function () {
 
     Route::get('/', 'ModulesEcommerceBlog@index')->name('blog');
     Route::get('/posts', 'ModulesEcommerceBlog@index')->name('blog.posts');
