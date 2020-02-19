@@ -2,7 +2,7 @@
 
 namespace Dorcas\ModulesEcommerce\Http\Controllers;
 
-use App\Http\Controllers\ECommerce\OnlineStore;
+//use App\Http\Controllers\ECommerce\OnlineStore;
 use Hostville\Dorcas\Sdk;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -56,11 +56,11 @@ class ModulesEcommerceBlog extends Controller {
         if ($request->session()->has('dorcas_referrer')) {
             $referrer =  $request->session()->get('dorcas_referrer', ["mode" => "", "value" => ""]);
             $this->data['page']['title'] = strtoupper($referrer["value"]) . "'s " . $this->data['page']['title'];
-            $this->data['page']['header']['title'] = strtoupper($referrer["value"]) . "'s Blog";
+            $this->data['page']['header']['title'] = $this->data['page']['title'];
             $this->data['blogName'] = strtoupper($referrer["value"]) . "'s Blog";
         } else {
             $this->data['page']['title'] = $blogOwner->name . ' ' . $this->data['page']['title'];
-            $this->data['page']['header']['title'] = $blogOwner->name . ' '  . $this->data['page']['title'];
+            $this->data['page']['header']['title'] = $this->data['page']['title'];
             $this->data['blogName'] = $blogOwner->name . " Blog";
         }
 

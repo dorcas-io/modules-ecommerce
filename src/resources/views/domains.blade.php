@@ -10,10 +10,10 @@
 
     <div class="col-md-9 col-xl-9" id="ecommerce-domains">
 
-        You can reserve your <strong>Dorcas sub-domain</strong>, add or purchase <strong>custom domain name(s)</strong> for your business:
+        You can reserve your Hub <strong>subdomain</strong>, add or purchase <strong>custom domain name(s)</strong> for your business:
         <ul class="nav nav-tabs nav-justified">
             <li class="nav-item">
-                <a class="nav-link active" data-toggle="tab" href="#dorcas_subdomain">Dorcas Sub-Domain</a>
+                <a class="nav-link active" data-toggle="tab" href="#dorcas_subdomain">Subdomain</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#custom_domains">Custom Domains &amp; Web-Hosting</a>
@@ -23,6 +23,7 @@
         <div class="tab-content">
             <div class="tab-pane container active" id="dorcas_subdomain">
                 <br/>
+                <p>You have secured <strong>{{ $subdomains->first()->prefix }}.{{ $subdomains->first()->domain["data"]["domain"] }}</strong> as your Hub Subdomain.</p>
 				<div class="row col-md-12">
 					<div class="card" v-for="(subdomain, index) in domains" :key="subdomain.id">
 						<div class="card-body">
@@ -40,7 +41,7 @@
                         @slot('title')
                             No Dorcas sub-domain
                         @endslot
-                        Set your FREE dorcas.ng sub-domain prefix, e.g. <strong>companyabc.dorcas.io</strong>
+                        Set your FREE Hub sub-domain prefix, e.g. <strong>demo.dorcas.io</strong>
                         @slot('buttons')
                             <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dorcas-sub-domain-modal">Reserve Sub Domain</a>
                         @endslot

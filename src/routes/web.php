@@ -43,6 +43,33 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
 
 
 
+
+$storeSubDomain = !empty($domainInfo) && $domainInfo->getService() === 'store' ?
+    $currentHost : 'store' . $defaultUri->getHost();
+
+Route::prefix('store')->group(function () {
+    Route::get('/', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@redirectRoute');
+    Route::get('/categories/{id?}', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@redirectRoute');
+    Route::get('/products/{id?}', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@redirectRoute');
+    Route::get('/cart', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@redirectRoute');
+});
+
+Route::domain($storeSubDomain)->namespace('WebStore')->middleware(['web_store'])->group(function () {
+    Route::get('/', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@index')->name('webstore');
+    Route::get('/categories', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@categories')->name('webstore.categories');
+    Route::get('/categories/{id}', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@index')->name('webstore.categories.single');
+    Route::get('/products', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@products')->name('webstore.products');
+    Route::get('/products/{id}', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@productDetails')->name('webstore.products.details');
+    Route::get('/cart', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@cart')->name('webstore.cart');
+    Route::get('/product-quick-view/{id}', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@quickView')->name('webstore.quick-view');
+    Route::delete('/xhr/cart', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@removeFromCartXhr');
+    Route::post('/xhr/cart', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@addToCartXhr');
+    Route::post('/xhr/cart/checkout', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@checkoutXhr');
+    Route::get('/xhr/cart/update-quantities', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@updateCartQuantitiesXhr');
+});
+
+
+
 $blogSubDomain = !empty($domainInfo) && $domainInfo->getService() === 'blog' ?
     $currentHost : 'blog' . $defaultUri->getHost();
 

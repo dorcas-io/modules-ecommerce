@@ -8,7 +8,7 @@
       <div class="modal-body">
         <form action="" id="form-dorcas-sub-domain" method="post">
             {{ csrf_field() }}
-            <h5>Check &amp; Reserve your <strong>Dorcas Sub Domain</strong> (<em>a unique prefix for service(s) such as website, online store, blog, etc</em>)</h5>
+            <h5>Check &amp; Reserve your <strong>Dorcas Sub Domain</strong> (<em>a unique prefix for services such as website, online store, blog, etc</em>)</h5>
             <fieldset class="form-fieldset">
                 <div class="row">
                     <div class="col-md-12 form-group">

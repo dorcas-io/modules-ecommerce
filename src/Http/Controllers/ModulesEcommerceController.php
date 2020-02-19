@@ -80,6 +80,10 @@ class ModulesEcommerceController extends Controller {
                 return starts_with($key, 'nameserver') && !empty($entry);
             })->values()->sort();
         }
+        // get website address
+        //$this->data['dorcas_website_url'] = str_replace($subdomains->first()->domain["data"]["domain"], "dorcas", "dorcas.website"); 
+
+
         //get wallet
         $this->data['wallet'] = (new HubControl)->getWallet();
 
