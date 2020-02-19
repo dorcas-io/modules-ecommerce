@@ -41,9 +41,6 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
 });
 
 
-
-
-
 $storeSubDomain = !empty($domainInfo) && $domainInfo->getService() === 'store' ?
     $currentHost : 'store' . $defaultUri->getHost();
 
@@ -67,8 +64,6 @@ Route::domain($storeSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controll
     Route::post('/xhr/cart/checkout', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@checkoutXhr');
     Route::get('/xhr/cart/update-quantities', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@updateCartQuantitiesXhr');
 });
-
-
 
 $blogSubDomain = !empty($domainInfo) && $domainInfo->getService() === 'blog' ?
     $currentHost : 'blog' . $defaultUri->getHost();
