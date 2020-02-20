@@ -51,7 +51,7 @@ Route::prefix('store')->group(function () {
     Route::get('/cart', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@redirectRoute');
 });
 
-Route::domain($storeSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controllers')->middleware(['web_store'])->group(function () {
+Route::domain($storeSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controllers')->middleware(['web','web_store'])->group(function () {
     Route::get('/', 'ModulesEcommerceStore@index')->name('webstore');
     Route::get('/categories', 'ModulesEcommerceStore@categories')->name('webstore.categories');
     Route::get('/categories/{id}', 'ModulesEcommerceStore@index')->name('webstore.categories.single');
@@ -64,6 +64,8 @@ Route::domain($storeSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controll
     Route::post('/xhr/cart/checkout', 'ModulesEcommerceStore@checkoutXhr');
     Route::get('/xhr/cart/update-quantities', 'ModulesEcommerceStore@updateCartQuantitiesXhr');
 });
+
+
 
 $blogSubDomain = !empty($domainInfo) && $domainInfo->getService() === 'blog' ?
     $currentHost : 'blog' . $defaultUri->getHost();
