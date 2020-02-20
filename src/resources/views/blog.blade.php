@@ -39,7 +39,7 @@
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
 	    				<div>
 	    					<h4 class="m-0"><a href="javascript:void(0)">Blog Domain</a></h4>
-	    					<small class="text-muted">{{ !empty($subdomain) ? $subdomain . '/blog' : 'Not Reserved' }}</small>
+	    					<small class="text-muted"><a href="{{ !empty($subdomain) ? $blog_Url : '#' }}" target="_blank">{{ !empty($subdomain) ? $blog_Url : 'Not Reserved' }}</a></small>
 	    				</div>
 	    			</div>
 	    		</div>

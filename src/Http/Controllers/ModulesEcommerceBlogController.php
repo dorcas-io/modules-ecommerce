@@ -44,8 +44,26 @@ class ModulesEcommerceBlogController extends Controller {
 
         $this->setViewUiResponse($request);
         $subdomain = get_dorcas_subdomain();
+
+        $blog_Url = $subdomain.'/blog';
+        $domain = get_dorcas_domain();
+        $subdomains = $this->getSubDomains($sdk);
+        if (!empty($subdomains)) {
+            $sub_domains = $this->getSubDomains($sdk)->filter(function ($subdomain) use ($domain) {
+                return $subdomain->domain['data']['domain'] === $domain;
+            });
+        } else {
+            $sub_domains = [];
+        }
+        if (count($sub_domains)>0) {
+            $blog_Url = "https://" . $subdomains->first()->prefix . ".blog." . $subdomains->first()->domain["data"]["domain"];
+        }
+        $this->data['blog_Url'] = $blog_Url;
+
+
         if (!empty($subdomain)) {
-            $this->data['header']['title'] .= ': '.$subdomain.'/blog';
+            //$this->data['header']['title'] .= ' (<a href="'.$blog_Url.'" target="_blank">'.$blog_Url.'</a>)';
+            $this->data['header']['title'] .= " ($blog_Url)";
         }
         $postsCount = 0;
         $query = $sdk->createBlogResource()->addQueryArgument('limit', 1)->send('get');

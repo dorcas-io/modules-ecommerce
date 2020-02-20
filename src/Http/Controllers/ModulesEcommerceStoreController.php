@@ -65,6 +65,26 @@ class ModulesEcommerceStoreController extends Controller {
         # set the subdomain
         if (!empty($this->data['subdomain'])) {
             $storeUrl = $this->data['subdomain'] . '/store';
+
+            $domain = get_dorcas_domain();
+            $subdomains = $this->getSubDomains($sdk);
+            if (!empty($subdomains)) {
+                $sub_domains = $this->getSubDomains($sdk)->filter(function ($subdomain) use ($domain) {
+                    return $subdomain->domain['data']['domain'] === $domain;
+                });
+            } else {
+                $sub_domains = [];
+            }
+            if (count($sub_domains)>0) {
+                $storeUrl = "https://" . $subdomains->first()->prefix . ".store." . $subdomains->first()->domain["data"]["domain"];
+                $this->data['header']['title'] .= " ($storeUrl)";
+            }
+            $this->data['storeUrl'] = $storeUrl;
+
+            if (!empty($subdomain)) {
+                //$this->data['header']['title'] .= ' (<a href="'.$storeUrl.'" target="_blank">'.$storeUrl.'</a>)';
+            }
+
             $this->data['submenuAction'] = '
                 <div class="dropdown"><button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Store Actions</button>
                     <div class="dropdown-menu">

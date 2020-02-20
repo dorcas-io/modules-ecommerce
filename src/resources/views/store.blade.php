@@ -39,7 +39,7 @@
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
 	    				<div>
 	    					<h4 class="m-0"><a href="javascript:void(0)">Store Domain</a></h4>
-	    					<small class="text-muted">{{ !empty($subdomain) ? $subdomain . '/store' : 'Not Reserved' }}</small>
+	    					<small class="text-muted"><a href="{{ !empty($subdomain) ? $storeUrl : '#' }}" target="_blank">{{ !empty($subdomain) ? $storeUrl : 'Not Reserved' }}</a></small>
 	    				</div>
 	    			</div>
 	    		</div>
