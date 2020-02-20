@@ -52,17 +52,17 @@ Route::prefix('store')->group(function () {
 });
 
 Route::domain($storeSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controllers')->middleware(['web_store'])->group(function () {
-    Route::get('/', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@index')->name('webstore');
-    Route::get('/categories', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@categories')->name('webstore.categories');
-    Route::get('/categories/{id}', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@index')->name('webstore.categories.single');
-    Route::get('/products', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@products')->name('webstore.products');
-    Route::get('/products/{id}', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@productDetails')->name('webstore.products.details');
-    Route::get('/cart', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@cart')->name('webstore.cart');
-    Route::get('/product-quick-view/{id}', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@quickView')->name('webstore.quick-view');
-    Route::delete('/xhr/cart', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@removeFromCartXhr');
-    Route::post('/xhr/cart', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@addToCartXhr');
-    Route::post('/xhr/cart/checkout', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@checkoutXhr');
-    Route::get('/xhr/cart/update-quantities', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@updateCartQuantitiesXhr');
+    Route::get('/', 'ModulesEcommerceStore@index')->name('webstore');
+    Route::get('/categories', 'ModulesEcommerceStore@categories')->name('webstore.categories');
+    Route::get('/categories/{id}', 'ModulesEcommerceStore@index')->name('webstore.categories.single');
+    Route::get('/products', 'ModulesEcommerceStore@products')->name('webstore.products');
+    Route::get('/products/{id}', 'ModulesEcommerceStore@productDetails')->name('webstore.products.details');
+    Route::get('/cart', 'ModulesEcommerceStore@cart')->name('webstore.cart');
+    Route::get('/product-quick-view/{id}', 'ModulesEcommerceStore@quickView')->name('webstore.quick-view');
+    Route::delete('/xhr/cart', 'ModulesEcommerceStore@removeFromCartXhr');
+    Route::post('/xhr/cart', 'ModulesEcommerceStore@addToCartXhr');
+    Route::post('/xhr/cart/checkout', 'ModulesEcommerceStore@checkoutXhr');
+    Route::get('/xhr/cart/update-quantities', 'ModulesEcommerceStore@updateCartQuantitiesXhr');
 });
 
 $blogSubDomain = !empty($domainInfo) && $domainInfo->getService() === 'blog' ?
