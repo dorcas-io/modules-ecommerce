@@ -27,7 +27,8 @@ class ModulesEcommerceStoreController extends Controller {
         'store_homepage',
         'store_terms_page',
         'store_ga_tracking_id',
-        'store_custom_js'
+        'store_custom_js',
+        'store_paid_notifications_email'
     ];
     
     public function __construct()
@@ -111,7 +112,8 @@ class ModulesEcommerceStoreController extends Controller {
             'store_homepage',
             'store_terms_page',
             'store_ga_tracking_id',
-            'store_custom_js'
+            'store_custom_js',
+            'store_paid_notifications_email'
         ];
         $settings = $configuration['store_settings'] ?? [];
         # our store settings container

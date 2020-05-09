@@ -24,7 +24,7 @@
             <div class="tab-pane container active" id="dorcas_subdomain">
                 <br/>
                 @if (!empty($subdomains->first()->prefix))
-                    <p>You have secured <strong>{{ $subdomains->first()->prefix }}.{{ $subdomains->first()->domain["data"]["domain"] }}</strong> as your Hub Subdomain.</p>
+                    <p>You have secured <strong>{{ $subdomains->first()->prefix }}.{{ $subdomains->first()->domain["data"]["domain"] }}</strong> as your Hub subdomain.</p>
                 @endif
 				<div class="row col-md-12">
 					<div class="card" v-for="(subdomain, index) in domains" :key="subdomain.id">

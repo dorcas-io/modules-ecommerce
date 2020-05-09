@@ -97,6 +97,13 @@
                                     <small>This allows you to add popular tools you use to your store site. e.g. Drift, Drip, Intercom, Tawk.to</small>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-md-12 form-group">
+                                    <input class="form-control" id="store_paid_notifications_email" name="store_paid_notifications_email" type="email"
+                                           class="validate" v-model="store_settings.store_paid_notifications_email">
+                                    <label class="form-label" for="store_paid_notifications_email">Email to send notifications on paid orders</label>
+                                </div>
+                            </div>
                             <button type="submit" class="btn btn-primary btn-block">
                                 Save Settings
                             </button>
