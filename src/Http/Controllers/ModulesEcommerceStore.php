@@ -43,7 +43,7 @@ class ModulesEcommerceStore extends Controller
         $this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
         $this->data['page']['header']['title'] = $storeOwner->name . ' Store';
         $this->data['cart'] = self::getCartContent($request);
-        return view('modules-ecommerce::webstore.shop', $this->data);
+        return view('webstore.shop', $this->data);
     }
     
     /**
