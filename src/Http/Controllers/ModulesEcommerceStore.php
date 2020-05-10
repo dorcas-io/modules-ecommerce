@@ -275,7 +275,7 @@ class ModulesEcommerceStore extends Controller
                                         ->send('POST', [$storeOwner->id, 'customers']);
         # we put step 1 & 2 in one call
         if (!$customer->isSuccessful()) {
-            throw new \RuntimeException('Failed while checking your customer account... Please try again later.'.$customer->getErrors()[0]['title']);
+            throw new \RuntimeException('Failed while checking your customer account... Please try again later.'); //$customer->getErrors()[0]['title']
         }
         $customer = $customer->getData(true);
         $orderData = [
