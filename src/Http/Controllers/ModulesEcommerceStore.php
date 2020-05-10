@@ -28,7 +28,7 @@ class ModulesEcommerceStore extends Controller
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index(Request $request, string $slug = null)
+    public function index(Request $request, Sdk $sdk, string $slug = null)
     {
         $storeOwner = $this->getCompanyViaDomain();
         # get the store owner
@@ -43,7 +43,10 @@ class ModulesEcommerceStore extends Controller
         $this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
         $this->data['page']['header']['title'] = $storeOwner->name . ' Store';
         $this->data['cart'] = self::getCartContent($request);
-        return view('webstore.shop', $this->data);
+
+        $this->storeViewComposer($this->data, $request, $sdk, $storeOwner);
+
+        return view('modules-ecommerce::webstore.shop', $this->data);
     }
     
     /**
@@ -352,7 +355,24 @@ class ModulesEcommerceStore extends Controller
         return response()->json($cart->commit()->getCart());
     }
 
+    private function storeViewComposer(&$viewData, Request $request, Sdk $sdk, $company) {
 
+        $domain = $request->session()->get('domain');
+        $user = $request->user();
+
+        //add store Categories
+        $categories = Cache::remember('business.product-categories.'.$company->id, 30, function () use ($sdk, $company) {
+            $query = $sdk->createBlogResource()->send('GET', [$company->id, 'categories']);
+            # get the response
+            if (!$query->isSuccessful() || empty($query->getData())) {
+                return null;
+            }
+            return collect($query->getData())->map(function ($category) {
+                return (object) $category;
+            });
+        });
+        $viewData["productCategories"] = $categories;
+    }
 
 
 }
