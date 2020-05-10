@@ -43,7 +43,7 @@ class ModulesEcommerceStore extends Controller
         $this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
         $this->data['page']['header']['title'] = $storeOwner->name . ' Store';
         $this->data['cart'] = self::getCartContent($request);
-        return view('webstore.shop', $this->data);
+        return view('modules-ecommerce::webstore.shop', $this->data);
     }
     
     /**
@@ -148,7 +148,7 @@ class ModulesEcommerceStore extends Controller
 
         $this->data['page']['title'] = 'Product Details | '.$product->name;
         $this->data['page']['header']['title'] = $product->name . ' | ' . $storeOwner->name . ' Store';
-        return view('webstore.product-details', $this->data);
+        return view('modules-ecommerce::webstore.product-details', $this->data);
     }
 
     /*
@@ -175,7 +175,7 @@ class ModulesEcommerceStore extends Controller
         }
         $this->data['product'] = $product = (object) $json->data;
         $this->data['price'] = collect($product->prices->data)->where('currency', 'NGN')->first();
-        return view('webstore.quick-view', $this->data);
+        return view('modules-ecommerce::webstore.quick-view', $this->data);
     }
 
     /**
@@ -215,7 +215,7 @@ class ModulesEcommerceStore extends Controller
         $this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
         //$this->data['cart'] = Home::getCartContent($request);
         $this->data['cart'] = $this->getCartContent($request);
-        return view('webstore.cart', $this->data);
+        return view('modules-ecommerce::webstore.cart', $this->data);
     }
 
     /**
