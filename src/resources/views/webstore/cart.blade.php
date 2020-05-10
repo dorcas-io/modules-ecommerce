@@ -207,7 +207,7 @@
                     <input type="text" class="sm-form-control" required placeholder="Phone number" v-model="checkout_form.phone">
                 </div>
                 <div class="col_full">
-                    <textarea class="form-control summernote" name="content" v-model="checkout_form.address"
+                    <textarea class="form-control summernote" maxlength="50" v-model="checkout_form.address"
                           rows="4" placeholder="Delivery Address (Optional)"></textarea>
                 </div>
                 <button type="submit" class="button button-3d nomargin button-black">Place Order</button>

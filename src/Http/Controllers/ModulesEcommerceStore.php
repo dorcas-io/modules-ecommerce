@@ -249,7 +249,8 @@ class ModulesEcommerceStore extends Controller
             'firstname' => 'required|string|max:30',
             'lastname' => 'required|string|max:30',
             'email' => 'required|email|max:80',
-            'phone' => 'required'
+            'phone' => 'required',
+            'phone' => 'nullable|max:250'
         ]);
         # validate the request
         $storeOwner = $this->getCompanyViaDomain();
@@ -267,6 +268,7 @@ class ModulesEcommerceStore extends Controller
                                         ->addBodyParam('lastname', $request->lastname)
                                         ->addBodyParam('email', $request->email)
                                         ->addBodyParam('phone', $request->phone)
+                                        ->addBodyParam('address', $request->address)
                                         ->send('POST', [$storeOwner->id, 'customers']);
         # we put step 1 & 2 in one call
         if (!$customer->isSuccessful()) {
