@@ -250,7 +250,7 @@ class ModulesEcommerceStore extends Controller
             'lastname' => 'required|string|max:30',
             'email' => 'required|email|max:80',
             'phone' => 'required',
-            'phone' => 'nullable|max:250'
+            'address' => 'nullable|max:250'
         ]);
         # validate the request
         $storeOwner = $this->getCompanyViaDomain();
@@ -272,7 +272,7 @@ class ModulesEcommerceStore extends Controller
                                         ->send('POST', [$storeOwner->id, 'customers']);
         # we put step 1 & 2 in one call
         if (!$customer->isSuccessful()) {
-            throw new \RuntimeException('Failed while checking your customer account... Please try again later.');
+            throw new \RuntimeException('Failed while checking your customer account... Please try again later.'.$customer->getErrors()[0]['title']);
         }
         $customer = $customer->getData(true);
         $orderData = [
