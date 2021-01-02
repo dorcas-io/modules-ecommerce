@@ -31,6 +31,7 @@ class ModulesEcommerceStore extends Controller
     public function index(Request $request, Sdk $sdk, string $slug = null)
     {
         $storeOwner = $this->getCompanyViaDomain();
+        //dd($storeOwner);
         # get the store owner
         if (empty($storeOwner)) {
             abort(404, 'Could not find a store at this URL.');

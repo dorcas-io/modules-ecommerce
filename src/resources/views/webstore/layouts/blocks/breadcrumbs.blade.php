@@ -6,9 +6,9 @@
         @foreach ($breadCrumbs['crumbs'] as $breadCrumb)
             <li class="{{ !empty($breadCrumb['isActive']) ? 'active' : '' }}">
                 @if (empty($breadCrumb['isActive']))
-                    <a href="{{ $breadCrumb['href'] or 'javascript:void(0);' }}">
+                    <a href="{{ $breadCrumb['href'] ?? 'javascript:void(0);' }}">
                         @endif
-                        {{ $breadCrumb['text'] or ''}}
+                        {{ $breadCrumb['text'] ?? ''}}
                         @if (empty($breadCrumb['isActive']))
                     </a>
                 @endif

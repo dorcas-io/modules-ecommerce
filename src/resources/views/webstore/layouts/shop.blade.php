@@ -18,7 +18,7 @@
         <meta name="keywords" content="" />
         <meta name="author" content="" />
     @show
-    <title>@section('head_title'){{ $page['title'] or 'We\'re Sorry' }} | {{ !empty($partnerHubConfig) ? $partnerHubConfig['product_name'] : config('app.name') }}@show</title>
+    <title>@section('head_title'){{ $page['title'] ?? 'We\'re Sorry' }} | {{ !empty($partnerHubConfig) ? $partnerHubConfig['product_name'] : config('app.name') }}@show</title>
     @yield('head_css')
 </head>
 <body @section('body_class')class="stretched" @show>
@@ -32,7 +32,7 @@
                 <section id="page-title">
                     <div class="container clearfix">
                         <h1>{{ $page['header']['title'] }}</h1>
-                        <span>{{ $page['header']['subTitle'] or '' }}</span>
+                        <span>{{ $page['header']['subTitle'] ?? '' }}</span>
                         @include('webstore.layouts.blocks.breadcrumbs')
                     </div>
                 </section><!-- #page-title end -->

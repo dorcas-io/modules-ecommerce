@@ -7,7 +7,10 @@ $request = app()->make('request');
 $currentHost = $request->header('host');
 $defaultUri = new Uri(config('app.url'));
 try {
+    //dd($currentHost);
+    //dd($defaultUri->getHost());
     $domainInfo = (new App\Http\Middleware\ResolveCustomSubdomain())->splitHost($currentHost);
+    //dd(array($currentHost,$domainInfo));
 } catch (RuntimeException $e) {
     $domainInfo = null;
 }
