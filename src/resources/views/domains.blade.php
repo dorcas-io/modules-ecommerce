@@ -9,14 +9,15 @@
     @include('layouts.blocks.tabler.sub-menu')
 
     <div class="col-md-9 col-xl-9" id="ecommerce-domains">
-
-        You can reserve your Hub <strong>subdomain</strong>, add or purchase <strong>custom domain name(s)</strong> for your business:
+        <div id="ecommerce-domains-heading">
+            You can reserve your Hub <strong>@{{ domain_title }}</strong>, add or purchase <strong>custom domain name(s)</strong> for your business:
+        </div>
         <ul class="nav nav-tabs nav-justified">
             <li class="nav-item">
                 <a class="nav-link active" data-toggle="tab" href="#dorcas_subdomain">Subdomain</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#custom_domains">Custom Domains &amp; Web-Hosting</a>
+                <a class="nav-link disabled" data-toggle="tab" href="#custom_domains">Custom Domains &amp; Web-Hosting</a>
             </li>
         </ul>
 
@@ -24,15 +25,15 @@
             <div class="tab-pane container active" id="dorcas_subdomain">
                 <br/>
                 @if (!empty($subdomains->first()->prefix))
-                    <p>You have secured <strong>{{ $subdomains->first()->prefix }}.{{ $subdomains->first()->domain["data"]["domain"] }}</strong> as your Hub subdomain.</p>
+                    <p>You have secured <strong>{{ $dorcasEdition === 'business' ? $subdomains->first()->prefix : $subdomains->first()->prefix . " " . $subdomains->first()->domain["data"]["domain"] }}</strong> as your @{{ domain_title }}.</p>
                 @endif
 				<div class="row col-md-12">
 					<div class="card" v-for="(subdomain, index) in domains" :key="subdomain.id">
 						<div class="card-body">
-							<p>https://@{{ subdomain.prefix }}.@{{ subdomain.domain.data.domain }}</p>
+							<p>https://@{{ domain_value(subdomain) }}</p>
 						</div>
 						<div class="card-footer">
-							<a class="btn btn-primary btn-sm" target="_blank" v-bind:href="'https://' + subdomain.prefix + '.' + subdomain.domain.data.domain">Visit</a>
+							<a class="btn btn-primary btn-sm" target="_blank" v-bind:href="'https://' + domain_value(subdomain)">Visit</a>
 							&nbsp;
 							<a href="#" class="btn btn-warning btn-sm" v-on:click.prevent="releaseDomain(index)">Release</a>
 						</div>
@@ -41,11 +42,11 @@
                 <div class="row col-md-12" v-if="domains.length === 0">
                     @component('layouts.blocks.tabler.empty-fullpage')
                         @slot('title')
-                            No Dorcas sub-domain
+                            No @{{ domain_title }}
                         @endslot
-                        Set your FREE Hub sub-domain prefix, e.g. <strong>demo.dorcas.io</strong>
+                        Set your FREE Hub @{{ domain_title }} prefix, e.g. <strong>@{{ domain_example }}</strong>
                         @slot('buttons')
-                            <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dorcas-sub-domain-modal">Reserve Sub Domain</a>
+                            <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dorcas-sub-domain-modal">Reserve @{{ domain_title.toUpperCase() }}</a>
                         @endslot
                     @endcomponent
                 </div>
@@ -116,13 +117,32 @@
 @endsection
 @section('body_js')
     <script type="text/javascript">
+
+
+    
+        new Vue({
+            el: '#ecommerce-domains-heading',
+            data: {
+                dorcasEdition:  '{!! $dorcasEdition !!}'
+            },
+            computed: {
+                domain_title: function() {
+                    return this.dorcasEdition == "business" ? 'primary domain' : 'subdomain';
+                }
+            },
+            methods: {
+               
+            }
+        });
+
         new Vue({
             el: '#dorcas-sub-domain-modal',
             data: {
                 domain: '',
                 is_available: false,
                 is_queried: false,
-                is_querying: false
+                is_querying: false,
+                dorcasEdition:  '{!! $dorcasEdition !!}'
             },
             computed: {
                 actual_domain: function () {
@@ -148,7 +168,7 @@
                         context.is_queried = true;
                         context.is_available = response.data.is_available;
                         //Materialize.toast(context.is_available ? 'The subdomain is available' : 'The subdomain is unavailable', 4000);
-                        $('#domain_result').html(context.is_available ? 'The subdomain is available FREE of charge' : 'The subdomain is unavailable');
+                        $('#domain_result').html(context.is_available ? 'This choice is available' : 'The choice is unavailable');
                     })
                         .catch(function (error) {
                             var message = '';
@@ -178,18 +198,34 @@
         new Vue({
             el: '#dorcas_subdomain',
             data: {
-                domains: {!! json_encode($subdomains) !!}
+                domains: {!! json_encode($subdomains) !!},
+                dorcasEdition:  '{!! $dorcasEdition !!}'
             },
             mounted: function() {
             	//console.log("Sub")
             	//console.log(this.domains)
             },
+            computed: {
+                domain_title: function() {
+                    return this.dorcasEdition == "business" ? 'primary domain' : 'subdomain';
+                },
+                domain_example: function() {
+                    return this.dorcasEdition == "business" ? 'mybusiness.com' : 'mybusiness.parentdomain.com';
+                },
+                domain_value: function(subdomain) {
+                    return this.dorcasEdition == "business" ? subdomain.prefix : subdomain.prefix + "." + subdomain.domain.data.domain;
+                }
+            },
             methods: {
+                domain_value: function(subdomain) {
+                    return this.dorcasEdition == "business" ? subdomain.prefix : subdomain.prefix + "." + subdomain.domain.data.domain;
+                },
                 releaseDomain: function (index) {
                     var subdomain = this.domains[index];
                     //console.log(subdomain, index);
                     var context = this;
-                    var name = subdomain.prefix + '.' + subdomain.domain.data.domain;
+                    //var name = subdomain.prefix + '.' + subdomain.domain.data.domain;
+                    var name = this.domain_value(subdomain);
                     Swal.fire({
                         title: "Are you sure?",
                         text: "You are about to release the subdomain " + name,
@@ -308,6 +344,7 @@
                 is_queried: false,
                 is_querying: false,
                 wallet:  {!! json_encode($wallet) !!},
+                dorcasEdition:  '{!! $dorcasEdition !!}',
                 domain_amount: 2000,
                 domain_amount_formatted: '',
                 is_purchasing: false
@@ -316,6 +353,7 @@
                 //console.log(headerAuthVue.loggedInUserCompany.extra_data.wallet.NGN.balance)
                 this.purchaseDomainOnPayment();
                 //console.log(this.wallet_balance);
+                //console.log(this.dorcasEdition);
             },
             computed: {
                 actual_domain: function () {

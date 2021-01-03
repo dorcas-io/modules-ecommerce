@@ -95,6 +95,7 @@ class ModulesEcommerceStore extends Controller
             abort(404, 'Could not find a store at this URL.');
         }
         $query = $sdk->createStoreService()->addQueryArgument('id', $id)->send('GET', [$storeOwner->id, 'product']);
+
         if (!$query->isSuccessful()) {
             abort(500, $query->getErrors()[0]['title'] ?? 'Something went wrong while fetching the product.');
         }
@@ -102,7 +103,11 @@ class ModulesEcommerceStore extends Controller
         $this->data['storeOwner'] = $storeOwner;
         $this->data['cart'] = self::getCartContent($request);
 
-
+        //$subdomain = get_dorcas_subdomain_via_owner($storeOwner,$sdk);
+        //dd($storeOwner);
+        //$storeURL = "https://store.".$subdomain;
+        //$this->data['storeDomain'] = $storeURL;
+        $this->data['storeDomain'] = "#";
 
         $this->data['variantTypes'] = $this->variant_type_get($request,$sdk);
 
@@ -151,7 +156,7 @@ class ModulesEcommerceStore extends Controller
 
 
         $this->data['page']['title'] = 'Product Details | '.$product->name;
-        $this->data['page']['header']['title'] = $product->name . ' | ' . $storeOwner->name . ' Store';
+        $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $product->name;
         return view('modules-ecommerce::webstore.product-details', $this->data);
     }
 
@@ -171,12 +176,23 @@ class ModulesEcommerceStore extends Controller
         $this->data['storeOwner'] = $storeOwner;
         $url = config('dorcas-api.url') . '/store/' . $storeOwner->id . '/product?id=' . $id;
         # compose the query URL
-        $json = json_decode(file_get_contents($url));
+
+        $skip_verify = env('DORCAS_CURL_SSL_VERIFY',true) === false && env('APP_ENV','production') !== "production" && env('DORCAS_ENV','production') !== "production";
+        //dd(array(env('DORCAS_CURL_SSL_VERIFY'), env('APP_ENV'), env('DORCAS_ENV'), $skip_verify));
+        if ($skip_verify) {
+            $json = json_decode(file_get_contents($url, false, stream_context_create(array('ssl' => array('verify_peer' => false, 'verify_peer_name' => false)))));
+        } else {
+            $json = json_decode(file_get_contents($url));
+        }
+
         # request the data
         if (empty($json->data)) {
             # something went wrong
             abort(500, 'Something went wrong while getting the product.');
         }
+
+        $this->data['storeDomain'] = "#";
+        
         $this->data['product'] = $product = (object) $json->data;
         $this->data['price'] = collect($product->prices->data)->where('currency', 'NGN')->first();
         return view('modules-ecommerce::webstore.quick-view', $this->data);
@@ -217,6 +233,7 @@ class ModulesEcommerceStore extends Controller
         }
         $this->data['storeOwner'] = $storeOwner;
         $this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
+        $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | Shopping Cart';
         //$this->data['cart'] = Home::getCartContent($request);
         $this->data['cart'] = $this->getCartContent($request);
         return view('modules-ecommerce::webstore.cart', $this->data);

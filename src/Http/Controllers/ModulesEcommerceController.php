@@ -54,21 +54,33 @@ class ModulesEcommerceController extends Controller {
      */
     public function domains(Request $request,  Sdk $sdk)
     {
-        $this->data['page']['title'] .= ' &rsaquo; Domains Manager';
+        $this->data['page']['title'] .= " &rsaquo; Domains Manager";
         $this->data['header']['title'] = 'Domains Manager';
         $this->data['selectedSubMenu'] = 'ecommerce-domains';
         $this->data['submenuAction'] = '';
+
+        $this->data['dorcasEdition'] = $dorcasEdition = (new HubControl)->getDorcasEdition();
 
         $this->setViewUiResponse($request);
 
         $config = (array) $this->getCompany()->extra_data;
         $this->data['domains'] = $domains = $this->getDomains($sdk);
-        $domain = get_dorcas_domain();
+        //$domain = get_dorcas_domain();
+        $domain = get_dorcas_parent_domain();
         $subdomains = $this->getSubDomains($sdk);
         if (!empty($subdomains)) {
-            $this->data['subdomains'] = $this->getSubDomains($sdk)->filter(function ($subdomain) use ($domain) {
-                return $subdomain->domain['data']['domain'] === $domain;
-            });
+            switch ($dorcasEdition):
+                case "business":
+                    $this->data['subdomains'] = $this->getSubDomains($sdk)->filter(function ($subdomain) use ($domain) {
+                        return $subdomain->prefix === $domain;
+                    });
+                break;
+                default:
+                    $this->data['subdomains'] = $this->getSubDomains($sdk)->filter(function ($subdomain) use ($domain) {
+                        return $subdomain->domain['data']['domain'] === $domain;
+                    });
+                break;
+            endswitch;
         } else {
             $this->data['subdomains'] = [];
         }
@@ -126,6 +138,9 @@ class ModulesEcommerceController extends Controller {
             'domain' => 'required|string|max:80',
             'extension' => 'required_with:purchase_domain|string|max:80',
         ]);
+
+        $domain_title = env("DORCAS_EDITION","business") === "business" ? "Primary Domain" : "Subdomain";
+
         # validate the request
         try {
             if ($request->has('reserve_subdomain')) {
@@ -136,10 +151,10 @@ class ModulesEcommerceController extends Controller {
                 if (!$response->isSuccessful()) {
                     # it failed
                     $message = $response->errors[0]['title'] ?? '';
-                    throw new \RuntimeException('Failed while reserving the ' . $request->domain . ' subdomain. ' . $message);
+                    throw new \RuntimeException('Failed while reserving the ' . $request->domain . ' ' . $domain_title . ': ' . $message);
                 }
                 Cache::forget('ecommerce.subdomains.' . $company->id);
-                $response = tabler_ui_html_response(['Successfully reserved the subdomain.'])->setType(UiResponse::TYPE_SUCCESS);
+                $response = tabler_ui_html_response(["Successfully reserved the $domain_title."])->setType(UiResponse::TYPE_SUCCESS);
     
             } elseif ($request->has('setup_hosting')) {
                 # setup hosting on the domain
