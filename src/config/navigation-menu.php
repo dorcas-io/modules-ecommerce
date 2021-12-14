@@ -5,21 +5,21 @@ return [
     	'route' => 'ecommerce-domains',
         'icon' => 'fe fe-at-sign',
     ],
-    'ecommerce-website' => [
-        'title' => 'Website',
-        'route' => 'ecommerce-website',
-        'icon' => 'fe fe-globe',
-    ],
-    'ecommerce-emails' => [
-    	'title' => 'Email',
-    	'route' => 'ecommerce-emails',
-        'icon' => 'fe fe-mail',
-    ],
-    'ecommerce-blog' => [
-    	'title' => 'Blog',
-    	'route' => 'ecommerce-blog',
-        'icon' => 'fe fe-file-text',
-    ],
+    // 'ecommerce-website' => [
+    //     'title' => 'Website',
+    //     'route' => 'ecommerce-website',
+    //     'icon' => 'fe fe-globe',
+    // ],
+    // 'ecommerce-emails' => [
+    // 	'title' => 'Email',
+    // 	'route' => 'ecommerce-emails',
+    //     'icon' => 'fe fe-mail',
+    // ],
+    // 'ecommerce-blog' => [
+    // 	'title' => 'Blog',
+    // 	'route' => 'ecommerce-blog',
+    //     'icon' => 'fe fe-file-text',
+    // ],
 /*    'ecommerce-adverts' => [
     	'title' => 'Adverts',
     	'route' => 'ecommerce-adverts',

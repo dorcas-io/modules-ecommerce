@@ -117,14 +117,14 @@
 		            @endslot
 		            To integrate online payment for your store, you need to integrate one of our payment partners.<br><br/>
 		            You need to create a vendor account, and install the appropriate integration from the "Integration" section.<br/><br/>     
-                    <a class="btn btn-primary btn-sm" href="https://dorcas.ravepay.co/auth/" target="_blank">
-                        Create Vendor Account
-                    </a>
-                    &nbsp;
+
                     <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
                         Add Integration
                     </a>
 		            @slot('buttons')
+                        <a class="btn btn-primary btn-sm" href="{{ env('DORCAS_STORE_PAYMENT_VENDOR_URL', 'https://dorcas.ravepay.co/auth/') }}" target="_blank">
+                            Create Vendor Account
+                        </a>
 		            @endslot
 		        @endcomponent
             </div>

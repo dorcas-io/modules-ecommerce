@@ -57,30 +57,42 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['selectedSubMenu'] = 'ecommerce-store';
         $this->data['submenuAction'] = '';
 
+        $this->data['dorcasEdition'] = (new \App\Http\Controllers\HubController())->getDorcasEdition();
+
         $this->setViewUiResponse($request);
         $this->data['storeSettings'] = self::getStoreSettings((array) $this->getCompany()->extra_data);
         # our store settings container
         $query = $sdk->createProductResource()->addQueryArgument('limit', 1)->send('get');
         $this->data['productCount'] = $query->isSuccessful() ? $query->meta['pagination']['total'] ?? 0 : 0;
+
         $this->data['subdomain'] = get_dorcas_subdomain($sdk);
         # set the subdomain
         if (!empty($this->data['subdomain'])) {
-            $storeUrl = $this->data['subdomain'] . '/store';
+            $storeUrl = 'store.' . $this->data['subdomain'];
 
             $domain = get_dorcas_domain();
             $subdomains = $this->getSubDomains($sdk);
-            if (!empty($subdomains)) {
-                $sub_domains = $this->getSubDomains($sdk)->filter(function ($subdomain) use ($domain) {
-                    return $subdomain->domain['data']['domain'] === $domain;
-                });
-            } else {
-                $sub_domains = [];
-            }
-            if (count($sub_domains)>0) {
-                $storeUrl = "https://" . $subdomains->first()->prefix . ".store." . $subdomains->first()->domain["data"]["domain"];
-                $this->data['header']['title'] .= " ($storeUrl)";
-            }
+            # returns ALL domains
+
+            // if (!empty($subdomains)) {
+            //     $sub_domains = $this->getSubDomains($sdk)->filter(function ($subdomain) use ($domain) {
+            //         return $subdomain->domain['data']['domain'] === $domain;
+            //     });
+            // } else {
+            //     $sub_domains = [];
+            // }
+            // if (count($sub_domains)>0) {
+            //     $storeUrl = "https://" . $subdomains->first()->prefix . ".store." . $subdomains->first()->domain["data"]["domain"];
+            //     $this->data['header']['title'] .= " ($storeUrl)";
+            // }
+            #kind of unnecessary since get_dorcas_subdomain() cleans this up nicely for us
+            
+            $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
+
+            $storeUrl = $scheme . 'store.' . $this->data['subdomain'];
+
             $this->data['storeUrl'] = $storeUrl;
+            $this->data['header']['title'] .= " ($storeUrl)";
 
             if (!empty($subdomain)) {
                 //$this->data['header']['title'] .= ' (<a href="'.$storeUrl.'" target="_blank">'.$storeUrl.'</a>)';

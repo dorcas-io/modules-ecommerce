@@ -10,7 +10,7 @@ try {
     //dd($currentHost);
     //dd($defaultUri->getHost());
     $domainInfo = (new App\Http\Middleware\ResolveCustomSubdomain())->splitHost($currentHost);
-    //dd(array($currentHost,$domainInfo));
+    //dd(array($currentHost,$domainInfo, $domainInfo->getService()));
 } catch (RuntimeException $e) {
     $domainInfo = null;
 }
