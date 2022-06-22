@@ -15,6 +15,11 @@ try {
     $domainInfo = null;
 }
 
+
+
+Route::get('/mec/ecommerce-domains-issuances-availability-register', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceController@checkAvailabilitySubdomainRegister');
+
+
 Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middleware' => ['web','auth'], 'prefix' => 'mec'], function() {
     Route::get('ecommerce-main', 'ModulesEcommerceController@index')->name('ecommerce-main');
     Route::get('ecommerce-domains', 'ModulesEcommerceController@domains')->name('ecommerce-domains');

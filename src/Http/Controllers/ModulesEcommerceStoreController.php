@@ -59,6 +59,8 @@ class ModulesEcommerceStoreController extends Controller {
 
         $this->data['dorcasEdition'] = (new \App\Http\Controllers\HubController())->getDorcasEdition();
 
+        $multiTenant = config('dorcas.edition','business') === 'business' ? false : true;
+
         $this->setViewUiResponse($request);
         $this->data['storeSettings'] = self::getStoreSettings((array) $this->getCompany()->extra_data);
         # our store settings container
@@ -68,7 +70,12 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['subdomain'] = get_dorcas_subdomain($sdk);
         # set the subdomain
         if (!empty($this->data['subdomain'])) {
-            $storeUrl = 'store.' . $this->data['subdomain'];
+            //$storeUrl = 'store.' . $this->data['subdomain'];
+
+            $subDomainSplit = explode('.', $this->data['subdomain']);
+            $subDomainSuffix = $multiTenant ? $subDomainSplit[1] . "." . $subDomainSplit[2] : $subDomainSplit[1] . "." . $subDomainSplit[2];
+            $storeUrl = $multiTenant ? $subDomainSplit[0] . '.store.' . $subDomainSuffix : $subDomainSplit[0] . '.store.' . $subDomainSuffix;
+            # Store URL pattern changed for easy of wildcard SSL
 
             $domain = get_dorcas_domain();
             $subdomains = $this->getSubDomains($sdk);
@@ -89,7 +96,8 @@ class ModulesEcommerceStoreController extends Controller {
             
             $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
 
-            $storeUrl = $scheme . 'store.' . $this->data['subdomain'];
+            $storeUrl = $scheme . $storeUrl;
+            
 
             $this->data['storeUrl'] = $storeUrl;
             $this->data['header']['title'] .= " ($storeUrl)";

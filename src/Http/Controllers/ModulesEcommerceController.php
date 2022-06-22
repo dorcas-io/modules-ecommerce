@@ -10,6 +10,7 @@ use App\Http\Controllers\HomeController;
 use Hostville\Dorcas\Sdk;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Auth\Access\AuthorizationException;
 use App\Exceptions\RecordNotFoundException;
@@ -463,5 +464,38 @@ class ModulesEcommerceController extends Controller {
             throw new \Exception("Domain Transaction Error: ". $e->getMessage());
         }
     }
+
+
+    /**
+     * @param Request $request
+     * @param Sdk     $sdk
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkAvailabilitySubdomainRegister(Request $request, Sdk $sdk)
+    {
+        $id = $request->query('id');
+        if (empty($id)) {
+            throw new \UnexpectedValueException('You need to provide the subdomain name');
+        }
+        # get the request parameters
+
+        $db = DB::connection('core_mysql');
+        $exists = $db->table("domain_issuances")->where('prefix', $id)->exists();
+
+        $domainId = $request->query('domain_id') ?? "";
+        # get the domain id to be searched against
+        //$domain = !empty($domainId) ? Domain::where('uuid', $domainId)->first() : null;
+        # get the domain, if any
+        if (!$exists) {
+            $response = ['is_available' => !$exists];
+            return response()->json($response);
+        } else {
+            throw new RecordNotFoundException('Something went wrong while checking availability of the subdomain.');
+        }
+
+        return response()->json($query->data);
+    }
+
 
 }
