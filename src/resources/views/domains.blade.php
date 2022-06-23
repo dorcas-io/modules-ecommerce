@@ -25,15 +25,15 @@
             <div class="tab-pane container active" id="dorcas_subdomain">
                 <br/>
                 @if (!empty($subdomains->first()->prefix))
-                    <p>You have secured <strong>{{ $dorcasEdition === 'business' ? $subdomains->first()->prefix : $subdomains->first()->prefix . " " . $subdomains->first()->domain["data"]["domain"] }}</strong> as your @{{ domain_title }}.</p>
+                    <p>You have secured <strong>{{ $dorcasEdition === 'business' ? $subdomains->first()->prefix : $subdomains->first()->prefix . "." . $subdomains->first()->domain["data"]["domain"] }}</strong> as your @{{ domain_title }}.</p>
                 @endif
 				<div class="row col-md-12">
-					<div class="card" v-for="(subdomain, index) in domains" :key="subdomain.id">
-						<div class="card-body">
-							<p>https://@{{ domain_value(subdomain) }}</p>
+					<div class="card" v-for="(domain, index) in domains" :key="domain.id">
+						<div class="card-body" v-if="index == 0">
+							<p>https://@{{ domain_value(domain) }}</p>
 						</div>
-						<div class="card-footer">
-							<a class="btn btn-primary btn-sm" target="_blank" v-bind:href="'https://' + domain_value(subdomain)">Visit</a>
+						<div class="card-footer" v-if="show_domain_options">
+							<a class="btn btn-primary btn-sm" target="_blank" v-bind:href="'https://' + domain_value(domain)">Visit</a>
 							&nbsp;
 							<a href="#" class="btn btn-warning btn-sm" v-on:click.prevent="releaseDomain(index)">Release</a>
 						</div>
@@ -55,13 +55,13 @@
                 <br/>
 				<div class="row col-md-12">
 					<div class="card" v-for="(domain, index) in domains" :key="domain.id">
-						<div class="card-body">
+						<div class="card-body" v-if="index != 0">
 							<p>@{{ domain.domain }}</p>
 						</div>
 						<div class="card-footer">
 							<a class="btn btn-primary btn-sm" target="_blank" v-bind:href="'http://www.' + domain.domain">Visit</a>
 							&nbsp;
-							<a href="#" class="btn btn-danger btn-sm" v-on:click.prevent="removeDomain(index)">Release</a>
+							<!-- <a href="#" class="btn btn-danger btn-sm" v-on:click.prevent="removeDomain(index)">Release</a> -->
 						</div>
 					</div>
 	            </div>
@@ -212,9 +212,12 @@
                 domain_example: function() {
                     return this.dorcasEdition == "business" ? 'mybusiness.com' : 'mybusiness.parentdomain.com';
                 },
-                domain_value: function(subdomain) {
-                    return this.dorcasEdition == "business" ? subdomain.prefix : subdomain.prefix + "." + subdomain.domain.data.domain;
+                show_domain_options: function() {
+                    return this.dorcasEdition == "business" ? false : true;
                 }
+                // domain_value: function(subdomain) {
+                //     return this.dorcasEdition == "business" ? subdomain.prefix : subdomain.prefix + "." + subdomain.domain.data.domain;
+                // }
             },
             methods: {
                 domain_value: function(subdomain) {

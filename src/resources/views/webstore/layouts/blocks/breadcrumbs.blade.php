@@ -1,7 +1,7 @@
 @if (!empty($breadCrumbs) && is_array($breadCrumbs))
     <ol class="breadcrumb">
         @if (!empty($breadCrumbs['showHome']))
-            <li><a href="{{ url('/store') }}">Home</a></li>
+            <li><a href="#">Home</a></li>
         @endif
         @foreach ($breadCrumbs['crumbs'] as $breadCrumb)
             <li class="{{ !empty($breadCrumb['isActive']) ? 'active' : '' }}">

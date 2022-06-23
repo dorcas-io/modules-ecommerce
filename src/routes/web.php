@@ -10,10 +10,15 @@ try {
     //dd($currentHost);
     //dd($defaultUri->getHost());
     $domainInfo = (new App\Http\Middleware\ResolveCustomSubdomain())->splitHost($currentHost);
-    //dd(array($currentHost,$domainInfo));
+    //dd(array($currentHost,$domainInfo, $domainInfo->getService()));
 } catch (RuntimeException $e) {
     $domainInfo = null;
 }
+
+
+
+Route::get('/mec/ecommerce-domains-issuances-availability-register', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceController@checkAvailabilitySubdomainRegister');
+
 
 Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middleware' => ['web','auth'], 'prefix' => 'mec'], function() {
     Route::get('ecommerce-main', 'ModulesEcommerceController@index')->name('ecommerce-main');
