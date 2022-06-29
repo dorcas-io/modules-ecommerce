@@ -81,18 +81,6 @@ class ModulesEcommerceStoreController extends Controller {
             $subdomains = $this->getSubDomains($sdk);
             # returns ALL domains
 
-            // if (!empty($subdomains)) {
-            //     $sub_domains = $this->getSubDomains($sdk)->filter(function ($subdomain) use ($domain) {
-            //         return $subdomain->domain['data']['domain'] === $domain;
-            //     });
-            // } else {
-            //     $sub_domains = [];
-            // }
-            // if (count($sub_domains)>0) {
-            //     $storeUrl = "https://" . $subdomains->first()->prefix . ".store." . $subdomains->first()->domain["data"]["domain"];
-            //     $this->data['header']['title'] .= " ($storeUrl)";
-            // }
-            #kind of unnecessary since get_dorcas_subdomain() cleans this up nicely for us
             
             $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
 
