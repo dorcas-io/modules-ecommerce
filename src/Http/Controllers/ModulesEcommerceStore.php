@@ -88,6 +88,7 @@ class ModulesEcommerceStore extends Controller
     public function productDetails(Request $request, Sdk $sdk, string $id)
     {
         $storeOwner = $this->getCompanyViaDomain();
+       
         # get the store owner
         $this->data['storeSettings'] = Dashboard::getStoreSettings((array) $storeOwner->extra_data);
         # our store settings container
