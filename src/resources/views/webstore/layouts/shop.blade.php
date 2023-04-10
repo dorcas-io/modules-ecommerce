@@ -18,7 +18,7 @@
         <meta name="keywords" content="" />
         <meta name="author" content="" />
     @show
-    <title>@section('head_title'){{ $page['title'] ?? 'We\'re Sorry' }} | {{ !empty($partnerHubConfig) ? $partnerHubConfig['product_name'] : config('app.name') }}@show</title>
+    <title>@section('head_title'){{ $page['title'] ?? 'We\'re Sorry' }} | {{ !empty($partnerHubConfig['product_name']) ? $partnerHubConfig['product_name'] : config('app.name') }}@show</title>
     @yield('head_css')
 </head>
 <body @section('body_class')class="stretched" @show>
