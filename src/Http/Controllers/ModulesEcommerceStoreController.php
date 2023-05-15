@@ -52,6 +52,7 @@ class ModulesEcommerceStoreController extends Controller {
      */
     public function index(Request $request, Sdk $sdk)
     {
+    
         $this->data['page']['title'] .= ' &rsaquo; Online Store Manager';
         $this->data['header']['title'] = 'Online Store Manager';
         $this->data['selectedSubMenu'] = 'ecommerce-store';
@@ -68,6 +69,7 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['productCount'] = $query->isSuccessful() ? $query->meta['pagination']['total'] ?? 0 : 0;
 
         $this->data['subdomain'] = get_dorcas_subdomain($sdk);
+       
         # set the subdomain
         if (!empty($this->data['subdomain'])) {
             //$storeUrl = 'store.' . $this->data['subdomain'];
@@ -85,6 +87,7 @@ class ModulesEcommerceStoreController extends Controller {
             $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
 
             $storeUrl = $scheme . $storeUrl;
+            
             
 
             $this->data['storeUrl'] = $storeUrl;

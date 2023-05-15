@@ -46,7 +46,7 @@
                         @endslot
                         Set your FREE Hub @{{ domain_title }} prefix, e.g. <strong>@{{ domain_example }}</strong>
                         @slot('buttons')
-                            <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dorcas-sub-domain-modal">Reserve @{{ domain_title.toUpperCase() }}</a>
+{{--                            <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dorcas-sub-domain-modal">Reserve @{{ domain_title.toUpperCase() }}</a>--}}
                         @endslot
                     @endcomponent
                 </div>
