@@ -104,6 +104,7 @@ class ModulesEcommerceStoreController extends Controller {
             
             // $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
             // $storeUrl = $scheme . $storeUrl;
+            $storeUrl = $storeURL;
             
 
             $this->data['storeUrl'] = $storeUrl;
