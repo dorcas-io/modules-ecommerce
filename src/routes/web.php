@@ -7,8 +7,7 @@ $request = app()->make('request');
 $currentHost = $request->header('host');
 $defaultUri = new Uri(config('app.url'));
 try {
-    //dd($currentHost);
-    //dd($defaultUri->getHost());
+    //dd([$currentHost,$defaultUri->getHost()]);
     $domainInfo = (new App\Http\Middleware\ResolveCustomSubdomain())->splitHost($currentHost);
     //dd(array($currentHost,$domainInfo, $domainInfo->getService()));
 } catch (RuntimeException $e) {

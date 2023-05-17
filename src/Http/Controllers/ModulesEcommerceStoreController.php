@@ -11,6 +11,7 @@ use Hostville\Dorcas\Sdk;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
+use GuzzleHttp\Psr7\Uri;
 
 
 class ModulesEcommerceStoreController extends Controller {
@@ -81,10 +82,28 @@ class ModulesEcommerceStoreController extends Controller {
             $subdomains = $this->getSubDomains($sdk);
             # returns ALL domains
 
-            
-            $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
 
-            $storeUrl = $scheme . $storeUrl;
+            // RE-DO STORE URL
+            $subdomain = get_dorcas_subdomain();
+
+            $base_domain = new Uri(config('app.url'));
+            $base_domain_host = $base_domain->getHost();
+            
+            if (env("DORCAS_EDITION","business") === "business") {
+                $multiTenant = false;
+                $dorcas_store_url = "https://store.".$subdomain;
+            } elseif ( env("DORCAS_EDITION","business") === "community" || env("DORCAS_EDITION","business") === "enterprise" ) {
+                $multiTenant = true;
+                $parts = explode('.', str_replace("." . $base_domain_host, "", $subdomain) );
+                $dorcas_store_url = "https://" .  $parts[0] . ".store." . $base_domain_host;
+            }
+    
+            $storeURL = $dorcas_store_url;
+
+
+            
+            // $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
+            // $storeUrl = $scheme . $storeUrl;
             
 
             $this->data['storeUrl'] = $storeUrl;
