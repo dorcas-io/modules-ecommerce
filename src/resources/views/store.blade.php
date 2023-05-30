@@ -111,75 +111,82 @@
                 </div>
             @endif
             <div class="col-md-12 col-lg-6">
-		        @component('layouts.blocks.tabler.empty-fullpage')
-		            @slot('title')
-		                Setup Payment Provider
-		            @endslot
-		            To integrate online payment for your store, you need to integrate one of our payment partners.<br><br/>
-		            You need to create a vendor account, and install the appropriate integration from the "Integration" section.<br/><br/>     
 
-                    <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
-                        Add Integration
-                    </a>
-		            @slot('buttons')
-                        <a class="btn btn-primary btn-sm" href="{{ env('DORCAS_STORE_PAYMENT_VENDOR_URL', 'https://dorcas.ravepay.co/auth/') }}" target="_blank">
-                            Create Vendor Account
+                <div class="row col-md-12">
+                    @component('layouts.blocks.tabler.empty-fullpage')
+                        @slot('title')
+                            Setup Payment Provider
+                        @endslot
+                        To integrate online payment for your store, you need to integrate one of our payment partners.<br><br/>
+                        You need to create a vendor account, and install the appropriate integration from the "Integration" section.<br/><br/>     
+
+                        <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
+                            Add Integration
                         </a>
-		            @endslot
-		        @endcomponent
-            </div>
-            <div class="col-md-12 col-lg-6">
-		        @component('layouts.blocks.tabler.empty-fullpage')
-		            @slot('title')
-		                Setup Logistics Provider
-		            @endslot
-		            There are 2 ways to handle shipment (delivery) of your orders: <br/><br/>
-                    <ol>
-                        <li>You can choose to handle your shipments yourself and have customers choose from routes whose prices you set manually</li>
-                        <li>You can choose a logistics provider and have shipping costs automatically calculated when your customers enter their addresses</li>
-                    </ol>
-                    <br/>
-                    If you choose (2) above, you have the following options:
-                    <ul>
-                        <li>you can decide to have the logistics provider come to pick orders at your location</li>
-                        <li>you can drop at a fulfilment centre (if available)</li>
-                    </ul>
+                        @slot('buttons')
+                            <a class="btn btn-primary btn-sm" href="{{ env('DORCAS_STORE_PAYMENT_VENDOR_URL', 'https://dorcas.ravepay.co/auth/') }}" target="_blank">
+                                Create Vendor Account
+                            </a>
+                        @endslot
+                    @endcomponent
+                </div>
 
-                    <br/>
-                    <fieldset class="form-fieldset">
-                        Choose Shipping Option: 
-                        <div class="row">
-                            <div class="col-md-6 form-group">
-                                <select id="logistics-shipping" class="form-control" required>
-                                    <option value="shipping_myself" selected>Handle Shipping Myself</option>
-                                    <option value="shipping_provider" selected>Use Shipping Provider</option>
-                                </select>
+                <div class="col-md-12">
+                    @component('layouts.blocks.tabler.empty-fullpage')
+                        @slot('title')
+                            Setup Logistics Provider
+                        @endslot
+                        There are 2 ways to handle shipment (delivery) of your orders: <br/><br/>
+                        <ol>
+                            <li>You can choose to handle your shipments yourself and have customers choose from routes whose prices you set manually</li>
+                            <li>You can choose to have a logistics provider handle shipping; shipping costs are automatically calculated when your customers enter their delivery addresses</li>
+                        </ol>
+                        <br/>
+                        If you choose (2) above, you have the following options:
+                        <ul>
+                            <li>you can decide to have the logistics provider come to pick orders at your location</li>
+                            <li>you can drop at a fulfilment centre (if available)</li>
+                        </ul>
+
+                        <br/>
+                        <fieldset class="form-fieldset">
+                            Choose Shipping Option: 
+                            <div class="row">
+                                <div class="col-md-12 form-group">
+                                    <select id="logistics-shipping" class="form-control" required>
+                                        <option value="shipping_myself" selected>Handle Shipping Myself</option>
+                                        <option value="shipping_provider" selected>Use Shipping Provider</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <button class="btn btn-primary" type="submit" name="action">Update Shipping Option</button>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-primary" type="submit" name="action">Update Shipping Option</button>
+                        </fieldset>
+                        <br/>
+                        <fieldset class="form-fieldset">
+                            Choose Fulfilment Option: 
+                            <div class="row">
+                                <div class="col-md-12 form-group">
+                                    <select id="logistics-fulfilment" class="form-control" required>
+                                        <option value="fulfilment_pickup" selected>Provider to come and Pickup</option>
+                                        <option value="fulfilment_centre" selected>I will Drop at Fulfilment Centre</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <button class="btn btn-primary" type="submit" name="action">Update Fulfilment Option</button>
+                                </div>
                             </div>
-                        </div>
-                    </fieldset>
-                    <br/>
-                    <fieldset class="form-fieldset">
-                        Choose Fulfilment Option: 
-                        <div class="row">
-                            <div class="col-md-6 form-group">
-                                <select id="logistics-fulfilment" class="form-control" required>
-                                    <option value="fulfilment_pickup" selected>Provider to come and Pickup</option>
-                                    <option value="fulfilment_centre" selected>I will Drop at Fulfilment Centre</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-primary" type="submit" name="action">Update Fulfilment Option</button>
-                            </div>
-                        </div>
-                    </fieldset>
-                    
-		            @slot('buttons')
-		            @endslot
-		        @endcomponent
+                        </fieldset>
+                        
+                        @slot('buttons')
+                        @endslot
+                    @endcomponent
+                </div>
+
+
             </div>
+
             @if (empty($subdomain))
                 <div class="col-md-6">
 			        @component('layouts.blocks.tabler.empty-fullpage')
