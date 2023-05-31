@@ -111,7 +111,7 @@
                 </div>
             @endif
             <div class="col-md-12 col-lg-6">
-                <form action="{{ route('ecommerce-logistics }}" method="post" class="col s12">
+                <form action="{{ route('ecommerce-logistics') }}" method="post" class="col s12">
                     {{ csrf_field() }}
                     <div class="row col-md-12">
                         @component('layouts.blocks.tabler.empty-fullpage')
