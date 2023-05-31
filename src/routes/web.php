@@ -43,7 +43,7 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
     Route::get('/ecommerce-store', 'ModulesEcommerceStoreController@index')->name('ecommerce-store');
     Route::post('/ecommerce-store', 'ModulesEcommerceStoreController@storeSettings');
 
-    Route::post('/ecommerce-logistics', 'ModulesEcommerceStoreController@storeLogistics');
+    Route::post('/ecommerce-logistics', 'ModulesEcommerceStoreController@storeLogistics')->name('ecommerce-logistics');
 
     Route::post('/payment-verify', 'ModulesEcommerceController@verifyTransaction');
 
@@ -71,7 +71,7 @@ Route::domain($storeSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controll
     Route::delete('/xhr/cart', 'ModulesEcommerceStore@removeFromCartXhr');
     Route::post('/xhr/cart', 'ModulesEcommerceStore@addToCartXhr');
     Route::post('/xhr/cart/checkout', 'ModulesEcommerceStore@checkoutXhr');
-    Route::get('/xhr/cart/update-quantities', 'ModulesEcommerceStore@updateCartQuantitiesXhr');
+    Route::put('/xhr/cart/update-quantities', 'ModulesEcommerceStore@updateCartQuantitiesXhr');
 });
 
 
