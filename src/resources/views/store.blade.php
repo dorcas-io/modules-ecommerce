@@ -154,7 +154,7 @@
                                 Choose Shipping Option: 
                                 <div class="row">
                                     <div class="col-md-12 form-group">
-                                        <select id="logistics_shipping" class="form-control" v-model="logistics_settings.logistics_fulfilment" required>
+                                        <select id="logistics_shipping" name="logistics_shipping" class="form-control" v-model="logistics_settings.logistics_shipping" required>
                                             <option value="shipping_myself">Handle Shipping Myself</option>
                                             <option value="shipping_provider">Use Shipping Provider</option>
                                         </select>
@@ -166,7 +166,7 @@
                                 Choose Fulfilment Option: 
                                 <div class="row">
                                     <div class="col-md-12 form-group">
-                                        <select id="logistics_fulfilment" class="form-control" v-model="logistics_settings.logistics_fulfilment" required>
+                                        <select id="logistics_fulfilment" name="logistics_fulfilment" class="form-control" v-model="logistics_settings.logistics_fulfilment" required>
                                             <option value="fulfilment_pickup">Provider to come and Pickup</option>
                                             <option value="fulfilment_centre">I will ensure goods are at Fulfilment Centre</option>
                                         </select>
