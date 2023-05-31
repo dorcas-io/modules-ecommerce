@@ -43,6 +43,8 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
     Route::get('/ecommerce-store', 'ModulesEcommerceStoreController@index')->name('ecommerce-store');
     Route::post('/ecommerce-store', 'ModulesEcommerceStoreController@storeSettings');
 
+    Route::post('/ecommerce-logistics', 'ModulesEcommerceStoreController@storeLogistics');
+
     Route::post('/payment-verify', 'ModulesEcommerceController@verifyTransaction');
 
 });

@@ -31,6 +31,11 @@ class ModulesEcommerceStoreController extends Controller {
         'store_custom_js',
         'store_paid_notifications_email'
     ];
+
+    protected $storeLogisticsFields = [
+        'logistics_shipping',
+        'logistics_fulfilment',
+    ];
     
     public function __construct()
     {
@@ -64,6 +69,7 @@ class ModulesEcommerceStoreController extends Controller {
 
         $this->setViewUiResponse($request);
         $this->data['storeSettings'] = self::getStoreSettings((array) $this->getCompany()->extra_data);
+        $this->data['logisticsSettings'] = self::getLogisticsSettings((array) $this->getCompany()->extra_data);
         # our store settings container
         $query = $sdk->createProductResource()->addQueryArgument('limit', 1)->send('get');
         $this->data['productCount'] = $query->isSuccessful() ? $query->meta['pagination']['total'] ?? 0 : 0;
@@ -155,6 +161,28 @@ class ModulesEcommerceStoreController extends Controller {
     }
     
     /**
+     * @param array $configuration
+     *
+     * @return array
+     */
+    public static function getLogisticsSettings(array $configuration = []): array
+    {
+        $requiredLogisticsSettings = [
+            'logistics_shipping',
+            'logistics_fulfilment',
+        ];
+        $settings = $configuration['logistics_settings'] ?? [];
+        # our store settings container
+        foreach ($requiredLogisticsSettings as $key) {
+            if (isset($settings[$key])) {
+                continue;
+            }
+            $settings[$key] = '';
+        }
+        return $settings;
+    }
+    
+    /**
      * @param Request $request
      * @param Sdk     $sdk
      *
@@ -193,6 +221,48 @@ class ModulesEcommerceStoreController extends Controller {
         }
         return redirect(url()->current())->with('UiResponse', $response);
     }
+
+
+    /**
+     * @param Request $request
+     * @param Sdk     $sdk
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function storeLogistics(Request $request, Sdk $sdk)
+    {
+        try {
+            $company = $this->getCompany();
+            $configuration = (array) $company->extra_data;
+            $logisticsSettings = $configuration['logistics_settings'] ?? [];
+            # our store settings container
+            $submitted = $request->only($this->storeLogisticsFields);
+            # get the submitted data
+            foreach ($submitted as $key => $value) {
+                if (empty($value)) {
+                    unset($logisticsSettings[$key]);
+                }
+                $logisticsSettings[$key] = $value;
+            }
+            $configuration['logistics_settings'] = $logisticsSettings;
+            # add the new store settings configuration
+            $query = $sdk->createCompanyService()->addBodyParam('extra_data', $configuration)
+                                                ->send('PUT');
+            # send the request
+            if (!$query->isSuccessful()) {
+                # it failed
+                $message = $query->errors[0]['title'] ?? '';
+                throw new \RuntimeException('Failed while updating the logistics settings. '.$message);
+            }
+            $this->clearCache($sdk);
+            $response = (tabler_ui_html_response(['Successfully updated your logistics information.']))->setType(UiResponse::TYPE_SUCCESS);
+        } catch (\Exception $e) {
+            $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
+        }
+        return redirect(url()->current())->with('UiResponse', $response);
+    }
+
     
     /**
      * @param Sdk     $sdk
