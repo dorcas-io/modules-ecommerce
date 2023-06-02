@@ -67,6 +67,7 @@ Route::domain($storeSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controll
     Route::get('/products', 'ModulesEcommerceStore@products')->name('webstore.products');
     Route::get('/products/{id}', 'ModulesEcommerceStore@productDetails')->name('webstore.products.details');
     Route::get('/cart', 'ModulesEcommerceStore@cart')->name('webstore.cart');
+    Route::get('/cart', 'ModulesEcommerceStore@cart2')->name('webstore.cart2');
     Route::get('/product-quick-view/{id}', 'ModulesEcommerceStore@quickView')->name('webstore.quick-view');
     Route::delete('/xhr/cart', 'ModulesEcommerceStore@removeFromCartXhr');
     Route::post('/xhr/cart', 'ModulesEcommerceStore@addToCartXhr');
