@@ -5,231 +5,262 @@
 @endsection
 
 @section('body_main_content_container_body')
-    <div class="table-responsive bottommargin" id="cart-container">
-        <table class="table cart">
-            <thead>
-            <tr>
-                <th class="cart-product-remove">&nbsp;</th>
-                <th class="cart-product-thumbnail">&nbsp;</th>
-                <th class="cart-product-name">Product</th>
-                <th class="cart-product-price">Unit Price</th>
-                <th class="cart-product-quantity">Quantity</th>
-                <th class="cart-product-subtotal">Total</th>
-            </tr>
-            </thead>
-            <tbody>
-                <tr class="cart_item" v-for="(cartItem, index) in cart.items" :key="cartItem.id">
-                    <td class="cart-product-remove">
-                        <a href="#" class="remove" title="Remove this item" v-on:click.prevent="removeItem(index)">
-                            <i class="icon-trash2"></i>
-                        </a>
-                    </td>
-                    <td class="cart-product-thumbnail">
-                        <a href="#">
-                            <img width="64" height="64" v-bind:src="cartItem.photo" v-bind:alt="cartItem.name">
-                        </a>
-                    </td>
-                    <td class="cart-product-name">
-                        <a href="#">@{{ cartItem.name }}</a>
-                    </td>
-                    <td class="cart-product-price">
-                        <span class="amount">@{{ cart.currency + '' + cartItem.unit_price }}</span>
-                    </td>
-                    <td class="cart-product-quantity">
-                        <div class="quantity clearfix">
-                            <input type="button" value="-" class="minus" v-on:click.prevent="decrementQuantity(index)">
-                            <input type="text" name="quantity" value="" v-model="cartItem.quantity" class="qty">
-                            <input type="button" value="+" class="plus" v-on:click.prevent="incrementQuantity(index)">
-                        </div>
-                    </td>
-                    <td class="cart-product-subtotal">
-                        <span class="amount">@{{ cart.currency }} @{{ cartItem.total.formatted }}</span>
-                    </td>
-                </tr>
-                <tr v-if="(typeof cart.items === 'undefined' || cart.items.length === 0) && payment_url.length === 0">
-                    <td colspan="6">
-                        There are no product in your cart
-                        <!-- <a href="{{ route('webstore') }}">Continue Shopping</a> -->
-                        <p><a href="{{ route('webstore') }}" class="button button-3d nomargin fright">Continue Shopping</a></p>
-                    </td>
-                </tr>
-                <tr v-if="payment_url.length > 0">
-                    <td colspan="6">Your order has been placed, you can also <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Now</a> to complete your order.</td>
-                </tr>
-                <tr class="cart_item">
-                    <td colspan="6">
-                        <div class="row clearfix">
-                            <div class="col-md-4 col-xs-4 nopadding">
-                                <!--<div class="col-md-8 col-xs-7 nopadding">
-                                    <input type="text" value="" class="sm-form-control" placeholder="Enter Coupon Code..">
-                                </div>
-                                <div class="col-md-4 col-xs-5">
-                                    <a href="#" class="button button-3d button-black nomargin">Apply Coupon</a>
-                                </div>-->
-                                &nbsp;
-                                <div class="progress" v-if="is_processing">
-                                    <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
-                                         aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
-                                        <span class="sr-only">Processing...</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-8 col-xs-8 nopadding" v-if="!is_processing && typeof cart.items !== 'undefined' && cart.items.length > 0">
-                                <a href="#" class="button button-3d nomargin fright" v-on:click.prevent="updateQuantities">Update Cart</a>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
 
+    <ul class="nav nav-tabs" id="shoppingCartTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-controls="address" aria-selected="true">@{{ stages.data.address.title }}</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" aria-selected="false">@{{ stages.data.address.shipping }}</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link disabled" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" aria-selected="false" tabindex="-1" aria-disabled="true">@{{ stages.data.address.review }}</button>
+        </li>
+    </ul>
 
+    <div class="tab-content" id="myTabContent">
+        
+        <div class="tab-pane fade show active" id="address" role="tabpanel" aria-labelledby="address-tab">
 
-    <div class="table-responsive bottommargin" id="cart-container" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0 && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
-        <h4>Delivery Options</h4>
-        <table class="table cart">
-            <thead>
-            <tr>
-                <th class="cart-product-remove">Choose</th>
-                <th class="cart-product-thumbnail">&nbsp;</th>
-                <th class="cart-product-name">Option</th>
-                <th class="cart-product-quantity" style="text-align: left !important;">Description</th>
-                <th class="cart-product-price" style="text-align: left !important;">Cost</th>
-            </tr>
-            </thead>
-            <tbody v-if="shippingSelected">
-                <tr class="cart_item" >
-                    <td colspan="5">
-                        <div>
-                            Delivery Option Selected! <em>Remove from cart above to switch options</em>
+            <!-- Cart Address Begins -->
+            <div class="row clearfix" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0">
+                <div class="col-md-6 clearfix">
+                    <h4>Delivery Address</h4>
+                    <form method="post" action="" v-on:submit.prevent="checkout()">
+                        <div class="col_half">
+                            <input type="text" class="sm-form-control" required placeholder="First Name" v-model="checkout_form.firstname">
                         </div>
-                    </td>
-                </tr>
-            </tbody>
-            <tbody v-if="!shippingSelected">
-                <tr class="cart_item" >
-                    <td class="cart-product-remove">
-                        <div>
-                            <input id="shipping-none" class="radio-style" name="shipping-group" type="radio" value="0" checked>
-                            <label for="shipping-none" class="radio-style-2-label">&nbsp;</label>
+                        <div class="col_half col_last">
+                            <input type="text" class="sm-form-control" required placeholder="Lastname" v-model="checkout_form.lastname">
                         </div>
-                    </td>
-                    <td class="cart-product-thumbnail">
-                        <a href="#">
-                        </a>
-                    </td>
-                    <td class="cart-product-name">
-                        <a href="#">None</a>
-                    </td>
-                    <td class="cart-product-price">
-                        <span class="amount"></span>
-                    </td>
-                    <td class="cart-product-quantity">
-                        <div class="quantity clearfix">
-                            
+                        <div class="col_half">
+                            <input type="email" class="sm-form-control" required placeholder="Email address" v-model="checkout_form.email">
                         </div>
-                    </td>
-                </tr>
-                <tr class="cart_item" v-for="(shippingRoute, index) in shippingRoutes" :key="shippingRoute.id">
-                    <td class="cart-product-remove">
-                        <div>
-                            <input :id="'shipping-' + shippingRoute.id" class="radio-style" name="shipping-group" type="radio" :value="shippingRoute.id">
-                            <label :for="'shipping-' + shippingRoute.id" class="radio-style-2-label">&nbsp;</label>
+                        <div class="col_half col_last">
+                            <input type="text" class="sm-form-control" required placeholder="Phone number" v-model="checkout_form.phone">
                         </div>
-                    </td>
-                    <td class="cart-product-thumbnail">
-                        <a href="#">
-                            <img width="64" height="64" v-bind:src="productPhoto" v-bind:alt="shippingRoute.name">
-                        </a>
-                    </td>
-                    <td class="cart-product-name">
-                        <a href="#">@{{ shippingRoute.name }}</a>
-                    </td>
-                    <td class="cart-product-quantity" style="text-align: left !important;">
-                        <div class="quantity clearfix">
-                            @{{ shippingRoute.description }}
+                        <div class="col_full">
+                            <textarea class="form-control summernote" maxlength="250" v-model="checkout_form.address" rows="4" placeholder="Delivery Address (Optional)"></textarea>
                         </div>
-                    </td>
-                    <td class="cart-product-price" style="text-align: left !important;">
-                        <span class="amount">@{{ shippingRoute.prices.data[0].currency + '' + shippingRoute.prices.data[0].unit_price.formatted }}</span>
-                    </td>
-                </tr>
-                <tr v-if="(typeof shippingRoutes === 'undefined' || shippingRoutes.length === 0)">
-                    <td colspan="6">There are no delivery options available </td>
-                </tr>
-                <tr class="cart_item">
-                    <td colspan="6">
-                        <div class="row clearfix">
-                            <div class="col-md-4 col-xs-4 nopadding">
-                                <!--<div class="col-md-8 col-xs-7 nopadding">
-                                    <input type="text" value="" class="sm-form-control" placeholder="Enter Coupon Code..">
-                                </div>
-                                <div class="col-md-4 col-xs-5">
-                                    <a href="#" class="button button-3d button-black nomargin">Apply Coupon</a>
-                                </div>-->
-                                &nbsp;
-                                <div class="progress" v-if="is_processing_shipping">
-                                    <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
-                                         aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
-                                        <span class="sr-only">Processing...</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-8 col-xs-8 nopadding" v-if="!is_processing_shipping && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
-                                <a href="#" class="button button-3d nomargin fright" v-if="!shippingSelected" v-on:click.prevent="addDeliveryOption">Add Delivery Option</a>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-
-
-
-
-    <div class="row clearfix" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0">
-        <div class="col-md-6 clearfix">
-            <h4>Checkout</h4>
-            <form method="post" action="" v-on:submit.prevent="checkout()">
-                <div class="col_half">
-                    <input type="text" class="sm-form-control" required placeholder="First Name" v-model="checkout_form.firstname">
+                        <button type="submit" class="button button-3d nomargin button-black">Place Order</button>
+                    </form>
                 </div>
-                <div class="col_half col_last">
-                    <input type="text" class="sm-form-control" required placeholder="Lastname" v-model="checkout_form.lastname">
+                <div class="col-md-6 clearfix">
+                    <div class="table-responsive">
+                        <h4>Cart Totals</h4>
+                        <table class="table cart">
+                            <tbody>
+                                <tr class="cart_item">
+                                    <td class="cart-product-name">
+                                        <strong>Total</strong>
+                                    </td>
+                                    <td class="cart-product-name">
+                                        <span class="amount color lead"><strong>@{{ cart.currency + '' + cart.total.formatted }}</strong></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="col_half">
-                    <input type="email" class="sm-form-control" required placeholder="Email address" v-model="checkout_form.email">
-                </div>
-                <div class="col_half col_last">
-                    <input type="text" class="sm-form-control" required placeholder="Phone number" v-model="checkout_form.phone">
-                </div>
-                <div class="col_full">
-                    <textarea class="form-control summernote" maxlength="250" v-model="checkout_form.address" rows="4" placeholder="Delivery Address (Optional)"></textarea>
-                </div>
-                <button type="submit" class="button button-3d nomargin button-black">Place Order</button>
-            </form>
+            </div>
+            <!-- Cart Address Begins -->
+
         </div>
-        <div class="col-md-6 clearfix">
-            <div class="table-responsive">
-                <h4>Cart Totals</h4>
+
+        <div class="tab-pane fade" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
+
+            <!-- Cart Shipping Begins -->
+            <div class="table-responsive bottommargin" id="cart-container" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0 && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
+                <h4>Delivery Costing</h4>
                 <table class="table cart">
-                    <tbody>
-                        <tr class="cart_item">
-                            <td class="cart-product-name">
-                                <strong>Total</strong>
+                    <thead>
+                    <tr>
+                        <th class="cart-product-remove">Select</th>
+                        <th class="cart-product-thumbnail">&nbsp;</th>
+                        <th class="cart-product-name">Option</th>
+                        <th class="cart-product-quantity" style="text-align: left !important;">Description</th>
+                        <th class="cart-product-price" style="text-align: left !important;">Cost</th>
+                    </tr>
+                    </thead>
+                    <tbody v-if="shippingSelected">
+                        <tr class="cart_item" >
+                            <td colspan="5">
+                                <div>
+                                    Delivery Option Selected! <em>Remove from cart above to switch options</em>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tbody v-if="!shippingSelected">
+                        <tr class="cart_item" >
+                            <td class="cart-product-remove">
+                                <div>
+                                    <input id="shipping-none" class="radio-style" name="shipping-group" type="radio" value="0" checked>
+                                    <label for="shipping-none" class="radio-style-2-label">&nbsp;</label>
+                                </div>
+                            </td>
+                            <td class="cart-product-thumbnail">
+                                <a href="#">
+                                </a>
                             </td>
                             <td class="cart-product-name">
-                                <span class="amount color lead"><strong>@{{ cart.currency + '' + cart.total.formatted }}</strong></span>
+                                <a href="#">None</a>
+                            </td>
+                            <td class="cart-product-price">
+                                <span class="amount"></span>
+                            </td>
+                            <td class="cart-product-quantity">
+                                <div class="quantity clearfix">
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="cart_item" v-for="(shippingRoute, index) in shippingRoutes" :key="shippingRoute.id">
+                            <td class="cart-product-remove">
+                                <div>
+                                    <input :id="'shipping-' + shippingRoute.id" class="radio-style" name="shipping-group" type="radio" :value="shippingRoute.id">
+                                    <label :for="'shipping-' + shippingRoute.id" class="radio-style-2-label">&nbsp;</label>
+                                </div>
+                            </td>
+                            <td class="cart-product-thumbnail">
+                                <a href="#">
+                                    <img width="64" height="64" v-bind:src="productPhoto" v-bind:alt="shippingRoute.name">
+                                </a>
+                            </td>
+                            <td class="cart-product-name">
+                                <a href="#">@{{ shippingRoute.name }}</a>
+                            </td>
+                            <td class="cart-product-quantity" style="text-align: left !important;">
+                                <div class="quantity clearfix">
+                                    @{{ shippingRoute.description }}
+                                </div>
+                            </td>
+                            <td class="cart-product-price" style="text-align: left !important;">
+                                <span class="amount">@{{ shippingRoute.prices.data[0].currency + '' + shippingRoute.prices.data[0].unit_price.formatted }}</span>
+                            </td>
+                        </tr>
+                        <tr v-if="(typeof shippingRoutes === 'undefined' || shippingRoutes.length === 0)">
+                            <td colspan="6">There are no delivery costing available. Delivery is possibly included or FREE.</td>
+                        </tr>
+                        <tr class="cart_item">
+                            <td colspan="6">
+                                <div class="row clearfix">
+                                    <div class="col-md-4 col-xs-4 nopadding">
+                                        <!--<div class="col-md-8 col-xs-7 nopadding">
+                                            <input type="text" value="" class="sm-form-control" placeholder="Enter Coupon Code..">
+                                        </div>
+                                        <div class="col-md-4 col-xs-5">
+                                            <a href="#" class="button button-3d button-black nomargin">Apply Coupon</a>
+                                        </div>-->
+                                        &nbsp;
+                                        <div class="progress" v-if="is_processing_shipping">
+                                            <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
+                                                aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                                                <span class="sr-only">Processing...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8 col-xs-8 nopadding" v-if="!is_processing_shipping && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
+                                        <a href="#" class="button button-3d nomargin fright" v-if="!shippingSelected" v-on:click.prevent="addDeliveryOption">Add Delivery Option</a>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+            <!-- Cart Shipping Begins -->
+
         </div>
+
+        <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
+
+            <!-- Cart Review Begins -->
+            <div class="table-responsive bottommargin" id="cart-container">
+                <table class="table cart">
+                    <thead>
+                    <tr>
+                        <th class="cart-product-remove">&nbsp;</th>
+                        <th class="cart-product-thumbnail">&nbsp;</th>
+                        <th class="cart-product-name">Product</th>
+                        <th class="cart-product-price">Unit Price</th>
+                        <th class="cart-product-quantity">Quantity</th>
+                        <th class="cart-product-subtotal">Total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="cart_item" v-for="(cartItem, index) in cart.items" :key="cartItem.id">
+                            <td class="cart-product-remove">
+                                <a href="#" class="remove" title="Remove this item" v-on:click.prevent="removeItem(index)">
+                                    <i class="icon-trash2"></i>
+                                </a>
+                            </td>
+                            <td class="cart-product-thumbnail">
+                                <a href="#">
+                                    <img width="64" height="64" v-bind:src="cartItem.photo" v-bind:alt="cartItem.name">
+                                </a>
+                            </td>
+                            <td class="cart-product-name">
+                                <a href="#">@{{ cartItem.name }}</a>
+                            </td>
+                            <td class="cart-product-price">
+                                <span class="amount">@{{ cart.currency + '' + cartItem.unit_price.formatted }}</span>
+                            </td>
+                            <td class="cart-product-quantity">
+                                <div class="quantity clearfix">
+                                    <input type="button" value="-" class="minus" v-on:click.prevent="decrementQuantity(index)">
+                                    <input type="text" name="quantity" value="" v-model="cartItem.quantity" class="qty">
+                                    <input type="button" value="+" class="plus" v-on:click.prevent="incrementQuantity(index)">
+                                </div>
+                            </td>
+                            <td class="cart-product-subtotal">
+                                <span class="amount">@{{ cart.currency }} @{{ cartItem.total.formatted }}</span>
+                            </td>
+                        </tr>
+                        <tr v-if="(typeof cart.items === 'undefined' || cart.items.length === 0) && payment_url.length === 0">
+                            <td colspan="6">
+                                There are no product in your cart
+                                <!-- <a href="{{ route('webstore') }}">Continue Shopping</a> -->
+                                <p><a href="{{ route('webstore') }}" class="button button-3d nomargin fright">Continue Shopping</a></p>
+                            </td>
+                        </tr>
+                        <tr v-if="payment_url.length > 0">
+                            <td colspan="6">Your order has been placed, you can also <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Now</a> to complete your order.</td>
+                        </tr>
+                        <tr class="cart_item">
+                            <td colspan="6">
+                                <div class="row clearfix">
+                                    <div class="col-md-4 col-xs-4 nopadding">
+                                        <!--<div class="col-md-8 col-xs-7 nopadding">
+                                            <input type="text" value="" class="sm-form-control" placeholder="Enter Coupon Code..">
+                                        </div>
+                                        <div class="col-md-4 col-xs-5">
+                                            <a href="#" class="button button-3d button-black nomargin">Apply Coupon</a>
+                                        </div>-->
+                                        &nbsp;
+                                        <div class="progress" v-if="is_processing">
+                                            <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
+                                                aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                                                <span class="sr-only">Processing...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8 col-xs-8 nopadding" v-if="!is_processing && typeof cart.items !== 'undefined' && cart.items.length > 0">
+                                        <a href="#" class="button button-3d nomargin fright" v-on:click.prevent="updateQuantities">Update Cart</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Cart Review Begins -->
+
+        </div>
+
     </div>
+
+
 @endsection
 @section('body_js')
     <script>
@@ -250,7 +281,8 @@
                 shippingRoutes: [],
                 is_processing_shipping: false,
                 base_url: "{{ config('dorcas-api.url') }}",
-                shop: {!! json_encode($storeOwner) !!}
+                shop: {!! json_encode($storeOwner) !!},
+                stages: {!! json_encode($stages) !!}
             },
             mounted: function() {
                 this.loadShippingRoutes();

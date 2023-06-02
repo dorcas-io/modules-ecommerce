@@ -256,7 +256,7 @@ class ModulesEcommerceStoreController extends Controller {
                 throw new \RuntimeException('Failed while updating the logistics settings. '.$message);
             }
             $this->clearCache($sdk);
-            $response = (tabler_ui_html_response(['Successfully updated your logistics information.']))->setType(UiResponse::TYPE_SUCCESS);
+            $response = (tabler_ui_html_response(['Successfully updated your Logistics Settings']))->setType(UiResponse::TYPE_SUCCESS);
         } catch (\Exception $e) {
             $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
         }

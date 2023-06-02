@@ -167,8 +167,8 @@
                                 <div class="row">
                                     <div class="col-md-12 form-group">
                                         <select id="logistics_fulfilment" name="logistics_fulfilment" class="form-control" v-model="logistics_settings.logistics_fulfilment" required>
-                                            <option value="fulfilment_pickup">Provider to come and Pickup</option>
-                                            <option value="fulfilment_centre">I will ensure goods are at Fulfilment Centre</option>
+                                            <option value="fulfilment_pickup">Provider to Come and Pickup</option>
+                                            <option value="fulfilment_centre">Deliver Goods to Fulfilment Centre Myself</option>
                                         </select>
                                     </div>
                                 </div>
