@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="{{ cdn('apps/webstore/css/magnific-popup.css') }}" type="text/css" />
     <link rel="stylesheet" href="{{ cdn('apps/webstore/css/responsive.css') }}" type="text/css" />
     <link href="{{ cdn('vendors/sweetalert/dist/sweetalert.css') }}" type="text/css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     @section('head_meta')
         <meta name="description" content="">
@@ -65,7 +64,6 @@
 <script type="text/javascript" src="{{ cdn('apps/webstore/js/plugins.js') }}"></script>
 <script type="text/javascript" src="{{ cdn('apps/webstore/js/functions.js') }}"></script>
 <script type="text/javascript" src="{{ cdn('apps/webstore/js/dorcas.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
 @if (app()->environment() === 'production')
     @include('webstore.layouts.blocks.production-js')
 @endif
