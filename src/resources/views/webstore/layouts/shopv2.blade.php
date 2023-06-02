@@ -94,7 +94,9 @@
                                     @yield('body_content_header_extras')
                                 </div>
                             @show
-                            @yield('body_main_content_container_body')
+                            <div class="container clearfix" id="main_content_container">
+                                @yield('body_main_content_container_body')
+                            </div>
                         </div>
                     </div>
             @show
