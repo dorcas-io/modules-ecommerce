@@ -105,34 +105,91 @@
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary btn-block">
-                                Save Settings
+                                Save Store Settings
                             </button>
                     </form>
                 </div>
             @endif
             <div class="col-md-12 col-lg-6">
-		        @component('layouts.blocks.tabler.empty-fullpage')
-		            @slot('title')
-		                Setup Online Payment
-		            @endslot
-		            To integrate online payment for your store, you need to integrate one of our payment partners.<br><br/>
-		            You need to create a vendor account, and install the appropriate integration from the "Integration" section.<br/><br/>     
+                <form action="/mec/ecommerce-logistics" method="post" class="col s12">
+                    {{ csrf_field() }}
+                    <div class="row col-md-12">
+                        @component('layouts.blocks.tabler.empty-fullpage')
+                            @slot('title')
+                                Setup Payment Provider
+                            @endslot
+                            To integrate online payment for your store, you need to integrate one of our payment partners.<br><br/>
+                            You need to create a vendor account, and install the appropriate integration from the "Integration" section.<br/><br/>     
 
-                    <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
-                        Add Integration
-                    </a>
-		            @slot('buttons')
-                        <a class="btn btn-primary btn-sm" href="{{ env('DORCAS_STORE_PAYMENT_VENDOR_URL', 'https://dorcas.ravepay.co/auth/') }}" target="_blank">
-                            Create Vendor Account
-                        </a>
-		            @endslot
-		        @endcomponent
+                            <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
+                                Add Integration
+                            </a>
+                            @slot('buttons')
+                                <a class="btn btn-primary btn-sm" href="{{ env('DORCAS_STORE_PAYMENT_VENDOR_URL', 'https://dorcas.ravepay.co/auth/') }}" target="_blank">
+                                    Create Vendor Account
+                                </a>
+                            @endslot
+                        @endcomponent
+                    </div>
+
+                    <div class="row col-md-12">
+                        @component('layouts.blocks.tabler.empty-fullpage')
+                            @slot('title')
+                                Setup Logistics Provider
+                            @endslot
+                            There are 2 ways to handle shipment (delivery) of your orders: <br/><br/>
+                            <ol>
+                                <li>You can choose to handle your shipments yourself and have customers choose from routes whose prices you set manually</li>
+                                <li>You can choose to have a logistics provider handle shipping; shipping costs are automatically calculated when your customers enter their delivery addresses</li>
+                            </ol>
+                            <br/>
+                            If you choose (2) above, you have the following options:
+                            <ul>
+                                <li>you can decide to have the logistics provider come to pick orders at your location</li>
+                                <li>you can drop at a fulfilment centre (if available)</li>
+                            </ul>
+
+                            <br/>
+                            <fieldset class="form-fieldset">
+                                Choose Shipping Option: 
+                                <div class="row">
+                                    <div class="col-md-12 form-group">
+                                        <select id="logistics_shipping" name="logistics_shipping" class="form-control" v-model="logistics_settings.logistics_shipping" required>
+                                            <option value="shipping_myself">Handle Shipping Myself</option>
+                                            <option value="shipping_provider">Use Shipping Provider</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <br/>
+                            <fieldset class="form-fieldset">
+                                Choose Fulfilment Option: 
+                                <div class="row">
+                                    <div class="col-md-12 form-group">
+                                        <select id="logistics_fulfilment" name="logistics_fulfilment" class="form-control" v-model="logistics_settings.logistics_fulfilment" required>
+                                            <option value="fulfilment_pickup">Provider to Come and Pickup</option>
+                                            <option value="fulfilment_centre">Deliver Goods to Fulfilment Centre Myself</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <div class="col-md-12">
+                                <button class="btn btn-primary" type="submit" name="action">Save Logistics Options</button>
+                            </div>
+
+                            @slot('buttons')
+                            @endslot
+                        @endcomponent
+                    </div>
+                </form>
             </div>
+
             @if (empty($subdomain))
                 <div class="col-md-6">
 			        @component('layouts.blocks.tabler.empty-fullpage')
 			            @slot('title')
-			                No Subdomainn
+			                No Subdomain
 			            @endslot
 			            Reserve your <strong>dorcas sub-domain</strong> to proceed with activating your online store.
 			            @slot('buttons')
@@ -159,7 +216,8 @@
             el: '#ecommerce-store',
             data: {
                 store_owner: {!! json_encode($business) !!},
-                store_settings: {!! json_encode($storeSettings) !!}
+                store_settings: {!! json_encode($storeSettings) !!},
+                logistics_settings: {!! !empty($logisticsSettings) ? json_encode($logisticsSettings) : ["logistics_shipping" => "shipping_myself", "logistics_fulfilment" => "fulfilment_pickup"] !!}
             }
         });
     </script>

@@ -234,11 +234,88 @@ class ModulesEcommerceStore extends Controller
             abort(404, 'Could not find a store at this URL.');
         }
         $this->data['storeOwner'] = $storeOwner;
-        $this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
-        $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | Shopping Cart';
+        //$this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
+        $this->data['page']['title'] = $storeOwner->name . ' | Shopping Cart';
+
+        // Process Cart Stages
+        $cart_stages = [
+            "address" => [
+                "title" => "Enter Delivery Address"
+            ],
+            "shipping" => [
+                "title" => "Choose Shipping Type"
+            ],
+            "review" => [
+                "title" => "Review &amp; Finalize Order"
+            ]
+        ];
+
+        $this->data['stages'] = [
+            "stage" => "address",
+            "data" => $cart_stages
+        ];
+
+        $stage_present = false;
+        if ( !empty($request->stage) && in_array($request->stage, array_keys($cart_stages)) ) {
+            $this->data['stages']['stage'] = $request->stage;
+            $stage_present = true;
+        }
+
+
+        $stage_title = $stage_present ? $cart_stages[$stage_title]["title"] : 'Shopping Cart';
+
+        $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
         //$this->data['cart'] = Home::getCartContent($request);
         $this->data['cart'] = $this->getCartContent($request);
+
         return view('modules-ecommerce::webstore.cart', $this->data);
+    }
+
+    public function cart2(Request $request)
+    {
+        $storeOwner = $this->getCompanyViaDomain();
+        # get the store owner
+        $this->data['storeSettings'] = Dashboard::getStoreSettings((array) $storeOwner->extra_data);
+        # our store settings container
+        if (empty($storeOwner)) {
+            abort(404, 'Could not find a store at this URL.');
+        }
+        $this->data['storeOwner'] = $storeOwner;
+        //$this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
+        $this->data['page']['title'] = $storeOwner->name . ' | Shopping Cart';
+
+        // Process Cart Stages
+        $cart_stages = [
+            "address" => [
+                "title" => "Enter Delivery Address"
+            ],
+            "shipping" => [
+                "title" => "Choose Shipping Type"
+            ],
+            "review" => [
+                "title" => "Review &amp; Finalize Order"
+            ]
+        ];
+
+        $this->data['stages'] = [
+            "stage" => "address",
+            "data" => $cart_stages
+        ];
+
+        $stage_present = false;
+        if ( !empty($request->stage) && in_array($request->stage, array_keys($cart_stages)) ) {
+            $this->data['stages']['stage'] = $request->stage;
+            $stage_present = true;
+        }
+
+
+        $stage_title = $stage_present ? $cart_stages[$stage_title]["title"] : 'Shopping Cart';
+
+        $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
+        //$this->data['cart'] = Home::getCartContent($request);
+        $this->data['cart'] = $this->getCartContent($request);
+
+        return view('modules-ecommerce::webstore.cart2', $this->data);
     }
 
     /**

@@ -11,6 +11,7 @@ use Hostville\Dorcas\Sdk;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
+use GuzzleHttp\Psr7\Uri;
 
 
 class ModulesEcommerceStoreController extends Controller {
@@ -29,6 +30,11 @@ class ModulesEcommerceStoreController extends Controller {
         'store_ga_tracking_id',
         'store_custom_js',
         'store_paid_notifications_email'
+    ];
+
+    protected $storeLogisticsFields = [
+        'logistics_shipping',
+        'logistics_fulfilment',
     ];
     
     public function __construct()
@@ -64,6 +70,7 @@ class ModulesEcommerceStoreController extends Controller {
 
         $this->setViewUiResponse($request);
         $this->data['storeSettings'] = self::getStoreSettings((array) $this->getCompany()->extra_data);
+        $this->data['logisticsSettings'] = self::getLogisticsSettings((array) $this->getCompany()->extra_data);
         # our store settings container
         $query = $sdk->createProductResource()->addQueryArgument('limit', 1)->send('get');
         $this->data['productCount'] = $query->isSuccessful() ? $query->meta['pagination']['total'] ?? 0 : 0;
@@ -83,10 +90,29 @@ class ModulesEcommerceStoreController extends Controller {
             $subdomains = $this->getSubDomains($sdk);
             # returns ALL domains
 
-            
-            $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
 
-            $storeUrl = $scheme . $storeUrl;
+            // RE-DO STORE URL
+            $subdomain = get_dorcas_subdomain();
+
+            $base_domain = new Uri(config('app.url'));
+            $base_domain_host = $base_domain->getHost();
+            
+            if (env("DORCAS_EDITION","business") === "business") {
+                $multiTenant = false;
+                $dorcas_store_url = "https://store.".$subdomain;
+            } elseif ( env("DORCAS_EDITION","business") === "community" || env("DORCAS_EDITION","business") === "enterprise" ) {
+                $multiTenant = true;
+                $parts = explode('.', str_replace("." . $base_domain_host, "", $subdomain) );
+                $dorcas_store_url = "https://" .  $parts[0] . ".store." . $base_domain_host;
+            }
+    
+            $storeURL = $dorcas_store_url;
+
+
+            
+            // $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
+            // $storeUrl = $scheme . $storeUrl;
+            $storeUrl = $storeURL;
             
             
 
@@ -138,6 +164,28 @@ class ModulesEcommerceStoreController extends Controller {
     }
     
     /**
+     * @param array $configuration
+     *
+     * @return array
+     */
+    public static function getLogisticsSettings(array $configuration = []): array
+    {
+        $requiredLogisticsSettings = [
+            'logistics_shipping',
+            'logistics_fulfilment',
+        ];
+        $settings = $configuration['logistics_settings'] ?? [];
+        # our store settings container
+        foreach ($requiredLogisticsSettings as $key) {
+            if (isset($settings[$key])) {
+                continue;
+            }
+            $settings[$key] = '';
+        }
+        return $settings;
+    }
+    
+    /**
      * @param Request $request
      * @param Sdk     $sdk
      *
@@ -176,6 +224,48 @@ class ModulesEcommerceStoreController extends Controller {
         }
         return redirect(url()->current())->with('UiResponse', $response);
     }
+
+
+    /**
+     * @param Request $request
+     * @param Sdk     $sdk
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function storeLogistics(Request $request, Sdk $sdk)
+    {
+        try {
+            $company = $this->getCompany();
+            $configuration = (array) $company->extra_data;
+            $logisticsSettings = $configuration['logistics_settings'] ?? [];
+            # our store settings container
+            $submitted = $request->only($this->storeLogisticsFields);
+            # get the submitted data
+            foreach ($submitted as $key => $value) {
+                if (empty($value)) {
+                    unset($logisticsSettings[$key]);
+                }
+                $logisticsSettings[$key] = $value;
+            }
+            $configuration['logistics_settings'] = $logisticsSettings;
+            # add the new store settings configuration
+            $query = $sdk->createCompanyService()->addBodyParam('extra_data', $configuration)
+                                                ->send('PUT');
+            # send the request
+            if (!$query->isSuccessful()) {
+                # it failed
+                $message = $query->errors[0]['title'] ?? '';
+                throw new \RuntimeException('Failed while updating the logistics settings. '.$message);
+            }
+            $this->clearCache($sdk);
+            $response = (tabler_ui_html_response(['Successfully updated your Logistics Settings']))->setType(UiResponse::TYPE_SUCCESS);
+        } catch (\Exception $e) {
+            $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
+        }
+        return redirect(route('ecommerce-store'))->with('UiResponse', $response);
+    }
+
     
     /**
      * @param Sdk     $sdk
