@@ -7,43 +7,65 @@
 
 @section('body_main_content_container_body')
 
-    <ul class="nav nav-tabs" id="shoppingCartTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-controls="address" aria-selected="true">@{{ stages.data.address.title }}</button>
+    <ul class="nav nav-tabs nav-justified" id="shoppingCartTab" role="tablist">
+        <li class="nav-item" role="presentation" style="padding-top:3px !important; padding-bottom:3px !important;">
+            <button :class="nav-link {'active': stages.data.address.active}" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-controls="address" :aria-selected="{'true': stages.data.address.active, 'false': !stages.data.address.active}"><h3>@{{ stages.data.address.title }}</h3></button>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" aria-selected="false">@{{ stages.data.shipping.title }}</button>
+        <li class="nav-item {'disabled': !stages.data.shipping.active || !stages.data.review.active}" role="presentation" style="padding-top:3px !important; padding-bottom:3px !important;">
+            <button :class="nav-link {'active': stages.data.shipping.active}" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" :aria-selected="{'true': stages.data.shipping.active, 'false': !stages.data.shipping.active}"><h3>@{{ stages.data.shipping.title }}</h3></button>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" aria-selected="false">@{{ stages.data.review.title }}</button>
+        <li class="nav-item {'disabled': !stages.data.review.active}" role="presentation" style="padding-top:3px !important; padding-bottom:3px !important;">
+            <button :class="nav-link {'active': stages.data.review.active}" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" :aria-selected="{'true': stages.data.review.active, 'false': !stages.data.review.active}"><h3>@{{ stages.data.review.title }}</h3></button>
         </li>
     </ul>
 
     <div class="tab-content" id="shoppingCartTabContent">
         
-        <div class="tab-pane active" id="address" role="tabpanel" aria-labelledby="address-tab">
+        <div :class="tab-pane {'active': stages.data.address.active}" id="address" role="tabpanel" aria-labelledby="address-tab" style="padding:10px !important;">
 
             <!-- Cart Address Begins -->
             <div class="row clearfix" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0">
                 <div class="col-md-6 clearfix">
                     <h4>Delivery Address</h4>
-                    <form method="post" action="" v-on:submit.prevent="checkout()">
+                    <form method="get" action="/">
                         <div class="col_half">
-                            <input type="text" class="sm-form-control" required placeholder="First Name" v-model="checkout_form.firstname">
+                            <input type="text" class="sm-form-control" name="address_firstname" id="address_firstname" required placeholder="First Name" v-model="checkout_form.firstname">
                         </div>
                         <div class="col_half col_last">
-                            <input type="text" class="sm-form-control" required placeholder="Lastname" v-model="checkout_form.lastname">
+                            <input type="text" class="sm-form-control" name="address_lastname" id="address_lastname" required placeholder="Lastname" v-model="checkout_form.lastname">
                         </div>
                         <div class="col_half">
-                            <input type="email" class="sm-form-control" required placeholder="Email address" v-model="checkout_form.email">
+                            <input type="email" class="sm-form-control" name="address_email" id="address_email" required placeholder="Email address" v-model="checkout_form.email">
                         </div>
                         <div class="col_half col_last">
-                            <input type="text" class="sm-form-control" required placeholder="Phone number" v-model="checkout_form.phone">
+                            <input type="text" class="sm-form-control" name="address_phone" id="address_phone" required placeholder="Phone number" v-model="checkout_form.phone">
                         </div>
                         <div class="col_full">
-                            <textarea class="form-control summernote" maxlength="250" v-model="checkout_form.address" rows="4" placeholder="Delivery Address (Optional)"></textarea>
+                            <textarea class="form-control summernote" name="address_address" id="address_address" maxlength="250" v-model="checkout_form.address" rows="4" placeholder="Delivery Address (Optional)"></textarea>
                         </div>
-                        <button type="submit" class="button button-3d nomargin button-black">Place Order</button>
+                        <div class="col_half">
+                            <select class="sm-form-control" name="address_state" id="address_state" v-model="checkout_form.state">
+                                <option value="">Choose your State</option>
+                                @if (!empty($states))
+                                    @foreach ($states as $state)
+                                        <option value="{{ $state->id }}">{{ $state->name }}</option>
+                                    @endforeach
+                                @endif
+                                <option value="non-nigerian">Non-Nigerian (Include Above)</option>
+                            </select>
+                        </div>
+                        <div class="col_half col_last">
+                            <select class="sm-form-control" name="address_country" id="address_country" v-model="checkout_form.country" required>
+                                <option value="">Choose your Country</option>
+                                @if (!empty($countries))
+                                    @foreach ($countries as $country)
+                                        <option value="{{ $country->id }}">{{ $country->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                        <input type="hidden" name="stage" id="stage" value="shipping">
+                        <button type="submit" class="button button-3d nomargin button-black">Save Address</button>
                     </form>
                 </div>
                 <div class="col-md-6 clearfix">
@@ -68,7 +90,7 @@
 
         </div>
 
-        <div class="tab-pane" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
+        <div class="tab-pane {'active': stages.data.shipping.active}" id="shipping" role="tabpanel" aria-labelledby="shipping-tab" style="padding:10px !important;">
 
             <!-- Cart Shipping Begins -->
             <div class="table-responsive bottommargin" id="cart-container-shipping" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0 && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
@@ -87,7 +109,7 @@
                         <tr class="cart_item" >
                             <td colspan="5">
                                 <div>
-                                    Delivery Option Selected! <em>Remove from cart above to switch options</em>
+                                    Delivery Option Selected! <em>Review the Cart to change options</em>
                                 </div>
                             </td>
                         </tr>
@@ -174,88 +196,91 @@
 
         </div>
 
-        <div class="tab-pane" id="review" role="tabpanel" aria-labelledby="review-tab">
+        <div class="tab-pane {'active': stages.data.review.active}" id="review" role="tabpanel" aria-labelledby="review-tab" style="padding:10px !important;">
 
-            <!-- Cart Review Begins -->
-            <div class="table-responsive bottommargin" id="cart-container-review">
-                <table class="table cart">
-                    <thead>
-                    <tr>
-                        <th class="cart-product-remove">&nbsp;</th>
-                        <th class="cart-product-thumbnail">&nbsp;</th>
-                        <th class="cart-product-name">Product</th>
-                        <th class="cart-product-price">Unit Price</th>
-                        <th class="cart-product-quantity">Quantity</th>
-                        <th class="cart-product-subtotal">Total</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="cart_item" v-for="(cartItem, index) in cart.items" :key="cartItem.id">
-                            <td class="cart-product-remove">
-                                <a href="#" class="remove" title="Remove this item" v-on:click.prevent="removeItem(index)">
-                                    <i class="icon-trash2"></i>
-                                </a>
-                            </td>
-                            <td class="cart-product-thumbnail">
-                                <a href="#">
-                                    <img width="64" height="64" v-bind:src="cartItem.photo" v-bind:alt="cartItem.name">
-                                </a>
-                            </td>
-                            <td class="cart-product-name">
-                                <a href="#">@{{ cartItem.name }}</a>
-                            </td>
-                            <td class="cart-product-price">
-                                <span class="amount">@{{ cart.currency + '' + cartItem.unit_price }}</span>
-                            </td>
-                            <td class="cart-product-quantity">
-                                <div class="quantity clearfix">
-                                    <input type="button" value="-" class="minus" v-on:click.prevent="decrementQuantity(index)">
-                                    <input type="text" name="quantity" value="" v-model="cartItem.quantity" class="qty">
-                                    <input type="button" value="+" class="plus" v-on:click.prevent="incrementQuantity(index)">
-                                </div>
-                            </td>
-                            <td class="cart-product-subtotal">
-                                <span class="amount">@{{ cart.currency }} @{{ cartItem.total.formatted }}</span>
-                            </td>
+            <form method="post" action="" v-on:submit.prevent="checkout()">
+                <!-- Cart Review Begins -->
+                <div class="table-responsive bottommargin" id="cart-container-review">
+                    <table class="table cart">
+                        <thead>
+                        <tr>
+                            <th class="cart-product-remove">&nbsp;</th>
+                            <th class="cart-product-thumbnail">&nbsp;</th>
+                            <th class="cart-product-name">Product</th>
+                            <th class="cart-product-price">Unit Price</th>
+                            <th class="cart-product-quantity">Quantity</th>
+                            <th class="cart-product-subtotal">Total</th>
                         </tr>
-                        <tr v-if="(typeof cart.items === 'undefined' || cart.items.length === 0) && payment_url.length === 0">
-                            <td colspan="6">
-                                There are no product in your cart
-                                <!-- <a href="{{ route('webstore') }}">Continue Shopping</a> -->
-                                <p><a href="{{ route('webstore') }}" class="button button-3d nomargin fright">Continue Shopping</a></p>
-                            </td>
-                        </tr>
-                        <tr v-if="payment_url.length > 0">
-                            <td colspan="6">Your order has been placed, you can also <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Now</a> to complete your order.</td>
-                        </tr>
-                        <tr class="cart_item">
-                            <td colspan="6">
-                                <div class="row clearfix">
-                                    <div class="col-md-4 col-xs-4 nopadding">
-                                        <!--<div class="col-md-8 col-xs-7 nopadding">
-                                            <input type="text" value="" class="sm-form-control" placeholder="Enter Coupon Code..">
-                                        </div>
-                                        <div class="col-md-4 col-xs-5">
-                                            <a href="#" class="button button-3d button-black nomargin">Apply Coupon</a>
-                                        </div>-->
-                                        &nbsp;
-                                        <div class="progress" v-if="is_processing">
-                                            <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
-                                                aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
-                                                <span class="sr-only">Processing...</span>
+                        </thead>
+                        <tbody>
+                            <tr class="cart_item" v-for="(cartItem, index) in cart.items" :key="cartItem.id">
+                                <td class="cart-product-remove">
+                                    <a href="#" class="remove" title="Remove this item" v-on:click.prevent="removeItem(index)">
+                                        <i class="icon-trash2"></i>
+                                    </a>
+                                </td>
+                                <td class="cart-product-thumbnail">
+                                    <a href="#">
+                                        <img width="64" height="64" v-bind:src="cartItem.photo" v-bind:alt="cartItem.name">
+                                    </a>
+                                </td>
+                                <td class="cart-product-name">
+                                    <a href="#">@{{ cartItem.name }}</a>
+                                </td>
+                                <td class="cart-product-price">
+                                    <span class="amount">@{{ cart.currency + '' + cartItem.unit_price }}</span>
+                                </td>
+                                <td class="cart-product-quantity">
+                                    <div class="quantity clearfix">
+                                        <input type="button" value="-" class="minus" v-on:click.prevent="decrementQuantity(index)">
+                                        <input type="text" name="quantity" value="" v-model="cartItem.quantity" class="qty">
+                                        <input type="button" value="+" class="plus" v-on:click.prevent="incrementQuantity(index)">
+                                    </div>
+                                </td>
+                                <td class="cart-product-subtotal">
+                                    <span class="amount">@{{ cart.currency }} @{{ cartItem.total.formatted }}</span>
+                                </td>
+                            </tr>
+                            <tr v-if="(typeof cart.items === 'undefined' || cart.items.length === 0) && payment_url.length === 0">
+                                <td colspan="6">
+                                    There are no product in your cart
+                                    <!-- <a href="{{ route('webstore') }}">Continue Shopping</a> -->
+                                    <p><a href="{{ route('webstore') }}" class="button button-3d nomargin fright">Continue Shopping</a></p>
+                                </td>
+                            </tr>
+                            <tr v-if="payment_url.length > 0">
+                                <td colspan="6">Your order has been placed, you can also <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Now</a> to complete your order.</td>
+                            </tr>
+                            <tr class="cart_item">
+                                <td colspan="6">
+                                    <div class="row clearfix">
+                                        <div class="col-md-4 col-xs-4 nopadding">
+                                            <!--<div class="col-md-8 col-xs-7 nopadding">
+                                                <input type="text" value="" class="sm-form-control" placeholder="Enter Coupon Code..">
+                                            </div>
+                                            <div class="col-md-4 col-xs-5">
+                                                <a href="#" class="button button-3d button-black nomargin">Apply Coupon</a>
+                                            </div>-->
+                                            &nbsp;
+                                            <div class="progress" v-if="is_processing">
+                                                <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
+                                                    aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                                                    <span class="sr-only">Processing...</span>
+                                                </div>
                                             </div>
                                         </div>
+                                        <div class="col-md-8 col-xs-8 nopadding" v-if="!is_processing && typeof cart.items !== 'undefined' && cart.items.length > 0">
+                                            <a href="#" class="button button-3d nomargin fright" v-on:click.prevent="updateQuantities">Update Cart</a>
+                                            <em>Click <strong>Update Cart</strong> only if you changed any quantity above</em>
+                                        </div>
                                     </div>
-                                    <div class="col-md-8 col-xs-8 nopadding" v-if="!is_processing && typeof cart.items !== 'undefined' && cart.items.length > 0">
-                                        <a href="#" class="button button-3d nomargin fright" v-on:click.prevent="updateQuantities">Update Cart</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <!-- Cart Review Begins -->
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Cart Review Begins -->
+            </form>
 
         </div>
 
@@ -272,13 +297,16 @@
                 cart: {!! json_encode($cart) !!},
                 store_settings: {!! json_encode($storeSettings) !!},
                 is_processing: false,
-                checkout_form: {
-                    firstname: '',
-                    lastname: '',
-                    email: '',
-                    phone: '',
-                    address: ''
-                },
+                checkout_form: {!! json_encode($cache["address"]) !!},
+                // checkout_form: {
+                //     firstname: '',
+                //     lastname: '',
+                //     email: '',
+                //     phone: '',
+                //     address: '',
+                //     state: '',
+                //     country: ''
+                // },
                 payment_url: '',
                 shippingRoutes: [],
                 is_processing_shipping: false,
@@ -529,6 +557,9 @@
                         context.is_processing = false;
                         headerView.cart = response.data;
                         context.updateQuantities();
+
+                        // Move to Finalize
+                        $('#review-tab').tab('show');
                     }).catch(function (error) {
                         var message = '';
                         if (error.response) {

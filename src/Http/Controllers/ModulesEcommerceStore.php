@@ -219,10 +219,11 @@ class ModulesEcommerceStore extends Controller
 
     /**
      * @param Request $request
+     * @param Sdk     $sdk
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function cart(Request $request)
+    public function cart(Request $request, Sdk $sdk)
     {
         $storeOwner = $this->getCompanyViaDomain();
         # get the store owner
@@ -235,16 +236,67 @@ class ModulesEcommerceStore extends Controller
         //$this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
         $this->data['page']['title'] = $storeOwner->name . ' | Shopping Cart';
 
+        $this->data['countries'] = $countries = $this->getCountries($sdk);
+        # get the countries listing
+        $nigeria = !empty($countries) && $countries->count() > 0 ? $countries->where('iso_code', 'NG')->first() : null;
+        # get the nigeria country model
+        if (!empty($nigeria)) {
+            $this->data['states'] = $this->getDorcasStates($sdk, $nigeria->id);
+            # get the states
+        }
+
+        // Fetch/Initiate Cache
+        $cartCacheKey = "cartCache." . $storeOwner->id;
+        if (Cache::has($cartCacheKey)) {
+            $cartCache = Cache::get($cartCacheKey);
+        } else {
+            $cartCache = [
+                "address" => [
+                    "firstname" => "",
+                    "lastname" => "",
+                    "email" => "",
+                    "phone" => "",
+                    "address" => "",
+                    "state" => "",
+                    "country" => ""
+                ]
+            ];
+        }
+
+        // Process Address Content
+        $address_firstname = !empty($request->address_firstname) ? $request->address_firstname : $cartCache["address"]["firstname"];
+        $address_lastname = !empty($request->address_lastname) ? $request->address_lastname : $cartCache["address"]["lastname"];
+        $address_email = !empty($request->address_email) ? $request->address_email : $cartCache["address"]["email"];
+        $address_phone = !empty($request->address_phone) ? $request->address_phone : $cartCache["address"]["phone"];
+        $address_address = !empty($request->address_address) ? $request->address_address : $cartCache["address"]["address"];
+        $address_state = !empty($request->address_state) ? $request->address_state : $cartCache["address"]["state"];
+        $address_country = !empty($request->address_country) ? $request->address_country : $cartCache["address"]["country"];
+
+        // Save Address Status
+        $cartCache["address"] = [
+            "firstname" => $address_firstname,
+            "lastname" => $address_lastname,
+            "email" => $address_email,
+            "phone" => $address_phone,
+            "address" => $address_address,
+            "state" => $address_state,
+            "country" => $address_country
+        ];
+        Cache::forever($cartCacheKey, $cartCache);
+
         // Process Cart Stages
         $cart_stages = [
             "address" => [
-                "title" => "Enter Delivery Address"
+                "title" => "Enter Delivery Address",
+                "active" => false
             ],
             "shipping" => [
-                "title" => "Choose Shipping Type"
+                "title" => "Choose Shipping Type",
+                "active" => false
             ],
             "review" => [
-                "title" => "Review & Finalize Order"
+                "title" => "Review & Finalize Order",
+                "active" => false
             ]
         ];
 
@@ -253,11 +305,19 @@ class ModulesEcommerceStore extends Controller
             "data" => $cart_stages
         ];
 
+        $this->data['cache'] = [
+            "address" => $cartCache["address"]
+        ];
+
         $stage_present = false;
         if ( !empty($request->stage) && in_array($request->stage, array_keys($cart_stages)) ) {
-            $this->data['stages']['stage'] = $request->stage;
+            $currentStage = $request->stage;
             $stage_present = true;
+        } else {
+            $currentStage = 'address';
         }
+        $this->data['stages']['stage'] = $currentStage;
+        $this->data['stages']['data'][$currentStage]['active'] = true;
 
 
         $stage_title = $stage_present ? $cart_stages[$stage_title]["title"] : 'Shopping Cart';
@@ -269,52 +329,52 @@ class ModulesEcommerceStore extends Controller
         return view('modules-ecommerce::webstore.cart', $this->data);
     }
 
-    public function cart2(Request $request)
-    {
-        $storeOwner = $this->getCompanyViaDomain();
-        # get the store owner
-        $this->data['storeSettings'] = Dashboard::getStoreSettings((array) $storeOwner->extra_data);
-        # our store settings container
-        if (empty($storeOwner)) {
-            abort(404, 'Could not find a store at this URL.');
-        }
-        $this->data['storeOwner'] = $storeOwner;
-        //$this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
-        $this->data['page']['title'] = $storeOwner->name . ' | Shopping Cart';
+    // public function cart2(Request $request)
+    // {
+    //     $storeOwner = $this->getCompanyViaDomain();
+    //     # get the store owner
+    //     $this->data['storeSettings'] = Dashboard::getStoreSettings((array) $storeOwner->extra_data);
+    //     # our store settings container
+    //     if (empty($storeOwner)) {
+    //         abort(404, 'Could not find a store at this URL.');
+    //     }
+    //     $this->data['storeOwner'] = $storeOwner;
+    //     //$this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
+    //     $this->data['page']['title'] = $storeOwner->name . ' | Shopping Cart';
 
-        // Process Cart Stages
-        $cart_stages = [
-            "address" => [
-                "title" => "Enter Delivery Address"
-            ],
-            "shipping" => [
-                "title" => "Choose Shipping Type"
-            ],
-            "review" => [
-                "title" => "Review & Finalize Order"
-            ]
-        ];
+    //     // Process Cart Stages
+    //     $cart_stages = [
+    //         "address" => [
+    //             "title" => "Enter Delivery Address"
+    //         ],
+    //         "shipping" => [
+    //             "title" => "Choose Shipping Type"
+    //         ],
+    //         "review" => [
+    //             "title" => "Review & Finalize Order"
+    //         ]
+    //     ];
 
-        $this->data['stages'] = [
-            "stage" => "address",
-            "data" => $cart_stages
-        ];
+    //     $this->data['stages'] = [
+    //         "stage" => "address",
+    //         "data" => $cart_stages
+    //     ];
 
-        $stage_present = false;
-        if ( !empty($request->stage) && in_array($request->stage, array_keys($cart_stages)) ) {
-            $this->data['stages']['stage'] = $request->stage;
-            $stage_present = true;
-        }
+    //     $stage_present = false;
+    //     if ( !empty($request->stage) && in_array($request->stage, array_keys($cart_stages)) ) {
+    //         $this->data['stages']['stage'] = $request->stage;
+    //         $stage_present = true;
+    //     }
 
 
-        $stage_title = $stage_present ? $cart_stages[$stage_title]["title"] : 'Shopping Cart';
+    //     $stage_title = $stage_present ? $cart_stages[$stage_title]["title"] : 'Shopping Cart';
 
-        $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
-        //$this->data['cart'] = Home::getCartContent($request);
-        $this->data['cart'] = $this->getCartContent($request);
+    //     $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
+    //     //$this->data['cart'] = Home::getCartContent($request);
+    //     $this->data['cart'] = $this->getCartContent($request);
 
-        return view('modules-ecommerce::webstore.cart2', $this->data);
-    }
+    //     return view('modules-ecommerce::webstore.cart2', $this->data);
+    // }
 
     /**
      * @param Request $request
@@ -396,6 +456,7 @@ class ModulesEcommerceStore extends Controller
             throw new \RuntimeException('Could not add your order to the record. Please try again later.');
         }
         Cache::forget('crm.customers.'.$storeOwner->id);
+        Cache::forget("cartAddress." . $storeOwner->id);
         # clear the cache
         $cartManager->clear();
         # clear the cart
