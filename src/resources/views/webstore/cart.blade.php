@@ -205,7 +205,7 @@
                                 <a href="#">@{{ cartItem.name }}</a>
                             </td>
                             <td class="cart-product-price">
-                                <span class="amount">@{{ cart.currency + '' + cartItem.unit_price.formatted }}</span>
+                                <span class="amount">@{{ cart.currency + '' + cartItem.unit_price }}</span>
                             </td>
                             <td class="cart-product-quantity">
                                 <div class="quantity clearfix">
