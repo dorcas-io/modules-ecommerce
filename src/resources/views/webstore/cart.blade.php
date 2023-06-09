@@ -21,7 +21,7 @@
 
     <div class="tab-content" id="shoppingCartTabContent">
         
-        <div class="tab-pane fade show active" id="address" role="tabpanel" aria-labelledby="address-tab">
+        <div class="tab-pane active" id="address" role="tabpanel" aria-labelledby="address-tab">
 
             <!-- Cart Address Begins -->
             <div class="row clearfix" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0">
@@ -68,7 +68,7 @@
 
         </div>
 
-        <div class="tab-pane fade" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
+        <div class="tab-pane" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
 
             <!-- Cart Shipping Begins -->
             <div class="table-responsive bottommargin" id="cart-container-shipping" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0 && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
@@ -174,7 +174,7 @@
 
         </div>
 
-        <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
+        <div class="tab-pane" id="review" role="tabpanel" aria-labelledby="review-tab">
 
             <!-- Cart Review Begins -->
             <div class="table-responsive bottommargin" id="cart-container-review">
