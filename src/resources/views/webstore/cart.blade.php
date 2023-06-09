@@ -19,7 +19,7 @@
         </li>
     </ul>
 
-    <div class="tab-content" id="myTabContent">
+    <div class="tab-content" id="shoppingCartTabContent">
         
         <div class="tab-pane fade show active" id="address" role="tabpanel" aria-labelledby="address-tab">
 
