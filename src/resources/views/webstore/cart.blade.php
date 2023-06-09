@@ -71,7 +71,7 @@
         <div class="tab-pane fade" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
 
             <!-- Cart Shipping Begins -->
-            <div class="table-responsive bottommargin" id="cart-container" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0 && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
+            <div class="table-responsive bottommargin" id="cart-container-shipping" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0 && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
                 <h4>Delivery Costing</h4>
                 <table class="table cart">
                     <thead>
@@ -177,7 +177,7 @@
         <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
 
             <!-- Cart Review Begins -->
-            <div class="table-responsive bottommargin" id="cart-container">
+            <div class="table-responsive bottommargin" id="cart-container-review">
                 <table class="table cart">
                     <thead>
                     <tr>

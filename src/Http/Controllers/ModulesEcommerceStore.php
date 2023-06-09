@@ -244,7 +244,7 @@ class ModulesEcommerceStore extends Controller
                 "title" => "Choose Shipping Type"
             ],
             "review" => [
-                "title" => "Review &amp; Finalize Order"
+                "title" => "Review & Finalize Order"
             ]
         ];
 
@@ -291,7 +291,7 @@ class ModulesEcommerceStore extends Controller
                 "title" => "Choose Shipping Type"
             ],
             "review" => [
-                "title" => "Review &amp; Finalize Order"
+                "title" => "Review & Finalize Order"
             ]
         ];
 
