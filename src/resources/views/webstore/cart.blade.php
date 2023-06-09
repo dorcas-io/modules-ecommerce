@@ -15,7 +15,7 @@
             <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" aria-selected="false">@{{ stages.data.address.shipping }}</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link disabled" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" aria-selected="false" tabindex="-1" aria-disabled="true">@{{ stages.data.address.review }}</button>
+            <button class="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" aria-selected="false">@{{ stages.data.address.review }}</button>
         </li>
     </ul>
 
@@ -68,7 +68,7 @@
 
         </div>
 
-        <div class="tab-pane fade" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
+        <div class="tab-pane fade show" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
 
             <!-- Cart Shipping Begins -->
             <div class="table-responsive bottommargin" id="cart-container" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0 && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
@@ -174,7 +174,7 @@
 
         </div>
 
-        <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
+        <div class="tab-pane fade show" id="review" role="tabpanel" aria-labelledby="review-tab">
 
             <!-- Cart Review Begins -->
             <div class="table-responsive bottommargin" id="cart-container">
