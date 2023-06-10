@@ -86,6 +86,13 @@
                     </div>
                 </div>
             </div>
+            <div class="row clearfix" v-else>
+                <div class="col-md-12 clearfix">
+                    <h3>There are no product in your cart.</h3>
+                    <p>Please add one or more products from the store.</p>
+                    <p><a href="{{ route('webstore') }}" class="button button-3d nomargin fright">Continue Shopping</a></p>
+                </div>
+            </div>
             <!-- Cart Address Begins -->
 
         </div>
