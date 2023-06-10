@@ -490,7 +490,7 @@
                         return swal("Oops!", message, "warning");
                     });
                 },
-                loadShippingRoutes: function (product_id) {
+                loadShippingRoutes: function () {
                     var context = this;
                     this.is_processing_shipping = true;
                     axios.get(this.base_url + "/store/" + this.shop.id, {

@@ -247,7 +247,8 @@ class ModulesEcommerceStore extends Controller
 
         $this->data['logistics'] = [
             "seller_state" => "",
-            "seller_country" => env('SETT_COUNTRY', 'NG')
+            "seller_country" => env('SETT_COUNTRY', 'NG'),
+            "sdk" => $sdk
         ];
 
         // Fetch/Initiate Cache
@@ -261,9 +262,9 @@ class ModulesEcommerceStore extends Controller
                     "lastname" => "",
                     "email" => "",
                     "phone" => "",
-                    "address" => "",
-                    "state" => "",
-                    "country" => ""
+                    "address" => "34 Jaiye Oyedotun",
+                    "state" => "Lagos",
+                    "country" => "Nigeria"
                 ]
             ];
         }
