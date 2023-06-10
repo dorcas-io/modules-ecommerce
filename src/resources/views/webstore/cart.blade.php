@@ -8,20 +8,20 @@
 @section('body_main_content_container_body')
 
     <ul class="nav nav-tabs nav-justified" id="shoppingCartTab" role="tablist">
-        <li class="nav-item" role="presentation" style="padding-top:3px !important; padding-bottom:3px !important;">
+        <li class="nav-item" role="presentation" style="padding-top:5px !important; padding-bottom:5px !important;">
             <button :class="stages.data.address.active ? 'nav-link active' : 'nav-link'" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-controls="address" :aria-selected="{'true': stages.data.address.active, 'false': !stages.data.address.active}"><h3>@{{ stages.data.address.title }}</h3></button>
         </li>
-        <li :class="!stages.data.shipping.active && !stages.data.review.active ? 'nav-item disabled' : 'nav-item'" role="presentation" style="padding-top:3px !important; padding-bottom:3px !important;">
-            <button :class="stages.data.shipping.active ? 'nav-link active' : 'nav-link'" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" :aria-selected="{'true': stages.data.shipping.active, 'false': !stages.data.shipping.active}"><h3>@{{ stages.data.shipping.title }}</h3></button>
+        <li class="nav-item" role="presentation" style="padding-top:5px !important; padding-bottom:5px !important;">
+            <button :class="{'nav-link active': stages.data.shipping.active, 'nav-link disabled': stages.stage == 'address', 'nav-link': stages.stage == 'review'}" :tabindex="stages.stage == 'address' ? '-1' : '0'" :aria-disabled="stages.stage == 'address' ? 'true' : 'false'" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" :aria-selected="{'true': stages.data.shipping.active, 'false': !stages.data.shipping.active}"><h3>@{{ stages.data.shipping.title }}</h3></button>
         </li>
-        <li :class="!stages.data.review.active ? 'nav-item disabled' : 'nav-item'" role="presentation" style="padding-top:3px !important; padding-bottom:3px !important;">
-            <button :class="stages.data.review.active ? 'nav-link active' : 'nav-link'" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" :aria-selected="{'true': stages.data.review.active, 'false': !stages.data.review.active}"><h3>@{{ stages.data.review.title }}</h3></button>
+        <li class="nav-item" role="presentation" style="padding-top:5px !important; padding-bottom:5px !important;">
+            <button :class="{'nav-link active': stages.data.review.active, 'nav-link disabled': stages.stage != 'review'}" :tabindex="stages.stage != 'review' ? '-1' : '0'" :aria-disabled="stages.stage != 'review' ? 'true' : 'false'" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" :aria-selected="{'true': stages.data.review.active, 'false': !stages.data.review.active}"><h3>@{{ stages.data.review.title }}</h3></button>
         </li>
     </ul>
 
     <div class="tab-content" id="shoppingCartTabContent">
         
-        <div :class="stages.data.address.active ? 'tab-pane active' : 'tab-pane'" id="address" role="tabpanel" aria-labelledby="address-tab" style="padding:10px !important;">
+        <div :class="stages.data.address.active ? 'tab-pane active' : 'tab-pane'" id="address" role="tabpanel" aria-labelledby="address-tab" style="padding:20px !important;">
 
             <!-- Cart Address Begins -->
             <div class="row clearfix" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0">
@@ -88,7 +88,7 @@
             </div>
             <div class="row clearfix" v-else>
                 <div class="col-md-12 clearfix">
-                    <h3>There are no product in your cart.</h3>
+                    <h3>There are no products in your cart.</h3>
                     <p>Please add one or more products from the store.</p>
                     <p><a href="{{ route('webstore') }}" class="button button-3d nomargin fright">Continue Shopping</a></p>
                 </div>
@@ -97,7 +97,7 @@
 
         </div>
 
-        <div :class="stages.data.shipping.active ? 'tab-pane active' : 'tab-pane'" id="shipping" role="tabpanel" aria-labelledby="shipping-tab" style="padding:10px !important;">
+        <div :class="stages.data.shipping.active ? 'tab-pane active' : 'tab-pane'" id="shipping" role="tabpanel" aria-labelledby="shipping-tab" style="padding:20px !important;">
 
             <!-- Cart Shipping Begins -->
             <div class="table-responsive bottommargin" id="cart-container-shipping" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0 && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
@@ -203,7 +203,7 @@
 
         </div>
 
-        <div :class="stages.data.review.active ? 'tab-pane active' : 'tab-pane'" id="review" role="tabpanel" aria-labelledby="review-tab" style="padding:10px !important;">
+        <div :class="stages.data.review.active ? 'tab-pane active' : 'tab-pane'" id="review" role="tabpanel" aria-labelledby="review-tab" style="padding:20px !important;">
 
             <form method="post" action="" v-on:submit.prevent="checkout()">
                 <!-- Cart Review Begins -->
