@@ -323,7 +323,7 @@
                 logistics: {!! json_encode($logistics) !!}
             },
             mounted: function() {
-                console.log(shop);
+                console.log(this.shop);
                 let shipping_type = 'shipping_myself';
                 this.loadShippingRoutes(shipping_type);
                 //console.log(this.cart)

@@ -493,6 +493,36 @@ class ModulesEcommerceStore extends Controller
         // Determine if its bike or car or planne depennding on inter state, 
 
         // Connect To API
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, env('CREDENTIAL_ECOMMERCE_PROVIDER_URL', 'provider.com'));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_HEADER, FALSE);
+        curl_setopt($ch, CURLOPT_POST, TRUE);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, "{
+          \"domain_name\": \"staging-client-panel.kwik.delivery\",
+          \"email\": \"esther@hostville.website\",
+          \"password\": \"AHxU4BXf9fjgX)@7\",
+          \"api_login\": 1
+        }");
+
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array(
+            'domain_name' => $this->apiKey,
+            'email' => env('CREDENTIAL_ECOMMERCE_PROVIDER_USERNAME', 'user@provider.com'),
+            'password' => env('CREDENTIAL_ECOMMERCE_PROVIDER_PASSWORD', 'password'),
+            'api_login' => 1,
+        )));
+
+
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+          "Content-Type: application/json"
+        ));
+        
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        var_dump($response);
+
 
         // Estimate Cost
 
