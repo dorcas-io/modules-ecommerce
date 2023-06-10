@@ -245,6 +245,11 @@ class ModulesEcommerceStore extends Controller
             # get the states
         }
 
+        $this->data['logistics'] = [
+            "seller_state" => "",
+            "seller_country" => env('SETT_COUNTRY', 'NG')
+        ];
+
         // Fetch/Initiate Cache
         $cartCacheKey = "cartCache." . $storeOwner->id;
         if (Cache::has($cartCacheKey)) {
@@ -302,7 +307,8 @@ class ModulesEcommerceStore extends Controller
 
         $this->data['stages'] = [
             "stage" => "address",
-            "data" => $cart_stages
+            "data" => $cart_stages,
+            "countries" => $countries
         ];
 
         $this->data['cache'] = [

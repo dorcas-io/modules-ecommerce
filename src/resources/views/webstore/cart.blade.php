@@ -9,13 +9,13 @@
 
     <ul class="nav nav-tabs nav-justified" id="shoppingCartTab" role="tablist">
         <li class="nav-item" role="presentation" style="padding-top:5px !important; padding-bottom:5px !important;">
-            <button :class="stages.data.address.active ? 'nav-link active' : 'nav-link'" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-controls="address" :aria-selected="{'true': stages.data.address.active, 'false': !stages.data.address.active}"><h3>@{{ stages.data.address.title }}</h3></button>
+            <button :class="stages.data.address.active ? 'nav-link active' : 'nav-link'" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-controls="address" :aria-selected="{'true': stages.data.address.active, 'false': !stages.data.address.active}"><h3>(1) @{{ stages.data.address.title }}</h3></button>
         </li>
         <li class="nav-item" role="presentation" style="padding-top:5px !important; padding-bottom:5px !important;">
-            <button :class="{'nav-link active': stages.data.shipping.active, 'nav-link disabled': stages.stage == 'address', 'nav-link': stages.stage == 'review'}" :tabindex="stages.stage == 'address' ? '-1' : '0'" :aria-disabled="stages.stage == 'address' ? 'true' : 'false'" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" :aria-selected="{'true': stages.data.shipping.active, 'false': !stages.data.shipping.active}"><h3>@{{ stages.data.shipping.title }}</h3></button>
+            <button :class="{'nav-link active': stages.data.shipping.active, 'nav-link disabled': stages.stage == 'address', 'nav-link': stages.stage == 'review'}" :tabindex="stages.stage == 'address' ? '-1' : '0'" :aria-disabled="stages.stage == 'address' ? 'true' : 'false'" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" :aria-selected="{'true': stages.data.shipping.active, 'false': !stages.data.shipping.active}"><h3>(2) @{{ stages.data.shipping.title }}</h3></button>
         </li>
         <li class="nav-item" role="presentation" style="padding-top:5px !important; padding-bottom:5px !important;">
-            <button :class="{'nav-link active': stages.data.review.active, 'nav-link disabled': stages.stage != 'review'}" :tabindex="stages.stage != 'review' ? '-1' : '0'" :aria-disabled="stages.stage != 'review' ? 'true' : 'false'" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" :aria-selected="{'true': stages.data.review.active, 'false': !stages.data.review.active}"><h3>@{{ stages.data.review.title }}</h3></button>
+            <button :class="{'nav-link active': stages.data.review.active, 'nav-link disabled': stages.stage != 'review'}" :tabindex="stages.stage != 'review' ? '-1' : '0'" :aria-disabled="stages.stage != 'review' ? 'true' : 'false'" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" :aria-selected="{'true': stages.data.review.active, 'false': !stages.data.review.active}"><h3>(3) @{{ stages.data.review.title }}</h3></button>
         </li>
     </ul>
 
@@ -41,7 +41,7 @@
                             <input type="text" class="sm-form-control" name="address_phone" id="address_phone" required placeholder="Phone number" v-model="checkout_form.phone">
                         </div>
                         <div class="col_full">
-                            <textarea class="form-control summernote" name="address_address" id="address_address" maxlength="250" v-model="checkout_form.address" rows="4" placeholder="Delivery Address (Optional)"></textarea>
+                            <textarea class="form-control summernote" name="address_address" id="address_address" maxlength="250" v-model="checkout_form.address" required rows="4" placeholder="Delivery Address (Optional)"></textarea>
                         </div>
                         <div class="col_half">
                             <select class="sm-form-control" name="address_state" id="address_state" v-model="checkout_form.state">
@@ -319,11 +319,15 @@
                 is_processing_shipping: false,
                 base_url: "{{ config('dorcas-api.url') }}",
                 shop: {!! json_encode($storeOwner) !!},
-                stages: {!! json_encode($stages) !!}
+                stages: {!! json_encode($stages) !!},
+                logistics: {!! json_encode($logistics) !!}
             },
             mounted: function() {
                 this.loadShippingRoutes();
                 //console.log(this.cart)
+                console.log(this.checkout_form);
+                console.log(this.stages);
+                console.log(this.logistics)
                 //console.log(this.shippingSelected)
             },
             computed: {
