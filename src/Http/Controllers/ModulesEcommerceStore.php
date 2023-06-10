@@ -245,9 +245,14 @@ class ModulesEcommerceStore extends Controller
             # get the states
         }
 
+        //$company_data = (array) $storeOwner->extra_data;
+        //$this->data['company_data'] = $company_data;
+        //$logistics = $company_data['logistics_settings'];
+        //'logistics_shipping', 'logistics_fulfilment'
+
         $this->data['logistics'] = [
             "seller_state" => "",
-            "seller_country" => env('SETT_COUNTRY', 'NG'),
+            "seller_country" => env('SETTINGS_COUNTRY', 'NG'),
             "sdk" => $sdk
         ];
 
@@ -472,6 +477,31 @@ class ModulesEcommerceStore extends Controller
             $data['payment_url'] = $checkout->meta['payment_url'];
         }
         return response()->json($data, 202);
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getProviderShippingRoutesXhr(Request $request)
+    {
+        // Get Destination Address Details
+
+        // Parse Shopper Origin Address
+
+        // Determine if its bike or car or planne depennding on inter state, 
+
+        // Connect To API
+
+        // Estimate Cost
+
+
+        // Parse Cost like route data
+
+        //Return
+        
+        return response()->json();
     }
 
     /**

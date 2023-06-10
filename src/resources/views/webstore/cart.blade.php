@@ -323,7 +323,9 @@
                 logistics: {!! json_encode($logistics) !!}
             },
             mounted: function() {
-                this.loadShippingRoutes();
+                console.log(shop);
+                let shipping_type = 'shipping_myself';
+                this.loadShippingRoutes(shipping_type);
                 //console.log(this.cart)
                 console.log(this.checkout_form);
                 console.log(this.stages);
@@ -490,19 +492,31 @@
                         return swal("Oops!", message, "warning");
                     });
                 },
-                loadShippingRoutes: function () {
+                loadShippingRoutes: function (shippingType) {
                     var context = this;
                     this.is_processing_shipping = true;
-                    axios.get(this.base_url + "/store/" + this.shop.id, {
-                        params: {
+
+                    let shipping_url, shipping_params;
+
+                    if (shippingType = 'shipping_myself') {
+                        shipping_url = this.base_url + "/store/" + this.shop.id;
+                        shipping_params = {
                             limit: 12,
                             product_type: 'shipping'
                         }
+                    } else if (shippingType = 'shipping_provider') {
+                        shipping_url = "/xhr/cart/get-provider-shipping-routes";
+                        shipping_params = {}
+                    }
+
+                    axios.get(shipping_url, {
+                        params: shipping_params
                     }).then(function (response) {
                         //console.log(response)
                         context.is_processing_shipping = false;
                         context.meta = response.data.meta;
                         context.shippingRoutes = response.data.data;
+                        console.log(context.shippingRoutes)
                     }).catch(function (error) {
                             var message = '';
                             context.is_fetching = false;
