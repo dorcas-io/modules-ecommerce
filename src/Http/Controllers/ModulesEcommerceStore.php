@@ -245,14 +245,14 @@ class ModulesEcommerceStore extends Controller
             # get the states
         }
 
-        //$company_data = (array) $storeOwner->extra_data;
+        $company_data = (array) $storeOwner->extra_data;
         //$this->data['company_data'] = $company_data;
-        //$logistics = $company_data['logistics_settings'];
-        //'logistics_shipping', 'logistics_fulfilment'
+        $logistics_settings = $company_data['logistics_settings'] ?? ["logistics_shipping" => env("SETTINGS_ECOMMERCE_LOGISTICS_SHIPPING", "shipping_myself"), "logistics_fulfilment" => env("SETTINGS_ECOMMERCE_LOGISTICS_FULFILMENT", "fulfilment_pickup")];
 
         $this->data['logistics'] = [
             "seller_state" => "",
             "seller_country" => env('SETTINGS_COUNTRY', 'NG'),
+            "settings" => $logistics_settings,
             "sdk" => $sdk
         ];
 
@@ -498,22 +498,12 @@ class ModulesEcommerceStore extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HEADER, FALSE);
         curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, "{
-          \"domain_name\": \"staging-client-panel.kwik.delivery\",
-          \"email\": \"esther@hostville.website\",
-          \"password\": \"AHxU4BXf9fjgX)@7\",
-          \"api_login\": 1
-        }");
-
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array(
-            'domain_name' => $this->apiKey,
+            'domain_name' => env('CREDENTIAL_ECOMMERCE_PROVIDER_DOMAIN', 'provider.com'),
             'email' => env('CREDENTIAL_ECOMMERCE_PROVIDER_USERNAME', 'user@provider.com'),
             'password' => env('CREDENTIAL_ECOMMERCE_PROVIDER_PASSWORD', 'password'),
             'api_login' => 1,
         )));
-
-
-        
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
           "Content-Type: application/json"
         ));
@@ -521,7 +511,7 @@ class ModulesEcommerceStore extends Controller
         $response = curl_exec($ch);
         curl_close($ch);
         
-        var_dump($response);
+        //var_dump($response);
 
 
         // Estimate Cost
