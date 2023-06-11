@@ -116,7 +116,7 @@
                         <tr class="cart_item" >
                             <td colspan="5">
                                 <div>
-                                    Delivery Option Selected! <em>Review the Cart to change options</em>
+                                    Delivery Option Selected! <em><strong>REVIEW THE CART</strong> to change options</em>
                                 </div>
                             </td>
                         </tr>
@@ -192,6 +192,7 @@
                                     </div>
                                     <div class="col-md-8 col-xs-8 nopadding" v-if="!is_processing_shipping && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
                                         <a href="#" class="button button-3d nomargin fright" v-if="!shippingSelected" v-on:click.prevent="addDeliveryOption">Add Delivery Option</a>
+                                        <a href="#" class="button button-3d nomargin fright" v-if="shippingSelected" v-on:click.prevent="proceedToReview">Review Cart</a>
                                     </div>
                                 </div>
                             </td>
@@ -242,6 +243,10 @@
                                         <input type="button" value="-" class="minus" v-on:click.prevent="decrementQuantity(index)">
                                         <input type="text" name="quantity" value="" v-model="cartItem.quantity" class="qty">
                                         <input type="button" value="+" class="plus" v-on:click.prevent="incrementQuantity(index)">
+                                    </div>
+                                    <div class="quantity clearfix" v-if="cartItem.isShipping=='yes'">
+                                        <!-- <input type="button" value="-" class="minus" v-on:click.prevent="decrementQuantity(index)"> -->
+                                        <a href="#" class="button nomargin" v-on:click.prevent="decrementQuantity(index)">Remove</a>
                                     </div>
                                 </td>
                                 <td class="cart-product-subtotal">
@@ -622,6 +627,15 @@
                         return swal("Oops!", message, "warning");
                     });
                 },
+                proceedToReview: function () {
+                    var current_url = '{{ url()->current() }}';
+                    if (current_url.indexOf('?') > -1) {
+                        current_url += '&stage=review'
+                    } else {
+                        current_url += '?stage=review'
+                    }
+                    window.location.href = current_url;
+                }
 
 
             }
