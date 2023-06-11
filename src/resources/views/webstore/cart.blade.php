@@ -246,7 +246,7 @@
                                     </div>
                                     <div class="quantity clearfix" v-if="cartItem.isShipping=='yes'">
                                         <!-- <input type="button" value="-" class="minus" v-on:click.prevent="decrementQuantity(index)"> -->
-                                        <a href="#" class="button nomargin" v-on:click.prevent="decrementQuantity(index)">Remove</a>
+                                        <a href="#" class="button nomargin" v-on:click.prevent="decrementQuantity(index, 'yes', 'yes')">Remove</a>
                                     </div>
                                 </td>
                                 <td class="cart-product-subtotal">
@@ -330,11 +330,11 @@
             },
             mounted: function() {
                 //console.log(this.shop.extra_data.logistics_settings.logistics_shipping);
+                console.log(this.logistics.settings.logistics_shipping);
                 if (this.stages.stage == "shipping") {
                     let shipping_type = this.logistics.settings.logistics_shipping;
                     this.loadShippingRoutes(shipping_type);
                 }
-                console.log(this.cart)
                 //console.log(this.logistics)
             },
             computed: {
@@ -398,13 +398,25 @@
                             });
                     });
                 },
-                decrementQuantity: function (index) {
+                decrementQuantity: function (index, update = 'no', refresh = 'no') {
                     if (index >= this.cart.items.length || parseInt(this.cart.items[index].quantity, 10) === 0) {
                         return;
                     }
                     this.cart.items[index].quantity -= 1;
+                    if (update == 'yes') {
+                        this.updateQuantities();
+                    }
+                    if (refresh == 'yes') {
+                        var current_url = '{{ url()->current() }}';
+                        if (current_url.indexOf('?') > -1) {
+                            current_url += '&stage=review'
+                        } else {
+                            current_url += '?stage=review'
+                        }
+                        window.location.href = current_url;
+                    }
                 },
-                incrementQuantity: function (index) {
+                incrementQuantity: function (index, update = 'no', refresh = 'no') {
                     if (index >= this.cart.items.length) {
                         return;
                     }
