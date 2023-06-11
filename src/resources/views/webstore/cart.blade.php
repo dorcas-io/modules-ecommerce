@@ -238,7 +238,7 @@
                                     <span class="amount">@{{ cart.currency + '' + cartItem.unit_price }}</span>
                                 </td>
                                 <td class="cart-product-quantity">
-                                    <div class="quantity clearfix">
+                                    <div class="quantity clearfix" v-if="cartItem.isShipping=='no'">
                                         <input type="button" value="-" class="minus" v-on:click.prevent="decrementQuantity(index)">
                                         <input type="text" name="quantity" value="" v-model="cartItem.quantity" class="qty">
                                         <input type="button" value="+" class="plus" v-on:click.prevent="incrementQuantity(index)">
@@ -512,7 +512,7 @@
                     axios.get(shipping_url, {
                         params: shipping_params
                     }).then(function (response) {
-                        //console.log(response)
+                        console.log(response)
                         context.is_processing_shipping = false;
                         context.meta = response.data.meta;
                         context.shippingRoutes = response.data.data;

@@ -550,9 +550,42 @@ class ModulesEcommerceStore extends Controller
 
         // Parse Cost like route data
 
+        /*
+        currency
+        items
+         - 0 (array)
+        id
+        isShipping "no"
+        name
+        photo
+        quantity
+        total (objecy)
+        unit_price 3700
+        */
+
+        $routes = [
+            "data" => [
+                "currency" => env("SETTINGS_CURRENCY", "NGN"),
+                "items" => [
+                    "id" => 0,
+                    "isShipping" => "no",
+                    "name" => "Test Route",
+                    "photo" => "",
+                    "quantity" => 1,
+                    "total" => [
+                        "raw" => 5000,
+                        "formatted" => "5,000"
+                    ],
+                    "unit_price" => 5000,
+                ],
+                "total" => 0
+            ],
+            "config" => $config
+        ];
+
         //Return
         $response = [
-            "data" => $config
+            "data" => $routes
         ];
         
         return response()->json($response);
