@@ -332,7 +332,7 @@ class ModulesEcommerceStore extends Controller
         $this->data['stages']['data'][$currentStage]['active'] = true;
 
 
-        $stage_title = $stage_present ? $cart_stages[$stage_title]["title"] : 'Shopping Cart';
+        $stage_title = $stage_present ? $cart_stages[$currentStage]["title"] : 'Shopping Cart';
 
         $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
         //$this->data['cart'] = Home::getCartContent($request);
@@ -486,6 +486,17 @@ class ModulesEcommerceStore extends Controller
      */
     public function getProviderShippingRoutesXhr(Request $request)
     {
+        // Determine active Logistics provider
+        $provider = env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik');
+        $country = env('SETTINGS_COUNTRY', 'NG');
+
+        $provider_config = strtolower($provider . '_' . $country) . '.php';
+        $provider_class = strtolower($provider . '_' . $country) . '.class.php';
+
+        $config = require_once(__DIR__.'/../../config/providers/logistics/' . $provider_config);
+
+
+
         // Get Destination Address Details
 
         // Parse Shopper Origin Address
@@ -514,14 +525,37 @@ class ModulesEcommerceStore extends Controller
         //var_dump($response);
 
 
+        /* KWIK PROCESS
+        - /vendor_login and get access token
+        
+        WHAT IS LOADER??
+
+        - /send_payment_for_task (get charge details according to google distance)
+        - /get_bill_breakdown (get bill details)
+
+
+        - /create_task_via_vendor (requires /send_payment_for_task and /get_bill_breakdown)
+
+
+
+        - /getVehicle to get details e.g base fare, etc
+        */
+        
+
+
         // Estimate Cost
+
+        // What is loader
 
 
         // Parse Cost like route data
 
         //Return
+        $response = [
+            "data" => $config
+        ];
         
-        return response()->json();
+        return response()->json($response);
     }
 
     /**

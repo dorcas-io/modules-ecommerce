@@ -27,7 +27,7 @@
             <div class="row clearfix" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0">
                 <div class="col-md-6 clearfix">
                     <h4>Delivery Address</h4>
-                    <form method="get" action="/">
+                    <form method="get" action="/cart">
                         <div class="col_half">
                             <input type="text" class="sm-form-control" name="address_firstname" id="address_firstname" required placeholder="First Name" v-model="checkout_form.firstname">
                         </div>
@@ -93,7 +93,7 @@
                     <p><a href="{{ route('webstore') }}" class="button button-3d nomargin fright">Continue Shopping</a></p>
                 </div>
             </div>
-            <!-- Cart Address Begins -->
+            <!-- Cart Address Ends -->
 
         </div>
 
@@ -199,7 +199,7 @@
                     </tbody>
                 </table>
             </div>
-            <!-- Cart Shipping Begins -->
+            <!-- Cart Shipping Ends -->
 
         </div>
 
@@ -286,7 +286,8 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- Cart Review Begins -->
+                <!-- Cart Review Ends -->
+                <button type="submit" class="button button-3d nomargin button-black">Place Order</button>
             </form>
 
         </div>
@@ -323,14 +324,13 @@
                 logistics: {!! json_encode($logistics) !!}
             },
             mounted: function() {
-                console.log(this.shop.extra_data.logistics_settings.logistics_shipping);
-                let shipping_type = 'shipping_myself';
-                this.loadShippingRoutes(shipping_type);
-                //console.log(this.cart)
-                console.log(this.checkout_form);
-                console.log(this.stages);
-                console.log(this.logistics)
-                //console.log(this.shippingSelected)
+                //console.log(this.shop.extra_data.logistics_settings.logistics_shipping);
+                if (this.stages.stage == "shipping") {
+                    let shipping_type = this.logistics.settings.logistics_shipping;
+                    this.loadShippingRoutes(shipping_type);
+                }
+                console.log(this.cart)
+                //console.log(this.logistics)
             },
             computed: {
                 productPhoto: function(product) {
