@@ -330,11 +330,9 @@
             },
             mounted: function() {
                 //console.log(this.shop.extra_data.logistics_settings.logistics_shipping);
-                console.log('all ' + this.logistics.settings);
-                console.log('single ' + this.logistics.settings.logistics_shipping);
+                //console.log(this.logistics.settings.logistics_shipping);
                 if (this.stages.stage == "shipping") {
                     let shipping_type = this.logistics.settings.logistics_shipping;
-                    console.log("inner" + shipping_type);
                     this.loadShippingRoutes(shipping_type);
                 }
                 //console.log(this.logistics)
@@ -517,13 +515,13 @@
 
                     let shipping_url, shipping_params;
 
-                    if (shippingType = 'shipping_myself') {
+                    if (shippingType == 'shipping_myself') {
                         shipping_url = this.base_url + "/store/" + this.shop.id;
                         shipping_params = {
                             limit: 12,
                             product_type: 'shipping'
                         }
-                    } else if (shippingType = 'shipping_provider') {
+                    } else if (shippingType == 'shipping_provider') {
                         shipping_url = "/xhr/cart/get-provider-shipping-routes";
                         shipping_params = {}
                     }
