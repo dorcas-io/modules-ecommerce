@@ -246,7 +246,7 @@
                                     </div>
                                     <div class="quantity clearfix" v-if="cartItem.isShipping=='yes'">
                                         <!-- <input type="button" value="-" class="minus" v-on:click.prevent="decrementQuantity(index)"> -->
-                                        <a href="#" class="button nomargin" v-on:click.prevent="decrementQuantity(index, 'yes', 'yes')">Remove</a>
+                                        <a href="#" class="button nomargin" v-on:click.prevent="decrementQuantity(index, 'yes')">Remove</a>
                                     </div>
                                 </td>
                                 <td class="cart-product-subtotal">
@@ -330,9 +330,11 @@
             },
             mounted: function() {
                 //console.log(this.shop.extra_data.logistics_settings.logistics_shipping);
-                console.log(this.logistics.settings.logistics_shipping);
+                console.log('all ' + this.logistics.settings);
+                console.log('single ' + this.logistics.settings.logistics_shipping);
                 if (this.stages.stage == "shipping") {
                     let shipping_type = this.logistics.settings.logistics_shipping;
+                    console.log("inner" + shipping_type);
                     this.loadShippingRoutes(shipping_type);
                 }
                 //console.log(this.logistics)
