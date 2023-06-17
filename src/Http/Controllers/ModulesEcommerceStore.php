@@ -256,6 +256,10 @@ class ModulesEcommerceStore extends Controller
             "sdk" => $sdk
         ];
 
+        $this->data['env'] = [
+            "CREDENTIAL_GOOGLE_API_KEY" => env('CREDENTIAL_GOOGLE_API_KEY', 'ABC'),
+        ];
+
         // Fetch/Initiate Cache
         $cartCacheKey = "cartCache." . $storeOwner->id;
         if (Cache::has($cartCacheKey)) {
@@ -269,7 +273,9 @@ class ModulesEcommerceStore extends Controller
                     "phone" => "",
                     "address" => "34 Jaiye Oyedotun",
                     "state" => "Lagos",
-                    "country" => "Nigeria"
+                    "country" => "Nigeria",
+                    "latitude" => "0",
+                    "longitude" => "0"
                 ]
             ];
         }
@@ -282,6 +288,8 @@ class ModulesEcommerceStore extends Controller
         $address_address = !empty($request->address_address) ? $request->address_address : $cartCache["address"]["address"];
         $address_state = !empty($request->address_state) ? $request->address_state : $cartCache["address"]["state"];
         $address_country = !empty($request->address_country) ? $request->address_country : $cartCache["address"]["country"];
+        $address_latitude = !empty($request->address_latitude) ? $request->address_latitude : $cartCache["address"]["latitude"];
+        $address_longitude = !empty($request->address_longitude) ? $request->address_longitude : $cartCache["address"]["longitude"];
 
         // Save Address Status
         $cartCache["address"] = [
@@ -291,7 +299,9 @@ class ModulesEcommerceStore extends Controller
             "phone" => $address_phone,
             "address" => $address_address,
             "state" => $address_state,
-            "country" => $address_country
+            "country" => $address_country,
+            "latitude" => $address_latitude,
+            "longitude" => $address_longitude
         ];
         Cache::forever($cartCacheKey, $cartCache);
 
@@ -491,7 +501,7 @@ class ModulesEcommerceStore extends Controller
         $country = env('SETTINGS_COUNTRY', 'NG');
 
         $provider_config = strtolower($provider . '_' . $country) . '.php';
-        $provider_class = strtolower($provider . '_' . $country) . '.class.php';
+        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
 
         $config = require_once(__DIR__.'/../../config/providers/logistics/' . $provider_config);
 
@@ -503,26 +513,32 @@ class ModulesEcommerceStore extends Controller
 
         // Determine if its bike or car or planne depennding on inter state, 
 
-        // Connect To API
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, env('CREDENTIAL_ECOMMERCE_PROVIDER_URL', 'provider.com'));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch, CURLOPT_HEADER, FALSE);
-        curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array(
-            'domain_name' => env('CREDENTIAL_ECOMMERCE_PROVIDER_DOMAIN', 'provider.com'),
-            'email' => env('CREDENTIAL_ECOMMERCE_PROVIDER_USERNAME', 'user@provider.com'),
-            'password' => env('CREDENTIAL_ECOMMERCE_PROVIDER_PASSWORD', 'password'),
-            'api_login' => 1,
-        )));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-          "Content-Type: application/json"
-        ));
-        
-        $response = curl_exec($ch);
-        curl_close($ch);
-        
-        //var_dump($response);
+
+        $provider = new $provider_class();
+
+        $from = [
+            "address" => "Landmark House, 52 Isaac John",
+            "name" => "Office",
+            "latitude" => 6.5847605,
+            "longitude" => 3.3575444,
+            "time" => "2023-06-17 09:20:00",
+            "phone" => "+2348185977165",
+            "has_return_task" => false,
+            "is_package_insured" => 0
+        ];
+
+        $to = [
+            "address" => "34 Jaiye Oyedotun Street, Lagos",
+            "name" => "Bolaji",
+            "latitude" => 6.6162878,
+            "longitude" => 3.3684280,
+            "time" => "2023-06-17 09:20:00",
+            "phone" => "+2348185977165",
+            "has_return_task" => false,
+            "is_package_insured" => 0
+        ];
+
+        $res = $provider->getCost($from, $to);
 
 
         /* KWIK PROCESS
@@ -580,7 +596,9 @@ class ModulesEcommerceStore extends Controller
                 ],
                 "total" => 0
             ],
-            "config" => $config
+            "config" => $config,
+            "token" => $provider->accessToken,
+            "res" => $res
         ];
 
         //Return

@@ -28,6 +28,13 @@
                 <div class="col-md-6 clearfix">
                     <h4>Delivery Address</h4>
                     <form method="get" action="/cart">
+                        {{ csrf_field() }}
+                        <div class="col_full">
+                            <input v-if="useAutoComplete" type="text" class="sm-form-control" name="address_address" id="address_address" required placeholder="Enter Delivery Address" v-model="checkout_form.address">
+                        </div>
+                        <div v-if="useAutoComplete" id="address_map" class="col_full"></div>
+                        <a v-if="useAutoComplete" id="address_confirm" href="#" v-on:click.prevent="addressConfirm" class="btn btn-success btn-block">Address Is Correct</a>
+                        <hr>
                         <div class="col_half">
                             <input type="text" class="sm-form-control" name="address_firstname" id="address_firstname" required placeholder="First Name" v-model="checkout_form.firstname">
                         </div>
@@ -41,7 +48,7 @@
                             <input type="text" class="sm-form-control" name="address_phone" id="address_phone" required placeholder="Phone number" v-model="checkout_form.phone">
                         </div>
                         <div class="col_full">
-                            <textarea class="form-control summernote" name="address_address" id="address_address" maxlength="250" v-model="checkout_form.address" required rows="4" placeholder="Delivery Address (Optional)"></textarea>
+                            <textarea v-if="!useAutoComplete" class="form-control summernote"  name="address_address" id="address_address" maxlength="250" v-model="checkout_form.address" required rows="4" placeholder="Delivery Address"></textarea>
                         </div>
                         <div class="col_half">
                             <select class="sm-form-control" name="address_state" id="address_state" v-model="checkout_form.state">
@@ -65,7 +72,11 @@
                             </select>
                         </div>
                         <input type="hidden" name="stage" id="stage" value="shipping">
-                        <button type="submit" class="button button-3d nomargin button-black">Save Address</button>
+                        <input type="hidden" name="address_latitude" id="address_latitude" v-model="checkout_form.latitude">
+                        <input type="hidden" name="address_longitude" id="address_longitude" v-model="checkout_form.longitude">
+                        <button v-if="addressIsConfirmed" type="submit" class="button button-3d nomargin button-black">Confirm & Save Address</button>
+                        <button v-if="!UseAutoComplete && !addressIsConfirmed" class="button button-3d nomargin button-black" action="confirmAddress()">Confirm Address</button>
+                        @include('modules-ecommerce::modals.confirm-address')
                     </form>
                 </div>
                 <div class="col-md-6 clearfix">
@@ -94,7 +105,6 @@
                 </div>
             </div>
             <!-- Cart Address Ends -->
-
         </div>
 
         <div :class="stages.data.shipping.active ? 'tab-pane active' : 'tab-pane'" id="shipping" role="tabpanel" aria-labelledby="shipping-tab" style="padding:20px !important;">
@@ -311,24 +321,20 @@
                 store_settings: {!! json_encode($storeSettings) !!},
                 is_processing: false,
                 checkout_form: {!! json_encode($cache["address"]) !!},
-                // checkout_form: {
-                //     firstname: '',
-                //     lastname: '',
-                //     email: '',
-                //     phone: '',
-                //     address: '',
-                //     state: '',
-                //     country: ''
-                // },
                 payment_url: '',
                 shippingRoutes: [],
                 is_processing_shipping: false,
                 base_url: "{{ config('dorcas-api.url') }}",
                 shop: {!! json_encode($storeOwner) !!},
                 stages: {!! json_encode($stages) !!},
-                logistics: {!! json_encode($logistics) !!}
+                logistics: {!! json_encode($logistics) !!},
+                addressIsConfirmed: false,
+                useAutoComplete: true,
+                env: {!! json_encode($env) !!},
             },
             mounted: function() {
+                loadGoogleMaps();
+
                 //console.log(this.shop.extra_data.logistics_settings.logistics_shipping);
                 //console.log(this.logistics.settings.logistics_shipping);
                 if (this.stages.stage == "shipping") {
@@ -358,6 +364,120 @@
                 }
             },
             methods: {
+                loadGoogleMaps: function () {
+                    // Load the Google Maps API script
+                    const script = document.createElement('script');
+                    if (this.useAutoComplete) {
+                        script.src = `https://maps.googleapis.com/maps/api/js?key=${this.env.CREDENTIAL_GOOGLE_API_KEY}&libraries=places`;
+                        script.onload = function() {
+                            initAutocomplete();
+                        };
+                    } else {
+                        script.src = `https://maps.googleapis.com/maps/api/js?key=` + this.env.CREDENTIAL_GOOGLE_API_KEY;
+                    }
+                    script.defer = true;
+                    document.head.appendChild(script);
+                
+
+                },
+
+                initAutocomplete: function () {
+
+                    const mapOptions = {
+                        center: { lat: 0, lng: 0 },
+                        zoom: 8
+                    };
+                    const map = new google.maps.Map(document.getElementById('address_map'), mapOptions);
+                    const geocoder = new google.maps.Geocoder();
+
+                    // Initialize the autocomplete
+                    const input = document.getElementById('address_address');
+                    const autocomplete = new google.maps.places.Autocomplete(input);
+
+                    autocomplete.bindTo('bounds', map);
+
+                    // Retrieve the selected place and populate latitude and longitude fields
+                    autocomplete.addListener('place_changed', function() {
+                        const place = autocomplete.getPlace();
+                        if (!place.geometry) {
+                            console.log('No location data available for this place.');
+                            this.addressIsConfirmed = false;
+                            return;
+                        }
+
+                        this.addressIsConfirmed = true;
+
+                        // Update the map center and marker
+                        map.setCenter(place.geometry.location);
+                        const marker = new google.maps.Marker({
+                            map: map,
+                            position: place.geometry.location
+                        });
+
+                        // Extract the state and country
+                        let state = '';
+                        let country = '';
+                        let countryCode = '';
+                        for (const component of place.address_components) {
+                            const componentType = component.types[0];
+                            if (componentType === 'administrative_area_level_1') {
+                                state = component.long_name;
+                            } else if (componentType === 'country') {
+                                country = component.long_name;
+                                countryCode = component.short_name; // Two-digit ISO country code
+                            }
+                        }
+
+                        // Log the state and country to the console
+                        this.checkout_form.state = state;
+                        this.checkout_form.country = country;
+
+                        this.checkout_form.latitude = place.geometry.location.lat();
+                        this.checkout_form.longitude = place.geometry.location.lng();
+                    });
+                },
+
+                initMap: function () {
+                    // Initialize and display the map
+                    const address = this.checkout_form.address;
+                    const state = this.checkout_form.state;
+                    const country = this.checkout_form.country;
+
+                    const geocoder = new google.maps.Geocoder();
+                    const mapOptions = {
+                        zoom: 15,
+                        center: new google.maps.LatLng(0, 0) // Default center
+                    };
+                    const map = new google.maps.Map(document.getElementById('address_map'), mapOptions);
+
+                    const addressString = `${address}, ${state}, ${country}`;
+                    geocoder.geocode({ address: addressString }, function(results, status) {
+                        if (status === google.maps.GeocoderStatus.OK) {
+                            map.setCenter(results[0].geometry.location);
+                            new google.maps.Marker({
+                                map: map,
+                                position: results[0].geometry.location
+                            });
+                        } else {
+                            console.log('Geocode was not successful for the following reason: ' + status);
+                        }
+                    });
+                },
+                confirmAddress: function () {
+                    if (this.useAutoComplete) {
+                        this.addressIsConfirmed = true;
+                    } else {
+                        this.initMap();
+                        $('#confirm-address-modal').modal('show');
+                    }
+                },
+                addressConfirm: function () {
+                    this.addressIsConfirmed = true;
+                },
+                addressCancel: function () {
+                	$('#confirm-address-modal').modal('hide');
+                },
+                confirmAddress
                 checkout: function () {
                     var context =  this;
                     swal({
