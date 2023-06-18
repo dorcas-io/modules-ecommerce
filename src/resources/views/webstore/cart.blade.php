@@ -58,7 +58,7 @@
                                         <option value="{{ $state->id }}">{{ $state->name }}</option>
                                     @endforeach
                                 @endif
-                                <option value="non-nigerian">Non-Nigerian (Include Above)</option>
+                                <option value="non-local">Non-Local (Include In Address Above)</option>
                             </select>
                         </div>
                         <div class="col_half col_last">
@@ -477,7 +477,6 @@
                 addressCancel: function () {
                 	$('#confirm-address-modal').modal('hide');
                 },
-                confirmAddress
                 checkout: function () {
                     var context =  this;
                     swal({

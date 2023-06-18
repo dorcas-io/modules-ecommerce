@@ -249,11 +249,15 @@ class ModulesEcommerceStore extends Controller
         //$this->data['company_data'] = $company_data;
         $logistics_settings = $company_data['logistics_settings'] ?? ["logistics_shipping" => env("SETTINGS_ECOMMERCE_LOGISTICS_SHIPPING", "shipping_myself"), "logistics_fulfilment" => env("SETTINGS_ECOMMERCE_LOGISTICS_FULFILMENT", "fulfilment_pickup")];
 
+        $seller_data = (array) $storeOwner->extra_data;
+
         $this->data['logistics'] = [
             "seller_state" => "",
             "seller_country" => env('SETTINGS_COUNTRY', 'NG'),
             "settings" => $logistics_settings,
-            "sdk" => $sdk
+            "seller_address" => [
+
+            ]
         ];
 
         $this->data['env'] = [
@@ -261,24 +265,24 @@ class ModulesEcommerceStore extends Controller
         ];
 
         // Fetch/Initiate Cache
-        $cartCacheKey = "cartCache." . $storeOwner->id;
-        if (Cache::has($cartCacheKey)) {
-            $cartCache = Cache::get($cartCacheKey);
-        } else {
-            $cartCache = [
-                "address" => [
-                    "firstname" => "",
-                    "lastname" => "",
-                    "email" => "",
-                    "phone" => "",
-                    "address" => "34 Jaiye Oyedotun",
-                    "state" => "Lagos",
-                    "country" => "Nigeria",
-                    "latitude" => "0",
-                    "longitude" => "0"
-                ]
-            ];
-        }
+        
+        $cartCacheKey = "cartCache";
+
+        $cartCacheDefault = [
+            "address" => [
+                "firstname" => "",
+                "lastname" => "",
+                "email" => "",
+                "phone" => "",
+                "address" => "",
+                "state" => "",
+                "country" => env('SETTINGS_COUNTRY', 'NG'),
+                "latitude" => "0",
+                "longitude" => "0"
+            ]
+        ];
+
+        $cartCache = session('cartCache', $cartCacheDefault);
 
         // Process Address Content
         $address_firstname = !empty($request->address_firstname) ? $request->address_firstname : $cartCache["address"]["firstname"];
@@ -303,7 +307,22 @@ class ModulesEcommerceStore extends Controller
             "latitude" => $address_latitude,
             "longitude" => $address_longitude
         ];
-        Cache::forever($cartCacheKey, $cartCache);
+
+
+        // Save Seller Address
+        $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']]];
+        # the location information
+        $locations = $this->getLocations($sdk);
+        $location = !empty($locations) ? $locations->first() : $location;
+        $location['country'] = env('SETTINGS_COUNTRY', 'NG');
+
+        $cartCache["address_seller"] = $location;
+
+
+        // Save ALL to session
+        session(['cartCache' => $cartCache]);
+
+
 
         // Process Cart Stages
         $cart_stages = [
@@ -324,7 +343,7 @@ class ModulesEcommerceStore extends Controller
         $this->data['stages'] = [
             "stage" => "address",
             "data" => $cart_stages,
-            "countries" => $countries
+            //"countries" => $countries
         ];
 
         $this->data['cache'] = [
@@ -478,7 +497,7 @@ class ModulesEcommerceStore extends Controller
             throw new \RuntimeException('Could not add your order to the record. Please try again later.');
         }
         Cache::forget('crm.customers.'.$storeOwner->id);
-        Cache::forget("cartAddress." . $storeOwner->id);
+        $request->session()->forget('cartCache');
         # clear the cache
         $cartManager->clear();
         # clear the cart
@@ -510,6 +529,20 @@ class ModulesEcommerceStore extends Controller
         // Get Destination Address Details
 
         // Parse Shopper Origin Address
+        $cartCache = session('cartCache');
+        $s = $request->user()->company(true, true);
+        $sAddress = $cartCache["address_seller"];
+        //$location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']]];
+        $sellerAdddress = [
+            "address" => $sAddress["address1"] . " " . $sAddress["address2"],
+            "name" => $s["name"],
+            "latitude" => $sAddress["latitude"],
+            "longitude" => $sAddress["longitude"],
+            "time" => Carbon::now(), //Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))
+            "phone" => $s["phone"],
+            "has_return_task" => false,
+            "is_package_insured" => 0
+        ];
 
         // Determine if its bike or car or planne depennding on inter state, 
 
@@ -598,7 +631,10 @@ class ModulesEcommerceStore extends Controller
             ],
             "config" => $config,
             "token" => $provider->accessToken,
-            "res" => $res
+            "res" => $res,
+            "to" => $to,
+            "from" => $from,
+            "sellerAdddress" => $sellerAdddress
         ];
 
         //Return
