@@ -571,7 +571,7 @@ class ModulesEcommerceStore extends Controller
             "is_package_insured" => 0
         ];
 
-        $res = $provider->getCost($from, $to);
+        $res = "hello"; // $provider->getCost($from, $to);
 
 
         /* KWIK PROCESS

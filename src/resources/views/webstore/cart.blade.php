@@ -368,12 +368,12 @@
                     // Load the Google Maps API script
                     const script = document.createElement('script');
                     if (this.useAutoComplete) {
-                        script.src = `https://maps.googleapis.com/maps/api/js?key=${this.env.CREDENTIAL_GOOGLE_API_KEY}&libraries=places`;
+                        script.src = `https://maps.googleapis.com/maps/api/js?key=${this.env.CREDENTIAL_GOOGLE_API_KEY}&libraries=places&callback=Function.prototype`;
                         script.onload = function() {
                             initAutocomplete();
                         };
                     } else {
-                        script.src = `https://maps.googleapis.com/maps/api/js?key=` + this.env.CREDENTIAL_GOOGLE_API_KEY;
+                        script.src = `https://maps.googleapis.com/maps/api/js?key=${this.env.CREDENTIAL_GOOGLE_API_KEY}&callback=Function.prototype`;
                     }
                     script.defer = true;
                     document.head.appendChild(script);
@@ -644,6 +644,8 @@
                         shipping_url = "/xhr/cart/get-provider-shipping-routes";
                         shipping_params = {}
                     }
+                    console.log(shippingType)
+                    console.log(shipping_url)
 
                     axios.get(shipping_url, {
                         params: shipping_params
