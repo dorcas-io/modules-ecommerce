@@ -1,7 +1,64 @@
 @extends('layouts.tabler')
+
+@section('head_css')
+    <style type="text/css">
+
+        .ribbon.bg-red {
+            border-color: #d63939;
+        }
+
+        .bg-red {
+            color: #fff!important;
+            background: #d63939!important;
+        }
+        
+        .ribbon.bg-yellow {
+            border-color: #f59f00;
+        }
+
+        .bg-yellow {
+            color: #fff!important;
+            background: #f59f00!important;
+        }
+        
+        .ribbon.bg-primary {
+            border-color: #206bc4;
+        }
+
+        .bg-primary {
+            color: #fff!important;
+            background: #206bc4!important;
+        }
+
+
+        .ribbon {
+            position: absolute;
+            top: 0.75rem;
+            right: -0.25rem;
+            z-index: 1;
+            padding: 0.25rem 0.75rem;
+            font-size: .625rem;
+            font-weight: 600;
+            line-height: 1.5rem;
+            color: #fff;
+            text-align: center;
+            text-transform: uppercase;
+            background: #206bc4;
+            border-color: #206bc4;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 2rem;
+            min-width: 2rem;
+        }
+    </style>
+@endsection
+
 @section('body_content_header_extras')
 
 @endsection
+
+
 @section('body_content_main')
 @include('layouts.blocks.tabler.alert')
 
@@ -52,9 +109,9 @@
             @if (!empty($subdomain))
                 <div class="col-md-12 col-lg-6">
                     <div class="card">
-                        <div class="ribbon bg-red">FIRST</div>
+                        <div class="ribbon bg-primary">FIRST</div>
                         <div class="card-body">
-                            <h3 class="card-title">Basic data for your online store</h3>
+                            <h3 class="card-title">Setup Basic Store Information</h3>
                             <p class="text-muted">
                                 <form action="" method="post" class="col s12">
                                     {{ csrf_field() }}
@@ -127,81 +184,95 @@
                 </div>
             @endif
             <div class="col-md-12 col-lg-6">
-                <form action="/mec/ecommerce-logistics" method="post" class="col s12">
-                    {{ csrf_field() }}
-                    <div class="row col-md-12">
-                        @component('layouts.blocks.tabler.empty-fullpage')
-                            @slot('title')
-                                Setup Store Payment
-                            @endslot
-                            To integrate online payment for your store, you need to integrate one of our payment partners.<br><br/>
-                            You need to create a vendor account, and install the appropriate integration from the "Integration" section.<br/><br/>     
 
-                            <!-- 
-                            <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
-                                Add Integration
-                            </a>
-                            <a class="btn btn-primary btn-sm" href="{{ env('DORCAS_STORE_PAYMENT_VENDOR_URL', 'https://dorcas.ravepay.co/auth/') }}" target="_blank">
-                                Create Vendor Account
-                            </a>
-                            -->
-                            @slot('buttons')
+                <div class="row col-md-12">
 
-                            @endslot
-                        @endcomponent
+                    <div class="card">
+                        <div class="ribbon bg-red">SECOND</div>
+                        <div class="card-body">
+                            <h3 class="card-title">Setup Payment Details</h3>
+                            <p class="text-muted">
+                                
+                                To integrate online payment for your store, you need to integrate one of our payment partners.<br><br/>
+                                You need to create a vendor account, and install the appropriate integration from the "Integration" section.<br/><br/>     
+
+                                <!-- 
+                                <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
+                                    Add Integration
+                                </a>
+                                <a class="btn btn-primary btn-sm" href="{{ env('DORCAS_STORE_PAYMENT_VENDOR_URL', 'https://dorcas.ravepay.co/auth/') }}" target="_blank">
+                                    Create Vendor Account
+                                </a>
+                                -->
+
+                            </p>
+                        </div>
                     </div>
 
-                    <div class="row col-md-12">
-                        @component('layouts.blocks.tabler.empty-fullpage')
-                            @slot('title')
-                                Setup Logistics Provider
-                            @endslot
-                            There are 2 ways to handle shipment (delivery) of your orders: <br/><br/>
-                            <ol>
-                                <li>You can choose to handle your shipments yourself and have customers choose from routes whose prices you set manually</li>
-                                <li>You can choose to have a logistics provider handle shipping; shipping costs are automatically calculated when your customers enter their delivery addresses</li>
-                            </ol>
-                            <br/>
-                            If you choose (2) above, you have the following options:
-                            <ul>
-                                <li>you can decide to have the logistics provider come to pick orders at your location</li>
-                                <li>you can drop at a fulfilment centre (if available)</li>
-                            </ul>
+                </div>
 
-                            <br/>
-                            <fieldset class="form-fieldset">
-                                Choose Shipping Option: 
-                                <div class="row">
-                                    <div class="col-md-12 form-group">
-                                        <select id="logistics_shipping" name="logistics_shipping" class="form-control" v-model="logistics_settings.logistics_shipping" required>
-                                            <option value="shipping_myself">Handle Shipping Myself</option>
-                                            <option value="shipping_provider">Use Shipping Provider</option>
-                                        </select>
+
+                <div class="row col-md-12">
+
+                    <div class="card">
+                        <div class="ribbon bg-red">THIRD</div>
+                        <div class="card-body">
+                            <h3 class="card-title">Setup Logistics Provider</h3>
+                            <p class="text-muted">
+                                
+                                <form action="/mec/ecommerce-logistics" method="post" class="col s12">
+                                    {{ csrf_field() }}
+                                        How do you wish to handle shipment (delivery) of orders placed on your store: <br/><br/>
+                                        <ul>
+                                            <li>You can choose to handle your shipments yourself and have customers choose from routes whose prices you set manually</li>
+                                            <li>You can choose to have a logistics provider handle shipping; shipping costs are automatically calculated when your customers enter their delivery addresses</li>
+                                        </ul>
+                                        <br/>
+                                        <fieldset class="form-fieldset">
+                                            Choose Shipping Option: 
+                                            <div class="row">
+                                                <div class="col-md-12 form-group">
+                                                    <select id="logistics_shipping" name="logistics_shipping" class="form-control" v-model="logistics_settings.logistics_shipping" required>
+                                                        <option value="shipping_myself">Handle Shipping Myself</option>
+                                                        <option value="shipping_provider">Use Shipping Provider</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                        <br/>
+                                        <br/>
+                                        If you choose <strong>Use Shipping Provider</strong> above, would you like to:
+                                        <ul>
+                                            <li>have the logistics provider come to pick orders at your location</li>
+                                            <li>drop at a fulfilment centre (if option is available)</li>
+                                        </ul>
+                                        <br/>
+                                        <fieldset class="form-fieldset">
+                                            Choose Fulfilment Option: 
+                                            <div class="row">
+                                                <div class="col-md-12 form-group">
+                                                    <select id="logistics_fulfilment" name="logistics_fulfilment" class="form-control" v-model="logistics_settings.logistics_fulfilment" required>
+                                                        <option value="fulfilment_pickup">Provider to Come and Pickup</option>
+                                                        <option value="fulfilment_centre" v-if="logistics_fulfilment_centre">Deliver Goods to Fulfilment Centre Myself</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+
+                                        <div class="col-md-12">
+                                            <button class="btn btn-primary" type="submit" name="action">Save Logistics Options</button>
+                                        </div>
+
                                     </div>
-                                </div>
-                            </fieldset>
-                            <br/>
-                            <fieldset class="form-fieldset">
-                                Choose Fulfilment Option: 
-                                <div class="row">
-                                    <div class="col-md-12 form-group">
-                                        <select id="logistics_fulfilment" name="logistics_fulfilment" class="form-control" v-model="logistics_settings.logistics_fulfilment" required>
-                                            <option value="fulfilment_pickup">Provider to Come and Pickup</option>
-                                            <option value="fulfilment_centre">Deliver Goods to Fulfilment Centre Myself</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </fieldset>
+                                </form>
 
-                            <div class="col-md-12">
-                                <button class="btn btn-primary" type="submit" name="action">Save Logistics Options</button>
-                            </div>
-
-                            @slot('buttons')
-                            @endslot
-                        @endcomponent
+                            </p>
+                        </div>
                     </div>
-                </form>
+                    
+                </div>
+
+
             </div>
 
             @if (empty($subdomain))
@@ -237,6 +308,7 @@
                 store_owner: {!! json_encode($business) !!},
                 store_settings: {!! json_encode($storeSettings) !!},
                 logistics_settings: {!! !empty($logisticsSettings) ? json_encode($logisticsSettings) : ["logistics_shipping" => "shipping_myself", "logistics_fulfilment" => "fulfilment_pickup"] !!},
+                logistics_fulfilment_centre: {!! json_encode($logisticsFulfilmentCentre) !!},
                 advanced_store_settings: false
             }
         });

@@ -70,6 +70,7 @@ class ModulesEcommerceStoreController extends Controller {
         $this->setViewUiResponse($request);
         $this->data['storeSettings'] = self::getStoreSettings((array) $this->getCompany()->extra_data);
         $this->data['logisticsSettings'] = self::getLogisticsSettings((array) $this->getCompany()->extra_data);
+        $this->data['logisticsFulfilmentCentre'] = env("SETTINGS_ECOMMERCE_LOGISTICS_FULFILMENT_CENTRE", false);
         # our store settings container
         $query = $sdk->createProductResource()->addQueryArgument('limit', 1)->send('get');
         $this->data['productCount'] = $query->isSuccessful() ? $query->meta['pagination']['total'] ?? 0 : 0;
