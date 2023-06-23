@@ -214,62 +214,63 @@
 
                 <div class="row col-md-12">
 
-                    <div class="card">
-                        <div class="ribbon bg-red">THIRD</div>
-                        <div class="card-body">
-                            <h3 class="card-title">Setup Logistics Provider</h3>
-                            <p class="text-muted">
-                                
-                                <form action="/mec/ecommerce-logistics" method="post" class="col s12">
-                                    {{ csrf_field() }}
-                                        How do you wish to handle shipment (delivery) of orders placed on your store: <br/><br/>
-                                        <ul>
-                                            <li>You can choose to handle your shipments yourself and have customers choose from routes whose prices you set manually</li>
-                                            <li>You can choose to have a logistics provider handle shipping; shipping costs are automatically calculated when your customers enter their delivery addresses</li>
-                                        </ul>
-                                        <br/>
-                                        <fieldset class="form-fieldset">
-                                            Choose Shipping Option: 
-                                            <div class="row">
-                                                <div class="col-md-12 form-group">
-                                                    <select id="logistics_shipping" name="logistics_shipping" class="form-control" v-model="logistics_settings.logistics_shipping" required>
-                                                        <option value="shipping_myself">Handle Shipping Myself</option>
-                                                        <option value="shipping_provider">Use Shipping Provider</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </fieldset>
-                                        <br/>
-                                        <br/>
-                                        If you choose <strong>Use Shipping Provider</strong> above, would you like to:
-                                        <ul>
-                                            <li>have the logistics provider come to pick orders at your location</li>
-                                            <li>drop at a fulfilment centre (if option is available)</li>
-                                        </ul>
-                                        <br/>
-                                        <fieldset class="form-fieldset">
-                                            Choose Fulfilment Option: 
-                                            <div class="row">
-                                                <div class="col-md-12 form-group">
-                                                    <select id="logistics_fulfilment" name="logistics_fulfilment" class="form-control" v-model="logistics_settings.logistics_fulfilment" required>
-                                                        <option value="fulfilment_pickup">Provider to Come and Pickup</option>
-                                                        <option value="fulfilment_centre" v-if="logistics_fulfilment_centre">Deliver Goods to Fulfilment Centre Myself</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </fieldset>
+                    <form action="/mec/ecommerce-logistics" method="post" class="col s12">
 
-                                        <div class="col-md-12">
-                                            <button class="btn btn-primary" type="submit" name="action">Save Logistics Options</button>
+                        {{ csrf_field() }}
+
+                        <div class="card">
+                            <div class="ribbon bg-yellow">THIRD</div>
+                            <div class="card-body">
+                                <h3 class="card-title">Setup Logistics Provider</h3>
+                                <p class="text-muted">
+                                    
+                                    How do you wish to handle shipment (delivery) of orders placed on your store: <br/><br/>
+                                    <ul>
+                                        <li>You can choose to handle your shipments yourself and have customers choose from routes whose prices you set manually</li>
+                                        <li>You can choose to have a logistics provider handle shipping; shipping costs are automatically calculated when your customers enter their delivery addresses</li>
+                                    </ul>
+                                    <br/>
+                                    <fieldset class="form-fieldset">
+                                        Choose Shipping Option: 
+                                        <div class="row">
+                                            <div class="col-md-12 form-group">
+                                                <select id="logistics_shipping" name="logistics_shipping" class="form-control" v-model="logistics_settings.logistics_shipping" required>
+                                                    <option value="shipping_myself">Handle Shipping Myself</option>
+                                                    <option value="shipping_provider">Use Shipping Provider</option>
+                                                </select>
+                                            </div>
                                         </div>
+                                    </fieldset>
+                                    <br/>
+                                    <br/>
+                                    If you choose <strong>Use Shipping Provider</strong> above, would you like to:
+                                    <ul>
+                                        <li>have the logistics provider come to pick orders at your location</li>
+                                        <li>drop at a fulfilment centre {{ $logisticsFulfilmentCentre ? '' : '(option currently not available)' }}</li>
+                                    </ul>
+                                    <br/>
+                                    <fieldset class="form-fieldset">
+                                        Choose Fulfilment Option: 
+                                        <div class="row">
+                                            <div class="col-md-12 form-group">
+                                                <select id="logistics_fulfilment" name="logistics_fulfilment" class="form-control" v-model="logistics_settings.logistics_fulfilment" required>
+                                                    <option value="fulfilment_pickup">Provider to Come and Pickup</option>
+                                                    <option value="fulfilment_centre" v-if="logistics_fulfilment_centre">Deliver Goods to Fulfilment Centre Myself</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </fieldset>
 
+                                    <div class="col-md-12">
+                                        <button class="btn btn-primary" type="submit" name="action">Save Logistics Options</button>
                                     </div>
-                                </form>
 
-                            </p>
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                    
+                        
+                    </form>
+
                 </div>
 
 
