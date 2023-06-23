@@ -51,6 +51,13 @@
         <div class="row col-md-12">
             @if (!empty($subdomain))
                 <div class="col-md-12 col-lg-6">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p>
+                                Provide some basic data for your online store
+                            </p>
+                        </div>
+                    </div>
                     <form action="" method="post" class="col s12">
                         {{ csrf_field() }}
                             <div class="row">
@@ -79,22 +86,25 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-12 form-group">
-                                    <input class="form-control" id="store_terms_page" name="store_terms_page" type="url" class="validate" v-model="store_settings.store_terms_page">
-                                    <label class="form-label" for="store_terms_page">Terms of Service URL</label>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12 form-group">
-                                    <input class="form-control" id="store_ga_tracking_id" name="store_ga_tracking_id" type="text" class="validate" v-model="store_settings.store_ga_tracking_id">
-                                    <label class="form-label" for="store_ga_tracking_id" v-bind:class="{'active': typeof store_settings.store_ga_tracking_id !== 'undefined' && store_settings.store_ga_tracking_id.length > 0}">Google Analytics Tracking ID (UA-XXXXXXXXX-X)</label>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12 form-group">
-                                    <textarea class="form-control" id="store_custom_js" name="store_custom_js" v-model="store_settings.store_custom_js"></textarea>
-                                    <label class="form-label" for="store_custom_js">Custom Javascript (Paste the codes you were given)</label>
-                                    <small>This allows you to add popular tools you use to your store site. e.g. Drift, Drip, Intercom, Tawk.to</small>
+                                <span>
+                                    <a href="#" v-on:click.prevent="advanced_store_settings = !advanced_store_settings">Enter Advanced Settings (Optional)</a>
+                                </span>
+                                <div id="store_advanced_settings" v-show="advanced_store_settings">
+                                    <div class="col-md-12 form-group">
+                                        <input class="form-control" id="store_terms_page" name="store_terms_page" type="url" class="validate" v-model="store_settings.store_terms_page">
+                                        <label class="form-label" for="store_terms_page">Terms of Service URL</label>
+                                    </div>
+                                    <br/>    
+                                    <div class="col-md-12 form-group">
+                                        <input class="form-control" id="store_ga_tracking_id" name="store_ga_tracking_id" type="text" class="validate" v-model="store_settings.store_ga_tracking_id">
+                                        <label class="form-label" for="store_ga_tracking_id" v-bind:class="{'active': typeof store_settings.store_ga_tracking_id !== 'undefined' && store_settings.store_ga_tracking_id.length > 0}">Google Analytics Tracking ID (UA-XXXXXXXXX-X)</label>
+                                    </div>
+                                    <br/>
+                                    <div class="col-md-12 form-group">
+                                        <textarea class="form-control" id="store_custom_js" name="store_custom_js" v-model="store_settings.store_custom_js"></textarea>
+                                        <label class="form-label" for="store_custom_js">Custom Javascript (Paste the codes you were given)</label>
+                                        <small>This allows you to add popular tools you use to your store site. e.g. Drift, Drip, Intercom, Tawk.to</small>
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">
@@ -217,7 +227,8 @@
             data: {
                 store_owner: {!! json_encode($business) !!},
                 store_settings: {!! json_encode($storeSettings) !!},
-                logistics_settings: {!! !empty($logisticsSettings) ? json_encode($logisticsSettings) : ["logistics_shipping" => "shipping_myself", "logistics_fulfilment" => "fulfilment_pickup"] !!}
+                logistics_settings: {!! !empty($logisticsSettings) ? json_encode($logisticsSettings) : ["logistics_shipping" => "shipping_myself", "logistics_fulfilment" => "fulfilment_pickup"] !!},
+                advanced_store_settings: false
             }
         });
     </script>
