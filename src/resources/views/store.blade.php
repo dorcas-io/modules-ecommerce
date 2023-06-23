@@ -137,7 +137,7 @@
                                             <div class="col-md-12 form-group">
                                                 <input class="form-control" id="store_homepage" name="store_homepage" type="url"
                                                     class="validate" v-model="store_settings.store_homepage">
-                                                <label class="form-label" for="store_homepage">Homepage URL</label>
+                                                <label class="form-label" for="store_homepage">Website URL (if any)</label>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -187,27 +187,53 @@
 
                 <div class="row col-md-12">
 
-                    <div class="card">
-                        <div class="ribbon bg-red">SECOND</div>
-                        <div class="card-body">
-                            <h3 class="card-title">Setup Payment Details</h3>
-                            <p class="text-muted">
-                                
-                                To integrate online payment for your store, you need to integrate one of our payment partners.<br><br/>
-                                You need to create a vendor account, and install the appropriate integration from the "Integration" section.<br/><br/>     
+                    <form action="/mec/ecommerce-payments" method="post" class="col s12">
 
-                                <!-- 
-                                <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
-                                    Add Integration
-                                </a>
-                                <a class="btn btn-primary btn-sm" href="{{ env('DORCAS_STORE_PAYMENT_VENDOR_URL', 'https://dorcas.ravepay.co/auth/') }}" target="_blank">
-                                    Create Vendor Account
-                                </a>
-                                -->
+                        {{ csrf_field() }}
 
-                            </p>
+                        <div class="card">
+                            <div class="ribbon bg-red">SECOND</div>
+                            <div class="card-body">
+                                <h3 class="card-title">Setup Payment Details</h3>
+                                <p class="text-muted">
+                                    
+                                    How do you wish to handle <strong>payment</strong> for orders placed on your store: <br/><br/>
+                                    <ul>
+                                        <li>Let them use my bank account</li>
+                                        <li>I have an online payment provider account (e.g. Paystack / Flutterwave)</li>
+                                        <li v-if="payment_settings.has_marketplace">Since you're automatically on the {{ env('DORCAS_PARTNER_PRODUCT_NAME', 'Hub') }} platform, anny orders placed there will use their own online payment provider</li>
+                                    </ul>
+                                    <fieldset class="form-fieldset">
+                                        Choose Payment Option: 
+                                        <div class="row">
+                                            <div class="col-md-12 form-group">
+                                                <select id="payment_option" name="payment_option" class="form-control" v-model="payment_settings.payment_option" required>
+                                                    <option value="use_bank_account">Use My Bank Account</option>
+                                                    <option value="use_online_provider_paystack">Use My Paystack Account</option>
+                                                    <option value="use_online_provider_flutterwave">Use My Flutterwave Account</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+
+                                    <!-- 
+                                    <a class="btn btn-secondary btn-sm" href="{{ route('integrations-main') }}">
+                                        Add Integration
+                                    </a>
+                                    <a class="btn btn-primary btn-sm" href="{{ env('DORCAS_STORE_PAYMENT_VENDOR_URL', 'https://dorcas.ravepay.co/auth/') }}" target="_blank">
+                                        Create Vendor Account
+                                    </a>
+                                    -->
+
+                                    <div class="col-md-12">
+                                        <button class="btn btn-primary" type="submit" name="action">Save Payments Options</button>
+                                    </div>
+
+                                </p>
+                            </div>
                         </div>
-                    </div>
+
+                    </form>
 
                 </div>
 
@@ -223,13 +249,11 @@
                             <div class="card-body">
                                 <h3 class="card-title">Setup Logistics Provider</h3>
                                 <p class="text-muted">
-                                    
-                                    How do you wish to handle shipment (delivery) of orders placed on your store: <br/><br/>
+                                    How do you wish to handle <strong>shipping / delivery<strong> of orders placed on your store: <br/><br/>
                                     <ul>
                                         <li>You can choose to handle your shipments yourself and have customers choose from routes whose prices you set manually</li>
                                         <li>You can choose to have a logistics provider handle shipping; shipping costs are automatically calculated when your customers enter their delivery addresses</li>
                                     </ul>
-                                    <br/>
                                     <fieldset class="form-fieldset">
                                         Choose Shipping Option: 
                                         <div class="row">
@@ -241,14 +265,11 @@
                                             </div>
                                         </div>
                                     </fieldset>
-                                    <br/>
-                                    <br/>
                                     If you choose <strong>Use Shipping Provider</strong> above, would you like to:
                                     <ul>
                                         <li>have the logistics provider come to pick orders at your location</li>
                                         <li>drop at a fulfilment centre {{ $logisticsFulfilmentCentre ? '' : '(option currently not available)' }}</li>
                                     </ul>
-                                    <br/>
                                     <fieldset class="form-fieldset">
                                         Choose Fulfilment Option: 
                                         <div class="row">
@@ -309,6 +330,7 @@
                 store_owner: {!! json_encode($business) !!},
                 store_settings: {!! json_encode($storeSettings) !!},
                 logistics_settings: {!! !empty($logisticsSettings) ? json_encode($logisticsSettings) : ["logistics_shipping" => "shipping_myself", "logistics_fulfilment" => "fulfilment_pickup"] !!},
+                payment_settings: {!! !empty($paymentSettings) ? json_encode($paymentSettings) : ["payment_option" => "use_bank_account", "has_marketplace" => "no"] !!},
                 logistics_fulfilment_centre: {!! json_encode($logisticsFulfilmentCentre) !!},
                 advanced_store_settings: false
             }

@@ -36,6 +36,11 @@ class ModulesEcommerceStoreController extends Controller {
         'logistics_shipping',
         'logistics_fulfilment',
     ];
+
+    protected $storePaymentsFields = [
+        'payment_option',
+        'has_marketplace',
+    ];
     
     public function __construct()
     {
@@ -71,6 +76,10 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['storeSettings'] = self::getStoreSettings((array) $this->getCompany()->extra_data);
         $this->data['logisticsSettings'] = self::getLogisticsSettings((array) $this->getCompany()->extra_data);
         $this->data['logisticsFulfilmentCentre'] = env("SETTINGS_ECOMMERCE_LOGISTICS_FULFILMENT_CENTRE", false);
+        $this->data['paymentSettings'] = [
+            "payment_option" => "use_bank_account",
+            "has_marketplace" => "no"
+        ];
         # our store settings container
         $query = $sdk->createProductResource()->addQueryArgument('limit', 1)->send('get');
         $this->data['productCount'] = $query->isSuccessful() ? $query->meta['pagination']['total'] ?? 0 : 0;
@@ -184,6 +193,29 @@ class ModulesEcommerceStoreController extends Controller {
     }
     
     /**
+     * @param array $configuration
+     *
+     * @return array
+     */
+    public static function getPaymentsSettings(array $configuration = []): array
+    {
+        $requiredPaymentSettings = [
+            'payment_option',
+            'has_marketplace',
+        ];
+        $settings = $configuration['payments_settings'] ?? [];
+        # our store settings container
+        foreach ($requiredPaymentSettings as $key) {
+            if (isset($settings[$key])) {
+                continue;
+            }
+            $settings[$key] = '';
+        }
+        return $settings;
+    }
+
+    
+    /**
      * @param Request $request
      * @param Sdk     $sdk
      *
@@ -258,6 +290,47 @@ class ModulesEcommerceStoreController extends Controller {
             }
             $this->clearCache($sdk);
             $response = (tabler_ui_html_response(['Successfully updated your Logistics Settings']))->setType(UiResponse::TYPE_SUCCESS);
+        } catch (\Exception $e) {
+            $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
+        }
+        return redirect(route('ecommerce-store'))->with('UiResponse', $response);
+    }
+
+
+    /**
+     * @param Request $request
+     * @param Sdk     $sdk
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function storePayments(Request $request, Sdk $sdk)
+    {
+        try {
+            $company = $this->getCompany();
+            $configuration = (array) $company->extra_data;
+            $paymentsSettings = $configuration['payments_settings'] ?? [];
+            # our store settings container
+            $submitted = $request->only($this->storePaymentsFields);
+            # get the submitted data
+            foreach ($submitted as $key => $value) {
+                if (empty($value)) {
+                    unset($paymentsSettings[$key]);
+                }
+                $paymentsSettings[$key] = $value;
+            }
+            $configuration['payments_settings'] = $paymentsSettings;
+            # add the new store settings configuration
+            $query = $sdk->createCompanyService()->addBodyParam('extra_data', $configuration)
+                                                ->send('PUT');
+            # send the request
+            if (!$query->isSuccessful()) {
+                # it failed
+                $message = $query->errors[0]['title'] ?? '';
+                throw new \RuntimeException('Failed while updating the payments settings. '.$message);
+            }
+            $this->clearCache($sdk);
+            $response = (tabler_ui_html_response(['Successfully updated your Payments Settings']))->setType(UiResponse::TYPE_SUCCESS);
         } catch (\Exception $e) {
             $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
         }
