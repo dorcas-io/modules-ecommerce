@@ -316,6 +316,7 @@ class ModulesEcommerceStoreController extends Controller {
                 }
                 $paymentsSettings[$key] = $value;
             }
+            $paymentsSettings["has_marketplace"] = env("DORCAS_EDITION","business") === "community" || env("DORCAS_EDITION","business") === "enterprise" ? true : false;
             $configuration['payments_settings'] = $paymentsSettings;
             # add the new store settings configuration
             $query = $sdk->createCompanyService()->addBodyParam('extra_data', $configuration)

@@ -330,7 +330,7 @@
                 store_owner: {!! json_encode($business) !!},
                 store_settings: {!! json_encode($storeSettings) !!},
                 logistics_settings: {!! !empty($logisticsSettings) ? json_encode($logisticsSettings) : ["logistics_shipping" => "shipping_myself", "logistics_fulfilment" => "fulfilment_pickup"] !!},
-                payment_settings: {!! !empty($paymentSettings) ? json_encode($paymentSettings) : ["payment_option" => "use_bank_account", "has_marketplace" => "no"] !!},
+                payment_settings: {!! !empty($paymentSettings) ? json_encode($paymentSettings) : ["payment_option" => "use_bank_account", "has_marketplace" => false] !!},
                 logistics_fulfilment_centre: {!! json_encode($logisticsFulfilmentCentre) !!},
                 advanced_store_settings: false
             }
