@@ -76,10 +76,7 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['storeSettings'] = self::getStoreSettings((array) $this->getCompany()->extra_data);
         $this->data['logisticsSettings'] = self::getLogisticsSettings((array) $this->getCompany()->extra_data);
         $this->data['logisticsFulfilmentCentre'] = env("SETTINGS_ECOMMERCE_LOGISTICS_FULFILMENT_CENTRE", false);
-        $this->data['paymentSettings'] = [
-            "payment_option" => "use_bank_account",
-            "has_marketplace" => "no"
-        ];
+        $this->data['paymentSettings'] = self::getPaymentsSettings((array) $this->getCompany()->extra_data);
         # our store settings container
         $query = $sdk->createProductResource()->addQueryArgument('limit', 1)->send('get');
         $this->data['productCount'] = $query->isSuccessful() ? $query->meta['pagination']['total'] ?? 0 : 0;

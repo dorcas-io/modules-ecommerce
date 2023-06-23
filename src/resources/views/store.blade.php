@@ -96,7 +96,7 @@
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
 	    				<div>
 	    					<h4 class="m-0"><a href="javascript:void(0)">Store Domain</a></h4>
-	    					<small class="text-muted"><a href="{{ !empty($subdomain) ? $storeUrl : '#' }}" target="_blank">{{ !empty($subdomain) ? $storeUrl : 'Not Reserved' }}</a></small>
+	    					<small class="text-muted"><a href="{{ !empty($subdomain) ? $storeUrl : '#' }}" target="_blank">{{ !empty($subdomain) ? str_replace("https://", "", $storeUrl) : 'Not Reserved' }}</a></small>
 	    				</div>
 	    			</div>
 	    		</div>
@@ -249,7 +249,7 @@
                             <div class="card-body">
                                 <h3 class="card-title">Setup Logistics Provider</h3>
                                 <p class="text-muted">
-                                    How do you wish to handle <strong>shipping / delivery<strong> of orders placed on your store: <br/><br/>
+                                    How do you wish to handle <strong>shipping / delivery</strong> of orders placed on your store: <br/><br/>
                                     <ul>
                                         <li>You can choose to handle your shipments yourself and have customers choose from routes whose prices you set manually</li>
                                         <li>You can choose to have a logistics provider handle shipping; shipping costs are automatically calculated when your customers enter their delivery addresses</li>
