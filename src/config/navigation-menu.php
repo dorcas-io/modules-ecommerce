@@ -1,10 +1,10 @@
 <?php
 return [
-    'ecommerce-domains' => [
-    	'title' => 'Domains',
-    	'route' => 'ecommerce-domains',
-        'icon' => 'fe fe-at-sign',
-    ],
+    // 'ecommerce-domains' => [
+    // 	'title' => 'Domains',
+    // 	'route' => 'ecommerce-domains',
+    //     'icon' => 'fe fe-at-sign',
+    // ],
     // 'ecommerce-website' => [
     //     'title' => 'Website',
     //     'route' => 'ecommerce-website',
