@@ -249,6 +249,41 @@ class ModulesEcommerceStoreController extends Controller {
         } catch (\Exception $e) {
             $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
         }
+
+        /* START INTERCEPT GETTING STARTED REDIRECTS */
+        $user = $request->user();
+        //$company = $user->company(true, true);
+        $storeSettings = self::getStoreSettings((array) $company->extra_data);
+        $logisticsSettings = self::getLogisticsSettings((array) $company->extra_data);
+        $paymentSettings = self::getPaymentsSettings((array) $company->extra_data);
+        
+        $storeSettingsFilled = collect($storeSettings);
+        $logisticsSettingsFilled = collect($logisticsSettings);
+        $paymentSettingsFilled = collect($paymentSettings);
+
+        $allFilled = collect([$storeSettingsFilled, $logisticsSettingsFilled, $paymentSettingsFilled]);
+
+        $hasAllNonEmptyCollections = $allFilled->every(function ($collection) {
+            return $collection->filter(function ($value) {
+                return !empty($value);
+            })->isNotEmpty();
+        });
+
+        if ($hasAllNonEmptyCollections) {
+            $GettingStartedCacheKey = 'GettingStartedCache.' . $company->id . '.' . $user->id;
+            $applicableClient = 'setup_store';
+            if ( Cache::has($GettingStartedCacheKey) ) {
+                $cache = Cache::get($GettingStartedCacheKey);
+                if ($cache['currentClient'] == $applicableClient) {
+                    $cache['currentClient'] = '';
+                    Cache::forever($GettingStartedCacheKey, $cache); // reset currentClient
+                    return redirect(route('dashboard'))->with('UiResponse', $response);
+                }
+            }
+        }
+        /* END INTERCEPT GETTING STARTED REDIRECTS */
+
+
         return redirect(url()->current())->with('UiResponse', $response);
     }
 
@@ -290,6 +325,40 @@ class ModulesEcommerceStoreController extends Controller {
         } catch (\Exception $e) {
             $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
         }
+
+        /* START INTERCEPT GETTING STARTED REDIRECTS */
+        $user = $request->user();
+        //$company = $user->company(true, true);
+        $storeSettings = self::getStoreSettings((array) $company->extra_data);
+        $logisticsSettings = self::getLogisticsSettings((array) $company->extra_data);
+        $paymentSettings = self::getPaymentsSettings((array) $company->extra_data);
+        
+        $storeSettingsFilled = collect($storeSettings);
+        $logisticsSettingsFilled = collect($logisticsSettings);
+        $paymentSettingsFilled = collect($paymentSettings);
+
+        $allFilled = collect([$storeSettingsFilled, $logisticsSettingsFilled, $paymentSettingsFilled]);
+
+        $hasAllNonEmptyCollections = $allFilled->every(function ($collection) {
+            return $collection->filter(function ($value) {
+                return !empty($value);
+            })->isNotEmpty();
+        });
+
+        if ($hasAllNonEmptyCollections) {
+            $GettingStartedCacheKey = 'GettingStartedCache.' . $company->id . '.' . $user->id;
+            $applicableClient = 'setup_store';
+            if ( Cache::has($GettingStartedCacheKey) ) {
+                $cache = Cache::get($GettingStartedCacheKey);
+                if ($cache['currentClient'] == $applicableClient) {
+                    $cache['currentClient'] = '';
+                    Cache::forever($GettingStartedCacheKey, $cache); // reset currentClient
+                    return redirect(route('dashboard'))->with('UiResponse', $response);
+                }
+            }
+        }
+        /* END INTERCEPT GETTING STARTED REDIRECTS */
+        
         return redirect(route('ecommerce-store'))->with('UiResponse', $response);
     }
 
@@ -332,6 +401,40 @@ class ModulesEcommerceStoreController extends Controller {
         } catch (\Exception $e) {
             $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
         }
+
+        /* START INTERCEPT GETTING STARTED REDIRECTS */
+        $user = $request->user();
+        //$company = $user->company(true, true);
+        $storeSettings = self::getStoreSettings((array) $company->extra_data);
+        $logisticsSettings = self::getLogisticsSettings((array) $company->extra_data);
+        $paymentSettings = self::getPaymentsSettings((array) $company->extra_data);
+        
+        $storeSettingsFilled = collect($storeSettings);
+        $logisticsSettingsFilled = collect($logisticsSettings);
+        $paymentSettingsFilled = collect($paymentSettings);
+
+        $allFilled = collect([$storeSettingsFilled, $logisticsSettingsFilled, $paymentSettingsFilled]);
+
+        $hasAllNonEmptyCollections = $allFilled->every(function ($collection) {
+            return $collection->filter(function ($value) {
+                return !empty($value);
+            })->isNotEmpty();
+        });
+
+        if ($hasAllNonEmptyCollections) {
+            $GettingStartedCacheKey = 'GettingStartedCache.' . $company->id . '.' . $user->id;
+            $applicableClient = 'setup_store';
+            if ( Cache::has($GettingStartedCacheKey) ) {
+                $cache = Cache::get($GettingStartedCacheKey);
+                if ($cache['currentClient'] == $applicableClient) {
+                    $cache['currentClient'] = '';
+                    Cache::forever($GettingStartedCacheKey, $cache); // reset currentClient
+                    return redirect(route('dashboard'))->with('UiResponse', $response);
+                }
+            }
+        }
+        /* END INTERCEPT GETTING STARTED REDIRECTS */
+
         return redirect(route('ecommerce-store'))->with('UiResponse', $response);
     }
 
