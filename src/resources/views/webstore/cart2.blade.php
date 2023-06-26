@@ -6,24 +6,24 @@
 
 @section('body_main_content_container_body')
 
-    <ul class="nav nav-tabs" id="shoppingCartTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-controls="address" aria-selected="true">@{{ stages.data.address.title }}</button>
+    <ul class="nav nav-tabs nav-justified" id="shoppingCartTab" role="tablist">
+        <li class="nav-item" role="presentation" style="padding-top:3px !important; padding-bottom:3px !important;">
+            <button class="nav-link active" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-controls="address" aria-selected="true"><h3>@{{ stages.data.address.title }}<h3></button>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item" role="presentation" style="padding-top:3px !important; padding-bottom:3px !important;">
             <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" aria-selected="false">@{{ stages.data.address.shipping }}</button>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item" role="presentation" style="padding-top:3px !important; padding-bottom:3px !important;">
             <button class="nav-link disabled" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" aria-selected="false" tabindex="-1" aria-disabled="true">@{{ stages.data.address.review }}</button>
         </li>
     </ul>
 
     <div class="tab-content" id="shoppingCartTabContent">
         
-        <div class="tab-pane fade show active" id="address" role="tabpanel" aria-labelledby="address-tab">
+        <div class="tab-pane fade show active" id="address" role="tabpanel" aria-labelledby="address-tab" style="padding:10px !important;">
 
             <!-- Cart Address Begins -->
-            <div class="row clearfix" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0">
+            <div class="row clearfix" style="margin:10px !important;" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0">
                 <div class="col-md-6 clearfix">
                     <h4>Delivery Address</h4>
                     <form method="post" action="" v-on:submit.prevent="checkout()">
@@ -67,10 +67,10 @@
 
         </div>
 
-        <div class="tab-pane fade" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
+        <div class="tab-pane fade" id="shipping" role="tabpanel" aria-labelledby="shipping-tab" style="padding:10px !important;">
 
             <!-- Cart Shipping Begins -->
-            <div class="table-responsive bottommargin" id="cart-container" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0 && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
+            <div class="table-responsive bottommargin" style="margin:10px !important;" id="cart-container" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0 && typeof shippingRoutes !== 'undefined' && shippingRoutes.length > 0">
                 <h4>Delivery Costing</h4>
                 <table class="table cart">
                     <thead>
@@ -173,10 +173,10 @@
 
         </div>
 
-        <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
+        <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab" style="padding:10px !important;">
 
             <!-- Cart Review Begins -->
-            <div class="table-responsive bottommargin" id="cart-container">
+            <div class="table-responsive bottommargin" id="cart-container" style="margin:10px !important;">
                 <table class="table cart">
                     <thead>
                     <tr>

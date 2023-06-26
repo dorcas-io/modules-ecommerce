@@ -221,10 +221,11 @@ class ModulesEcommerceStore extends Controller
 
     /**
      * @param Request $request
+     * @param Sdk     $sdk
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function cart(Request $request)
+    public function cart(Request $request, Sdk $sdk)
     {
         $storeOwner = $this->getCompanyViaDomain();
         # get the store owner
@@ -237,32 +238,132 @@ class ModulesEcommerceStore extends Controller
         //$this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
         $this->data['page']['title'] = $storeOwner->name . ' | Shopping Cart';
 
+        $this->data['countries'] = $countries = $this->getCountries($sdk);
+        # get the countries listing
+        $nigeria = !empty($countries) && $countries->count() > 0 ? $countries->where('iso_code', 'NG')->first() : null;
+        # get the nigeria country model
+        if (!empty($nigeria)) {
+            $this->data['states'] = $this->getDorcasStates($sdk, $nigeria->id);
+            # get the states
+        }
+
+        $company_data = (array) $storeOwner->extra_data;
+        //$this->data['company_data'] = $company_data;
+        $logistics_settings = $company_data['logistics_settings'] ?? ["logistics_shipping" => env("SETTINGS_ECOMMERCE_LOGISTICS_SHIPPING", "shipping_myself"), "logistics_fulfilment" => env("SETTINGS_ECOMMERCE_LOGISTICS_FULFILMENT", "fulfilment_pickup")];
+
+        $seller_data = (array) $storeOwner->extra_data;
+
+        $this->data['logistics'] = [
+            "seller_state" => "",
+            "seller_country" => env('SETTINGS_COUNTRY', 'NG'),
+            "settings" => $logistics_settings,
+            "seller_address" => [
+
+            ]
+        ];
+
+        $this->data['env'] = [
+            "CREDENTIAL_GOOGLE_API_KEY" => env('CREDENTIAL_GOOGLE_API_KEY', 'ABC'),
+        ];
+
+        // Fetch/Initiate Cache
+        
+        $cartCacheKey = "cartCache";
+
+        $cartCacheDefault = [
+            "address" => [
+                "firstname" => "",
+                "lastname" => "",
+                "email" => "",
+                "phone" => "",
+                "address" => "",
+                "state" => "",
+                "country" => env('SETTINGS_COUNTRY', 'NG'),
+                "latitude" => "0",
+                "longitude" => "0"
+            ]
+        ];
+
+        $cartCache = session('cartCache', $cartCacheDefault);
+
+        // Process Address Content
+        $address_firstname = !empty($request->address_firstname) ? $request->address_firstname : $cartCache["address"]["firstname"];
+        $address_lastname = !empty($request->address_lastname) ? $request->address_lastname : $cartCache["address"]["lastname"];
+        $address_email = !empty($request->address_email) ? $request->address_email : $cartCache["address"]["email"];
+        $address_phone = !empty($request->address_phone) ? $request->address_phone : $cartCache["address"]["phone"];
+        $address_address = !empty($request->address_address) ? $request->address_address : $cartCache["address"]["address"];
+        $address_state = !empty($request->address_state) ? $request->address_state : $cartCache["address"]["state"];
+        $address_country = !empty($request->address_country) ? $request->address_country : $cartCache["address"]["country"];
+        $address_latitude = !empty($request->address_latitude) ? $request->address_latitude : $cartCache["address"]["latitude"];
+        $address_longitude = !empty($request->address_longitude) ? $request->address_longitude : $cartCache["address"]["longitude"];
+
+        // Save Address Status
+        $cartCache["address"] = [
+            "firstname" => $address_firstname,
+            "lastname" => $address_lastname,
+            "email" => $address_email,
+            "phone" => $address_phone,
+            "address" => $address_address,
+            "state" => $address_state,
+            "country" => $address_country,
+            "latitude" => $address_latitude,
+            "longitude" => $address_longitude
+        ];
+
+
+        // Save Seller Address
+        $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']]];
+        # the location information
+        $locations = $this->getLocations($sdk);
+        $location = !empty($locations) ? $locations->first() : $location;
+        $location['country'] = env('SETTINGS_COUNTRY', 'NG');
+
+        $cartCache["address_seller"] = $location;
+
+
+        // Save ALL to session
+        session(['cartCache' => $cartCache]);
+
+
+
         // Process Cart Stages
         $cart_stages = [
             "address" => [
-                "title" => "Enter Delivery Address"
+                "title" => "Enter Delivery Address",
+                "active" => false
             ],
             "shipping" => [
-                "title" => "Choose Shipping Type"
+                "title" => "Choose Shipping Type",
+                "active" => false
             ],
             "review" => [
-                "title" => "Review &amp; Finalize Order"
+                "title" => "Review & Finalize Order",
+                "active" => false
             ]
         ];
 
         $this->data['stages'] = [
             "stage" => "address",
-            "data" => $cart_stages
+            "data" => $cart_stages,
+            //"countries" => $countries
+        ];
+
+        $this->data['cache'] = [
+            "address" => $cartCache["address"]
         ];
 
         $stage_present = false;
         if ( !empty($request->stage) && in_array($request->stage, array_keys($cart_stages)) ) {
-            $this->data['stages']['stage'] = $request->stage;
+            $currentStage = $request->stage;
             $stage_present = true;
+        } else {
+            $currentStage = 'address';
         }
+        $this->data['stages']['stage'] = $currentStage;
+        $this->data['stages']['data'][$currentStage]['active'] = true;
 
 
-        $stage_title = $stage_present ? $cart_stages[$stage_title]["title"] : 'Shopping Cart';
+        $stage_title = $stage_present ? $cart_stages[$currentStage]["title"] : 'Shopping Cart';
 
         $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
         //$this->data['cart'] = Home::getCartContent($request);
@@ -271,52 +372,52 @@ class ModulesEcommerceStore extends Controller
         return view('modules-ecommerce::webstore.cart', $this->data);
     }
 
-    public function cart2(Request $request)
-    {
-        $storeOwner = $this->getCompanyViaDomain();
-        # get the store owner
-        $this->data['storeSettings'] = Dashboard::getStoreSettings((array) $storeOwner->extra_data);
-        # our store settings container
-        if (empty($storeOwner)) {
-            abort(404, 'Could not find a store at this URL.');
-        }
-        $this->data['storeOwner'] = $storeOwner;
-        //$this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
-        $this->data['page']['title'] = $storeOwner->name . ' | Shopping Cart';
+    // public function cart2(Request $request)
+    // {
+    //     $storeOwner = $this->getCompanyViaDomain();
+    //     # get the store owner
+    //     $this->data['storeSettings'] = Dashboard::getStoreSettings((array) $storeOwner->extra_data);
+    //     # our store settings container
+    //     if (empty($storeOwner)) {
+    //         abort(404, 'Could not find a store at this URL.');
+    //     }
+    //     $this->data['storeOwner'] = $storeOwner;
+    //     //$this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
+    //     $this->data['page']['title'] = $storeOwner->name . ' | Shopping Cart';
 
-        // Process Cart Stages
-        $cart_stages = [
-            "address" => [
-                "title" => "Enter Delivery Address"
-            ],
-            "shipping" => [
-                "title" => "Choose Shipping Type"
-            ],
-            "review" => [
-                "title" => "Review &amp; Finalize Order"
-            ]
-        ];
+    //     // Process Cart Stages
+    //     $cart_stages = [
+    //         "address" => [
+    //             "title" => "Enter Delivery Address"
+    //         ],
+    //         "shipping" => [
+    //             "title" => "Choose Shipping Type"
+    //         ],
+    //         "review" => [
+    //             "title" => "Review & Finalize Order"
+    //         ]
+    //     ];
 
-        $this->data['stages'] = [
-            "stage" => "address",
-            "data" => $cart_stages
-        ];
+    //     $this->data['stages'] = [
+    //         "stage" => "address",
+    //         "data" => $cart_stages
+    //     ];
 
-        $stage_present = false;
-        if ( !empty($request->stage) && in_array($request->stage, array_keys($cart_stages)) ) {
-            $this->data['stages']['stage'] = $request->stage;
-            $stage_present = true;
-        }
+    //     $stage_present = false;
+    //     if ( !empty($request->stage) && in_array($request->stage, array_keys($cart_stages)) ) {
+    //         $this->data['stages']['stage'] = $request->stage;
+    //         $stage_present = true;
+    //     }
 
 
-        $stage_title = $stage_present ? $cart_stages[$stage_title]["title"] : 'Shopping Cart';
+    //     $stage_title = $stage_present ? $cart_stages[$stage_title]["title"] : 'Shopping Cart';
 
-        $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
-        //$this->data['cart'] = Home::getCartContent($request);
-        $this->data['cart'] = $this->getCartContent($request);
+    //     $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
+    //     //$this->data['cart'] = Home::getCartContent($request);
+    //     $this->data['cart'] = $this->getCartContent($request);
 
-        return view('modules-ecommerce::webstore.cart2', $this->data);
-    }
+    //     return view('modules-ecommerce::webstore.cart2', $this->data);
+    // }
 
     /**
      * @param Request $request
@@ -398,6 +499,7 @@ class ModulesEcommerceStore extends Controller
             throw new \RuntimeException('Could not add your order to the record. Please try again later.');
         }
         Cache::forget('crm.customers.'.$storeOwner->id);
+        $request->session()->forget('cartCache');
         # clear the cache
         $cartManager->clear();
         # clear the cart
@@ -406,6 +508,143 @@ class ModulesEcommerceStore extends Controller
             $data['payment_url'] = $checkout->meta['payment_url'];
         }
         return response()->json($data, 202);
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getProviderShippingRoutesXhr(Request $request)
+    {
+        // Determine active Logistics provider
+        $provider = env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik');
+        $country = env('SETTINGS_COUNTRY', 'NG');
+
+        $provider_config = strtolower($provider . '_' . $country) . '.php';
+        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+
+        $config = require_once(__DIR__.'/../../config/providers/logistics/' . $provider_config);
+
+
+
+        // Get Destination Address Details
+
+        // Parse Shopper Origin Address
+        $cartCache = session('cartCache');
+        $s = $request->user()->company(true, true);
+        $sAddress = $cartCache["address_seller"];
+        //$location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']]];
+        $sellerAdddress = [
+            "address" => $sAddress["address1"] . " " . $sAddress["address2"],
+            "name" => $s["name"],
+            "latitude" => $sAddress["latitude"],
+            "longitude" => $sAddress["longitude"],
+            "time" => Carbon::now(), //Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))
+            "phone" => $s["phone"],
+            "has_return_task" => false,
+            "is_package_insured" => 0
+        ];
+
+        // Determine if its bike or car or planne depennding on inter state, 
+
+
+        $provider = new $provider_class();
+
+        $from = [
+            "address" => "Landmark House, 52 Isaac John",
+            "name" => "Office",
+            "latitude" => 6.5847605,
+            "longitude" => 3.3575444,
+            "time" => "2023-06-17 09:20:00",
+            "phone" => "+2348185977165",
+            "has_return_task" => false,
+            "is_package_insured" => 0
+        ];
+
+        $to = [
+            "address" => "34 Jaiye Oyedotun Street, Lagos",
+            "name" => "Bolaji",
+            "latitude" => 6.6162878,
+            "longitude" => 3.3684280,
+            "time" => "2023-06-17 09:20:00",
+            "phone" => "+2348185977165",
+            "has_return_task" => false,
+            "is_package_insured" => 0
+        ];
+
+        $res = "hello"; // $provider->getCost($from, $to);
+
+
+        /* KWIK PROCESS
+        - /vendor_login and get access token
+        
+        WHAT IS LOADER??
+
+        - /send_payment_for_task (get charge details according to google distance)
+        - /get_bill_breakdown (get bill details)
+
+
+        - /create_task_via_vendor (requires /send_payment_for_task and /get_bill_breakdown)
+
+
+
+        - /getVehicle to get details e.g base fare, etc
+        */
+        
+
+
+        // Estimate Cost
+
+        // What is loader
+
+
+        // Parse Cost like route data
+
+        /*
+        currency
+        items
+         - 0 (array)
+        id
+        isShipping "no"
+        name
+        photo
+        quantity
+        total (objecy)
+        unit_price 3700
+        */
+
+        $routes = [
+            "data" => [
+                "currency" => env("SETTINGS_CURRENCY", "NGN"),
+                "items" => [
+                    "id" => 0,
+                    "isShipping" => "no",
+                    "name" => "Test Route",
+                    "photo" => "",
+                    "quantity" => 1,
+                    "total" => [
+                        "raw" => 5000,
+                        "formatted" => "5,000"
+                    ],
+                    "unit_price" => 5000,
+                ],
+                "total" => 0
+            ],
+            "config" => $config,
+            "token" => $provider->accessToken,
+            "res" => $res,
+            "to" => $to,
+            "from" => $from,
+            "sellerAdddress" => $sellerAdddress
+        ];
+
+        //Return
+        $response = [
+            "data" => $routes
+        ];
+        
+        return response()->json($response);
     }
 
     /**

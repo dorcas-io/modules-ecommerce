@@ -44,6 +44,7 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
     Route::post('/ecommerce-store', 'ModulesEcommerceStoreController@storeSettings');
 
     Route::post('/ecommerce-logistics', 'ModulesEcommerceStoreController@storeLogistics');
+    Route::post('/ecommerce-payments', 'ModulesEcommerceStoreController@storePayments');
 
     Route::post('/payment-verify', 'ModulesEcommerceController@verifyTransaction');
 
@@ -68,12 +69,13 @@ Route::namespace('Dorcas\ModulesEcommerce\Http\Controllers')->middleware(['web',
     Route::get('/products', 'ModulesEcommerceStore@products')->name('webstore.products');
     Route::get('/products/{id}', 'ModulesEcommerceStore@productDetails')->name('webstore.products.details');
     Route::get('/cart', 'ModulesEcommerceStore@cart')->name('webstore.cart');
-    Route::get('/cart2', 'ModulesEcommerceStore@cart2')->name('webstore.cart2');
+    // Route::get('/cart2', 'ModulesEcommerceStore@cart2')->name('webstore.cart2');
     Route::get('/product-quick-view/{id}', 'ModulesEcommerceStore@quickView')->name('webstore.quick-view');
     Route::delete('/xhr/cart', 'ModulesEcommerceStore@removeFromCartXhr');
     Route::post('/xhr/cart', 'ModulesEcommerceStore@addToCartXhr');
     Route::post('/xhr/cart/checkout', 'ModulesEcommerceStore@checkoutXhr');
     Route::put('/xhr/cart/update-quantities', 'ModulesEcommerceStore@updateCartQuantitiesXhr');
+    Route::get('/xhr/cart/get-provider-shipping-routes', 'ModulesEcommerceStore@getProviderShippingRoutesXhr');
 });
 
 
