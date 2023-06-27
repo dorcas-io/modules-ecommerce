@@ -273,19 +273,14 @@ class ModulesEcommerceStoreController extends Controller {
         });
 
         if ($hasAllNonEmptyCollections) {
-            $GettingStartedCacheKey = 'GettingStartedCache.' . $company->id . '.' . $user->id;
-            $applicableClient = 'setup_store';
-            if ( Cache::has($GettingStartedCacheKey) ) {
-                $cache = Cache::get($GettingStartedCacheKey);
-                if ($cache['currentClient'] == $applicableClient) {
-                    $cache['currentClient'] = '';
-                    Cache::forever($GettingStartedCacheKey, $cache); // reset currentClient
-                    return redirect(route('dashboard'))->with('UiResponse', $response);
-                }
+
+            $gettingStartedRedirect = \Dorcas\ModulesDashboard\Http\Controllers\ModulesDashboardController::processGettingStartedRedirection($request, 'setup_store', $response);
+            if ($gettingStartedRedirect) {
+                return redirect(route('dashboard'))->with('UiResponse', $response);
             }
+
         }
         /* END INTERCEPT GETTING STARTED REDIRECTS */
-
 
         return redirect(url()->current())->with('UiResponse', $response);
     }
@@ -349,16 +344,12 @@ class ModulesEcommerceStoreController extends Controller {
         });
 
         if ($hasAllNonEmptyCollections) {
-            $GettingStartedCacheKey = 'GettingStartedCache.' . $company->id . '.' . $user->id;
-            $applicableClient = 'setup_store';
-            if ( Cache::has($GettingStartedCacheKey) ) {
-                $cache = Cache::get($GettingStartedCacheKey);
-                if ($cache['currentClient'] == $applicableClient) {
-                    $cache['currentClient'] = '';
-                    Cache::forever($GettingStartedCacheKey, $cache); // reset currentClient
-                    return redirect(route('dashboard'))->with('UiResponse', $response);
-                }
+
+            $gettingStartedRedirect = \Dorcas\ModulesDashboard\Http\Controllers\ModulesDashboardController::processGettingStartedRedirection($request, 'setup_store', $response);
+            if ($gettingStartedRedirect) {
+                return redirect(route('dashboard'))->with('UiResponse', $response);
             }
+
         }
         /* END INTERCEPT GETTING STARTED REDIRECTS */
         
@@ -425,16 +416,12 @@ class ModulesEcommerceStoreController extends Controller {
         });
 
         if ($hasAllNonEmptyCollections) {
-            $GettingStartedCacheKey = 'GettingStartedCache.' . $company->id . '.' . $user->id;
-            $applicableClient = 'setup_store';
-            if ( Cache::has($GettingStartedCacheKey) ) {
-                $cache = Cache::get($GettingStartedCacheKey);
-                if ($cache['currentClient'] == $applicableClient) {
-                    $cache['currentClient'] = '';
-                    Cache::forever($GettingStartedCacheKey, $cache); // reset currentClient
-                    return redirect(route('dashboard'))->with('UiResponse', $response);
-                }
+
+            $gettingStartedRedirect = \Dorcas\ModulesDashboard\Http\Controllers\ModulesDashboardController::processGettingStartedRedirection($request, 'setup_store', $response);
+            if ($gettingStartedRedirect) {
+                return redirect(route('dashboard'))->with('UiResponse', $response);
             }
+
         }
         /* END INTERCEPT GETTING STARTED REDIRECTS */
 
