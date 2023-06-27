@@ -101,6 +101,22 @@
 	    			</div>
 	    		</div>
 	    	</div>
+            <div class="col-md-12 col-lg-4">
+                <div class="card p-3">
+                    <div class="d-flex align-items-center">
+                        <span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
+                        <div>
+                            <h4 class="m-0"><a href="javascript:void(0)">Marketplace</a></h4>
+                            <small class="text-muted">
+                                <a href="{{ env('E_COMMERCE_URL' , '') }}"
+                                   target="_blank">
+                                    {{ env('E_COMMERCE_URL' , 'Not Set')  }}
+                                </a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
 	    </div>
 
 
