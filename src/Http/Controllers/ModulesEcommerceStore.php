@@ -30,8 +30,9 @@ class ModulesEcommerceStore extends Controller
      */
     public function index(Request $request, Sdk $sdk, string $slug = null)
     {
+ 
         $storeOwner = $this->getCompanyViaDomain();
-        //dd($storeOwner);
+    
         # get the store owner
         if (empty($storeOwner)) {
             abort(404, 'Could not find a store at this URL.');
@@ -88,6 +89,7 @@ class ModulesEcommerceStore extends Controller
     public function productDetails(Request $request, Sdk $sdk, string $id)
     {
         $storeOwner = $this->getCompanyViaDomain();
+       
         # get the store owner
         $this->data['storeSettings'] = Dashboard::getStoreSettings((array) $storeOwner->extra_data);
         # our store settings container
