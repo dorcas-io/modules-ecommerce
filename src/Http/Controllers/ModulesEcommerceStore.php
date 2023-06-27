@@ -314,7 +314,7 @@ class ModulesEcommerceStore extends Controller
         // Save Seller Address
         $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']]];
         # the location information
-        $locations = $this->getLocations($sdk);
+        $locations = $this->getLocations($sdk, $storeOwner);
         $location = !empty($locations) ? $locations->first() : $location;
         $location['country'] = env('SETTINGS_COUNTRY', 'NG');
 
