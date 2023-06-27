@@ -32,25 +32,26 @@
                         <div class="col_full">
                             <input v-if="useAutoComplete" type="text" class="sm-form-control" name="address_address" id="address_address" required placeholder="Enter Delivery Address" v-model="checkout_form.address">
                         </div>
-                        <div v-if="useAutoComplete" id="address_map" class="col_full"></div>
-                        <a v-if="useAutoComplete" id="address_confirm" href="#" v-on:click.prevent="addressConfirm" class="btn btn-success btn-block">Address Is Correct</a>
+                        <div v-if="useAutoComplete" id="address_map" style="width:100%; height: 300px;" class="col_full"></div>
+                        <a v-if="useAutoComplete && mapIsConfirmed" id="address_confirm" href="#" v-on:click.prevent="confirmAddress" class="button button-3d nomargin button-green">Yes, Address On Map Is Correct</a>
+                        <!-- <button v-if="!useAutoComplete && !addressIsConfirmed" class="button button-3d nomargin button-black" action="confirmAddress()">Confirm Address</button> -->
                         <hr>
-                        <div class="col_half">
+                        <div class="col_half" v-show="addressIsConfirmed">
                             <input type="text" class="sm-form-control" name="address_firstname" id="address_firstname" required placeholder="First Name" v-model="checkout_form.firstname">
                         </div>
-                        <div class="col_half col_last">
+                        <div class="col_half col_last" v-show="addressIsConfirmed">
                             <input type="text" class="sm-form-control" name="address_lastname" id="address_lastname" required placeholder="Lastname" v-model="checkout_form.lastname">
                         </div>
-                        <div class="col_half">
+                        <div class="col_half" v-show="addressIsConfirmed">
                             <input type="email" class="sm-form-control" name="address_email" id="address_email" required placeholder="Email address" v-model="checkout_form.email">
                         </div>
-                        <div class="col_half col_last">
+                        <div class="col_half col_last" v-show="addressIsConfirmed">
                             <input type="text" class="sm-form-control" name="address_phone" id="address_phone" required placeholder="Phone number" v-model="checkout_form.phone">
                         </div>
                         <div class="col_full">
                             <textarea v-if="!useAutoComplete" class="form-control summernote"  name="address_address" id="address_address" maxlength="250" v-model="checkout_form.address" required rows="4" placeholder="Delivery Address"></textarea>
                         </div>
-                        <div class="col_half">
+                        <div class="col_half" v-show="addressIsConfirmed">
                             <select class="sm-form-control" name="address_state" id="address_state" v-model="checkout_form.state">
                                 <option value="">Choose your State</option>
                                 @if (!empty($states))
@@ -61,7 +62,7 @@
                                 <option value="non-local">Non-Local (Include In Address Above)</option>
                             </select>
                         </div>
-                        <div class="col_half col_last">
+                        <div class="col_half col_last" v-show="addressIsConfirmed">
                             <select class="sm-form-control" name="address_country" id="address_country" v-model="checkout_form.country" required>
                                 <option value="">Choose your Country</option>
                                 @if (!empty($countries))
@@ -75,7 +76,7 @@
                         <input type="hidden" name="address_latitude" id="address_latitude" v-model="checkout_form.latitude">
                         <input type="hidden" name="address_longitude" id="address_longitude" v-model="checkout_form.longitude">
                         <button v-if="addressIsConfirmed" type="submit" class="button button-3d nomargin button-black">Confirm & Save Address</button>
-                        <button v-if="!UseAutoComplete && !addressIsConfirmed" class="button button-3d nomargin button-black" action="confirmAddress()">Confirm Address</button>
+                        <button v-if="!useAutoComplete && !addressIsConfirmed" class="button button-3d nomargin button-black" action="confirmAddress()">Confirm Address</button>
                         @include('modules-ecommerce::modals.confirm-address')
                     </form>
                 </div>
@@ -329,11 +330,14 @@
                 stages: {!! json_encode($stages) !!},
                 logistics: {!! json_encode($logistics) !!},
                 addressIsConfirmed: false,
+                mapIsConfirmed: false,
                 useAutoComplete: true,
                 env: {!! json_encode($env) !!},
+                states: {!! json_encode($states) !!},
+                countries: {!! json_encode($countries) !!},
             },
             mounted: function() {
-                loadGoogleMaps();
+                this.loadGoogleMaps();
 
                 //console.log(this.shop.extra_data.logistics_settings.logistics_shipping);
                 //console.log(this.logistics.settings.logistics_shipping);
@@ -370,7 +374,7 @@
                     if (this.useAutoComplete) {
                         script.src = `https://maps.googleapis.com/maps/api/js?key=${this.env.CREDENTIAL_GOOGLE_API_KEY}&libraries=places&callback=Function.prototype`;
                         script.onload = function() {
-                            initAutocomplete();
+                            cartView.initAutocomplete();
                         };
                     } else {
                         script.src = `https://maps.googleapis.com/maps/api/js?key=${this.env.CREDENTIAL_GOOGLE_API_KEY}&callback=Function.prototype`;
@@ -401,11 +405,11 @@
                         const place = autocomplete.getPlace();
                         if (!place.geometry) {
                             console.log('No location data available for this place.');
-                            this.addressIsConfirmed = false;
+                            cartView.mapIsConfirmed = false;
                             return;
                         }
 
-                        this.addressIsConfirmed = true;
+                        cartView.mapIsConfirmed = true;
 
                         // Update the map center and marker
                         map.setCenter(place.geometry.location);
@@ -429,11 +433,14 @@
                         }
 
                         // Log the state and country to the console
-                        this.checkout_form.state = state;
-                        this.checkout_form.country = country;
+                        let stateObject = cartView.states.find( stat => stat.name = state.trim() )
+                        let countryObject = cartView.countries.find( coun => coun.name = country.trim() )
 
-                        this.checkout_form.latitude = place.geometry.location.lat();
-                        this.checkout_form.longitude = place.geometry.location.lng();
+                        cartView.checkout_form.state = stateObject.id;
+                        cartView.checkout_form.country = countryObject.id;
+
+                        cartView.checkout_form.latitude = place.geometry.location.lat();
+                        cartView.checkout_form.longitude = place.geometry.location.lng();
                     });
                 },
 
