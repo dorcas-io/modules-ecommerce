@@ -61,8 +61,7 @@ Route::prefix('store')->group(function () {
     Route::get('/cart', 'Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStore@redirectRoute');
 });
 
-Route::namespace('Dorcas\ModulesEcommerce\Http\Controllers')->middleware(['web','web_store'])->group(function () {
-    // domain($storeSubDomain)->
+Route::domain($storeSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controllers')->middleware(['web','web_store'])->group(function () {
     Route::get('/', 'ModulesEcommerceStore@index')->name('webstore');
     Route::get('/categories', 'ModulesEcommerceStore@categories')->name('webstore.categories');
     Route::get('/categories/{id}', 'ModulesEcommerceStore@index')->name('webstore.categories.single');
