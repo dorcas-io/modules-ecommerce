@@ -310,10 +310,11 @@ class ModulesEcommerceStore extends Controller
 
 
         // Save Seller Address
-        $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']]];
+        $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']], 'country' => ''];
         # the location information
         $locations = $this->getLocations($sdk, $storeOwner);
         $location = !empty($locations) ? $locations->first() : $location;
+        $location = (array) $location;
         $location['country'] = env('SETTINGS_COUNTRY', 'NG');
 
         $cartCache["address_seller"] = $location;

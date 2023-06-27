@@ -389,7 +389,7 @@
 
                     const mapOptions = {
                         center: { lat: 0, lng: 0 },
-                        zoom: 8
+                        zoom: 18
                     };
                     const map = new google.maps.Map(document.getElementById('address_map'), mapOptions);
                     const geocoder = new google.maps.Geocoder();
@@ -436,6 +436,13 @@
                         let stateObject = cartView.states.find( stat => stat.name = state.trim() )
                         let countryObject = cartView.countries.find( coun => coun.name = country.trim() )
 
+                        console.log(state)
+                        console.log(country)
+                        console.log(stateObject)
+                        console.log(countryObject)
+                        console.log(stateObject.id)
+                        console.log(countryObject.id)
+
                         cartView.checkout_form.state = stateObject.id;
                         cartView.checkout_form.country = countryObject.id;
 
@@ -452,7 +459,7 @@
 
                     const geocoder = new google.maps.Geocoder();
                     const mapOptions = {
-                        zoom: 15,
+                        zoom: 18,
                         center: new google.maps.LatLng(0, 0) // Default center
                     };
                     const map = new google.maps.Map(document.getElementById('address_map'), mapOptions);
@@ -653,6 +660,7 @@
                     }
                     console.log(shippingType)
                     console.log(shipping_url)
+                    console.log(shipping_params)
 
                     axios.get(shipping_url, {
                         params: shipping_params
