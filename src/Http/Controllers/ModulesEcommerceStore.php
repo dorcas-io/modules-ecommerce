@@ -310,6 +310,8 @@ class ModulesEcommerceStore extends Controller
             "longitude" => $address_longitude
         ];
 
+        $cartCache["storeOwner"] = $storeOwner;
+
 
         // Save Seller Address
         $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']], 'country' => ''];
@@ -533,7 +535,7 @@ class ModulesEcommerceStore extends Controller
 
         // Parse Shopper Origin Address
         $cartCache = session('cartCache');
-        $s = $request->user()->company(true, true);
+        $s = $cartCache["storeOwner"]; // $request->user()->company(true, true);
         $sAddress = $cartCache["address_seller"];
         //$location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']]];
         $sellerAdddress = [
