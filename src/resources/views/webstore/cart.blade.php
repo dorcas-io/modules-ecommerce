@@ -433,8 +433,8 @@
                         }
 
                         // Log the state and country to the console
-                        let stateObject = cartView.states.find( stat => stat.name = state.trim() )
-                        let countryObject = cartView.countries.find( coun => coun.name = country.trim() )
+                        let stateObject = cartView.states.find( stat => stat.name == state.trim() )
+                        let countryObject = cartView.countries.find( coun => coun.name == country.trim() )
 
                         console.log(state)
                         console.log(country)
