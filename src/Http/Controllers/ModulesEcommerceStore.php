@@ -310,11 +310,11 @@ class ModulesEcommerceStore extends Controller
             "longitude" => $address_longitude
         ];
 
-        $cartCache["storeOwner"] = $storeOwner;
+        $cartCache["storeOwner"] = (array) $storeOwner;
 
 
         // Save Seller Address
-        $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']], 'country' => ''];
+        $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']], 'country' => '', 'latitude' => '', 'longitude' => ''];
         # the location information
         $locations = $this->getLocations($sdk, $storeOwner);
         $location = !empty($locations) ? $locations->first() : $location;
@@ -326,8 +326,6 @@ class ModulesEcommerceStore extends Controller
 
         // Save ALL to session
         session(['cartCache' => $cartCache]);
-
-
 
         // Process Cart Stages
         $cart_stages = [
@@ -527,9 +525,11 @@ class ModulesEcommerceStore extends Controller
         $provider_config = strtolower($provider . '_' . $country) . '.php';
         $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
 
-        $config = require_once(__DIR__.'/../../config/providers/logistics/' . $provider_config);
+        $provider_config_path = __DIR__.'/../../config/providers/logistics/' . $provider_config;
+        $config = require_once($provider_config_path);
 
-
+        $provider_class_path = __DIR__.'/../../config/providers/logistics/' . $provider_class;
+        require_once($provider_class_path);
 
         // Get Destination Address Details
 
@@ -552,7 +552,9 @@ class ModulesEcommerceStore extends Controller
         // Determine if its bike or car or planne depennding on inter state, 
 
 
-        $provider = new $provider_class();
+        //$provider = new $provider_class();
+        $c = $config["class"];
+        $provider = new $c();
 
         $from = [
             "address" => "Landmark House, 52 Isaac John",
