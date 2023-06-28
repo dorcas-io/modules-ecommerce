@@ -652,7 +652,7 @@ class ModulesEcommerceStore extends Controller
         $parsedRoutes = [
             [
                 "id" => "sdd",
-                "name" => $config["class"],
+                "name" => $config["name"],
                 "logo" => asset('vendor/modules-ecommerce/providers/' . $config["logo"]),
                 "description" => "Delivery Estimate by " . $config["name"],
                 "prices" => [

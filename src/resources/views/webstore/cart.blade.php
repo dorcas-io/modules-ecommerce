@@ -355,13 +355,6 @@
                     }
                     return photo;
                 },
-                providerPhoto: function(shippingRoute) {
-                    var photo = '{{ cdn('apps/webstore/images/products/1.jpg') }}';
-                    if (typeof shippingRoute.logo !== 'undefined') {
-                        photo = shippingRoute.logo;
-                    }
-                    return photo;
-                },
                 shippingSelected: function() {
                     //check cart if shipping is among
                     let shippingItem = this.cart.items.find( itm => itm.isShipping==='yes')
@@ -375,6 +368,13 @@
                 }
             },
             methods: {
+                providerPhoto: function(shippingRoute) {
+                    var photo = '{{ cdn('apps/webstore/images/products/1.jpg') }}';
+                    if (typeof shippingRoute.logo !== 'undefined') {
+                        photo = shippingRoute.logo;
+                    }
+                    return photo;
+                },
                 loadGoogleMaps: function () {
                     // Load the Google Maps API script
                     const script = document.createElement('script');
