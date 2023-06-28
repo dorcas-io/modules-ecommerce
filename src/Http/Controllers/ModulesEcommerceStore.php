@@ -353,9 +353,9 @@ class ModulesEcommerceStore extends Controller
         $sOwner = (array) $storeOwner;
         
         if (isset ($sOwner["extra_data"]["location"])) {
-            $location['address'] = $sOwner["extra_data"]['location']['address'];
-            $location['latitude'] = $sOwner["extra_data"]['location']['latitude'];
-            $location['longitude'] = $sOwner["extra_data"]['location']['longitude'];
+            $location['address'] = $sOwner["extra_data"]['location']['address'] ?? '';
+            $location['latitude'] = $sOwner["extra_data"]['location']['latitude'] ?? '';
+            $location['longitude'] = $sOwner["extra_data"]['location']['longitude'] ?? '';
         }
 
         $cartCache["address_seller"] = $location;
@@ -544,8 +544,12 @@ class ModulesEcommerceStore extends Controller
 
 
         //$provider = new $provider_class();
+        $providerParams = [
+            "vendor_id" => 3152
+
+        ];
         $c = $config["class"];
-        $provider = new $c();
+        $provider = new $c($providerParams);
 
         $from = $sellerAdddress;
 
@@ -564,48 +568,6 @@ class ModulesEcommerceStore extends Controller
 
         $totalShippingCosts = $costs["ACTUAL_ORDER_PAYABLE_AMOUNT"] + $costs["TOTAL_SERVICE_CHARGE"];
 
-        /*
-        ^ {#854
-            +"ACTUAL_AMOUNT": "1974.50"
-            +"DISCOUNT": "0.00"
-            +"CREDITS_TO_ADD": 0
-            +"VAT": "151.09"
-            +"PENDING_AMOUNT": 0
-            +"SERVICE_TAX": 0
-            +"BENEFIT_TYPE": null
-            +"PAYABLE_AMOUNT_WITHOUT_CREDITS": 0
-            +"TIP": "0.00"
-            +"DEFAULT_VAT_PERCENT": 7.5
-            +"DEFAULT_SERVICE_TAX_PERCENT": 0
-            +"INSURANCE_AMOUNT": 0
-            +"AMOUNT_PER_TASK": "1974.50"
-            +"TOTAL_NO_OF_TASKS": 1
-            +"AMOUNT_FOR_FIRST_TASK": "2165.59"
-            +"TOTAL_SERVICE_CHARGE": 500
-            +"SURGE_PRICING": 0
-            +"SURGE_TYPE": 0
-            +"CREDITS_USED": "0.00"
-            +"LOADER_CHARGES": 40
-            +"LOADER_REQUIRED": 1
-            +"LOADERS_INSTRUCTION": "Hey, please handover parcel with safety. Thanks"
-            +"LOADERS_IMAGES": "https://s3.ap-south-1.amazonaws.com/kwik-project/task_images/wPqj1603886372690-stripeconnect.png"
-            +"VEHICLE_ID": 4
-            +"PENDING_CANCELLATION_CHARGE": 0
-            +"PENDING_WAITING_CHARGES": 0
-            +"LOADERS_COUNT": 4
-            +"SAREA_ID": 0
-            +"CURRENT_CREDITS": "60000.00"
-            +"PROMO_VALUE": null
-            +"DISCOUNTED_AMOUNT": "2014.50"
-            +"PAYABLE_AMOUNT": "2165.59"
-            +"NET_PAYABLE_AMOUNT": 2200
-            +"ORDER_PAYABLE_AMOUNT": 1700
-            +"ACTUAL_ORDER_PAYABLE_AMOUNT": 2200
-            +"VENDOR_CREDITS": 60000
-            +"NET_CREDITS_PAYABLE_AMOUNT": 0
-            +"WALLET_ENABLE": 0
-          }
-          */
 
         /*
 
