@@ -344,10 +344,17 @@ class ModulesEcommerceStore extends Controller
         $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']], 'country' => '', 'latitude' => '', 'longitude' => ''];
         # the location information
         $locations = $this->getLocations($sdk, $storeOwner);
+
         $location = !empty($locations) ? $locations->first() : $location;
         $location = (array) $location;
         $location['country'] = env('SETTINGS_COUNTRY', 'NG');
-
+        // get Seller Geo Location details
+        
+        if (isset ($storeOwner["extra_data"]["location"])) {
+            $location['latitude'] = $storeOwner["extra_data"]['location']['latitude'];
+            $location['longitude'] = $storeOwner["extra_data"]['location']['longitude'];
+        }
+        
         $cartCache["address_seller"] = $location;
 
 
@@ -519,7 +526,6 @@ class ModulesEcommerceStore extends Controller
         $cartCache = session('cartCache');
         $s = $cartCache["storeOwner"]; // $request->user()->company(true, true);
         $sAddress = $cartCache["address_seller"];
-        //$location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']]];
         $sellerAdddress = [
             "address" => $sAddress["address1"] . " " . $sAddress["address2"],
             "name" => $s["name"],
