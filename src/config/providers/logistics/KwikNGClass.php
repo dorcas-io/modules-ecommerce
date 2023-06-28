@@ -25,7 +25,7 @@ class KwikNGClass
         $this->baseUrl = env('CREDENTIAL_ECOMMERCE_PROVIDER_URL', 'provider.com');
         $this->domainName = env('CREDENTIAL_ECOMMERCE_PROVIDER_DOMAIN', 'provider.com');
         $this->userName = env('CREDENTIAL_ECOMMERCE_PROVIDER_USERNAME', 'user@provider.com');
-        $this->userPassword = env('CREDENTIAL_ECOMMERCE_PROVIDER_DOMAIN', 'provider.com');
+        $this->userPassword = env('CREDENTIAL_ECOMMERCE_PROVIDER_PASSWORD', 'provider.com');
 
         // Get Access Token
         if (empty($this->accessToken)) {
@@ -42,8 +42,9 @@ class KwikNGClass
         curl_setopt($ch, CURLOPT_URL, $this->baseUrl . $path);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HEADER, FALSE);
+        curl_setopt($ch, CURLOPT_ENCODING, '');
         curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postParams));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postParams));
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             "Content-Type: application/json"
         ));
@@ -51,7 +52,7 @@ class KwikNGClass
         $response = curl_exec($ch);
         curl_close($ch);
         
-        return $response;
+        return json_decode($response);
 
     }
 
@@ -59,9 +60,9 @@ class KwikNGClass
     {
         // Connect To API
         $params = $this->getProviderParams('vendor_login');
-        $response = $this->connect('/vendor_login', null);
+        $response = $this->connect('/vendor_login', $params, null);
         
-        $this->accessToken = $response["data"]["access_token"];
+        $this->accessToken = $response->data->access_token;
 
     }
 
@@ -88,12 +89,12 @@ class KwikNGClass
         ];
 
         $params = $this->getProviderParams('send_payment_for_task', $input_send_payment_for_task);
-        $response = $this->connect('/send_payment_for_task', null);
+        $response = $this->connect('/send_payment_for_task', $params, null);
 
         $input_get_bill_breakdown = $response["data"];
 
         $params = $this->getProviderParams('get_bill_breakdown', $input_get_bill_breakdown);
-        $response = $this->connect('/get_bill_breakdown', null);
+        $response = $this->connect('/get_bill_breakdown', $params, null);
 
 
 
