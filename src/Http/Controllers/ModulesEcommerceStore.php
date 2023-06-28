@@ -354,7 +354,7 @@ class ModulesEcommerceStore extends Controller
             $location['latitude'] = $storeOwner["extra_data"]['location']['latitude'];
             $location['longitude'] = $storeOwner["extra_data"]['location']['longitude'];
         }
-        
+
         $cartCache["address_seller"] = $location;
 
 
@@ -544,16 +544,7 @@ class ModulesEcommerceStore extends Controller
         $c = $config["class"];
         $provider = new $c();
 
-        $from = [
-            "address" => "Landmark House, 52 Isaac John",
-            "name" => "Office",
-            "latitude" => 6.5847605,
-            "longitude" => 3.3575444,
-            "time" => "2023-06-17 09:20:00",
-            "phone" => "+2348185977165",
-            "has_return_task" => false,
-            "is_package_insured" => 0
-        ];
+        $from = $sellerAdddress;
 
         $to = [
             "address" => $cartCache["address"]["address"],
@@ -566,7 +557,7 @@ class ModulesEcommerceStore extends Controller
             "is_package_insured" => 0
         ];
 
-        $costs = $provider->getCost($sellerAdddress, $to);
+        $costs = $provider->getCost($from, $to);
 
         $totalShippingCosts = $costs["ACTUAL_ORDER_PAYABLE_AMOUNT"] + $costs["TOTAL_SERVICE_CHARGE"];
 
@@ -654,10 +645,8 @@ class ModulesEcommerceStore extends Controller
         $response = [
             "data" => $parsedRoutes,
             "meta" => "",
-            "token" => $provider->accessToken,
-            "to" => $to,
             "from" => $from,
-            "sellerAdddress" => $sellerAdddress
+            "to" => $to
         ];
         
         return response()->json($response);
