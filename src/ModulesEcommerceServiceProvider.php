@@ -12,9 +12,9 @@ class ModulesEcommerceServiceProvider extends ServiceProvider {
 		$this->publishes([
 			__DIR__.'/config/modules-ecommerce.php' => config_path('modules-ecommerce.php'),
 		], 'dorcas-modules');
-		/*$this->publishes([
+		$this->publishes([
 			__DIR__.'/assets' => public_path('vendor/modules-ecommerce')
-		], 'dorcas-modules');*/
+		], 'dorcas-modules');
 	}
 
 	public function register()

@@ -525,10 +525,10 @@ class ModulesEcommerceStore extends Controller
         $provider_config = strtolower($provider . '_' . $country) . '.php';
         $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
 
-        $provider_config_path = __DIR__.'/../../config/providers/logistics/' . $provider_config;
+        $provider_config_path = __DIR__.'/../../config/providers/logistics/' . $provider. '/' . $provider_config;
         $config = require_once($provider_config_path);
 
-        $provider_class_path = __DIR__.'/../../config/providers/logistics/' . $provider_class;
+        $provider_class_path = __DIR__.'/../../config/providers/logistics/' . $provider. '/' . $provider_class;
         require_once($provider_class_path);
 
         // Get Destination Address Details
@@ -578,7 +578,50 @@ class ModulesEcommerceStore extends Controller
             "is_package_insured" => 0
         ];
 
-        $res = "hello"; // $provider->getCost($from, $to);
+        $costs = $provider->getCost($from, $to);
+
+        /*
+        ^ {#854
+            +"ACTUAL_AMOUNT": "1974.50"
+            +"DISCOUNT": "0.00"
+            +"CREDITS_TO_ADD": 0
+            +"VAT": "151.09"
+            +"PENDING_AMOUNT": 0
+            +"SERVICE_TAX": 0
+            +"BENEFIT_TYPE": null
+            +"PAYABLE_AMOUNT_WITHOUT_CREDITS": 0
+            +"TIP": "0.00"
+            +"DEFAULT_VAT_PERCENT": 7.5
+            +"DEFAULT_SERVICE_TAX_PERCENT": 0
+            +"INSURANCE_AMOUNT": 0
+            +"AMOUNT_PER_TASK": "1974.50"
+            +"TOTAL_NO_OF_TASKS": 1
+            +"AMOUNT_FOR_FIRST_TASK": "2165.59"
+            +"TOTAL_SERVICE_CHARGE": 500
+            +"SURGE_PRICING": 0
+            +"SURGE_TYPE": 0
+            +"CREDITS_USED": "0.00"
+            +"LOADER_CHARGES": 40
+            +"LOADER_REQUIRED": 1
+            +"LOADERS_INSTRUCTION": "Hey, please handover parcel with safety. Thanks"
+            +"LOADERS_IMAGES": "https://s3.ap-south-1.amazonaws.com/kwik-project/task_images/wPqj1603886372690-stripeconnect.png"
+            +"VEHICLE_ID": 4
+            +"PENDING_CANCELLATION_CHARGE": 0
+            +"PENDING_WAITING_CHARGES": 0
+            +"LOADERS_COUNT": 4
+            +"SAREA_ID": 0
+            +"CURRENT_CREDITS": "60000.00"
+            +"PROMO_VALUE": null
+            +"DISCOUNTED_AMOUNT": "2014.50"
+            +"PAYABLE_AMOUNT": "2165.59"
+            +"NET_PAYABLE_AMOUNT": 2200
+            +"ORDER_PAYABLE_AMOUNT": 1700
+            +"ACTUAL_ORDER_PAYABLE_AMOUNT": 2200
+            +"VENDOR_CREDITS": 60000
+            +"NET_CREDITS_PAYABLE_AMOUNT": 0
+            +"WALLET_ENABLE": 0
+          }
+          */
 
 
         /* KWIK PROCESS
@@ -606,47 +649,34 @@ class ModulesEcommerceStore extends Controller
 
         // Parse Cost like route data
 
-        /*
-        currency
-        items
-         - 0 (array)
-        id
-        isShipping "no"
-        name
-        photo
-        quantity
-        total (objecy)
-        unit_price 3700
-        */
+        $parsedRoutes = [
+            [
+                "id" => "sdd",
+                "name" => $config["class"],
+                "logo" => asset('providers/' . $config["logo"]),
+                "description" => "Delivery Estimate by " . $config["name"],
+                "prices" => [
+                    "data" => [
+                        [
+                            "currency" => "NGN",
+                            "unit_price" => [
+                                "raw" => $costs["ACTUAL_ORDER_PAYABLE_AMOUNT"],
+                                "formatted" => number_format($costs["ACTUAL_ORDER_PAYABLE_AMOUNT"])
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
 
-        $routes = [
-            "data" => [
-                "currency" => env("SETTINGS_CURRENCY", "NGN"),
-                "items" => [
-                    "id" => 0,
-                    "isShipping" => "no",
-                    "name" => "Test Route",
-                    "photo" => "",
-                    "quantity" => 1,
-                    "total" => [
-                        "raw" => 5000,
-                        "formatted" => "5,000"
-                    ],
-                    "unit_price" => 5000,
-                ],
-                "total" => 0
-            ],
-            "config" => $config,
+        $response = [
+            "data" => $parsedRoutes,
+            "meta" => "",
             "token" => $provider->accessToken,
             "res" => $res,
             "to" => $to,
             "from" => $from,
             "sellerAdddress" => $sellerAdddress
-        ];
-
-        //Return
-        $response = [
-            "data" => $routes
         ];
         
         return response()->json($response);

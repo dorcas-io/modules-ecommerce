@@ -88,15 +88,17 @@ class KwikNGClass
             ]
         ];
 
-        $params = $this->getProviderParams('send_payment_for_task', $input_send_payment_for_task);
-        $response = $this->connect('/send_payment_for_task', $params, null);
+        $params1 = $this->getProviderParams('send_payment_for_task', $input_send_payment_for_task);
+        $response = $this->connect('/send_payment_for_task', $params1, null);
 
-        $input_get_bill_breakdown = $response["data"];
+        $input_get_bill_breakdown = $response->data;
 
-        $params = $this->getProviderParams('get_bill_breakdown', $input_get_bill_breakdown);
-        $response = $this->connect('/get_bill_breakdown', $params, null);
+        $params2 = $this->getProviderParams('get_bill_breakdown', $input_get_bill_breakdown);
+        $response = $this->connect('/get_bill_breakdown', $params2, null);
 
+        $output = (array) $response->data;
 
+        return $output;
 
     }
 

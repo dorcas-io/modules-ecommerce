@@ -165,7 +165,7 @@
                             </td>
                             <td class="cart-product-thumbnail">
                                 <a href="#">
-                                    <img width="64" height="64" v-bind:src="productPhoto" v-bind:alt="shippingRoute.name">
+                                    <img width="64" height="64" v-bind:src="providerPhoto(shippingRoute)" v-bind:alt="shippingRoute.name">
                                 </a>
                             </td>
                             <td class="cart-product-name">
@@ -352,6 +352,13 @@
                     var photo = '{{ cdn('apps/webstore/images/products/1.jpg') }}';
                     if (typeof product.images !== 'undefined' && typeof product.images.data !== 'undefined' && product.images.data.length > 0) {
                         photo = product.images.data[0].url;
+                    }
+                    return photo;
+                },
+                providerPhoto: function(shippingRoute) {
+                    var photo = '{{ cdn('apps/webstore/images/products/1.jpg') }}';
+                    if (typeof shippingRoute.logo !== 'undefined') {
+                        photo = shippingRoute.logo;
                     }
                     return photo;
                 },
