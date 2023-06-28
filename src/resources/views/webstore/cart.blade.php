@@ -443,13 +443,6 @@
                         let stateObject = cartView.states.find( stat => stat.name == state.trim() )
                         let countryObject = cartView.countries.find( coun => coun.name == country.trim() )
 
-                        console.log(state)
-                        console.log(country)
-                        console.log(stateObject)
-                        console.log(countryObject)
-                        console.log(stateObject.id)
-                        console.log(countryObject.id)
-
                         cartView.checkout_form.state = stateObject.id;
                         cartView.checkout_form.country = countryObject.id;
 

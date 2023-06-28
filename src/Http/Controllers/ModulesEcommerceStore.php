@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStoreController as Dashboard;
+use Dorcas\ModulesDashboard\Http\Controllers\ModulesDashboardController as Dash;
 
 class ModulesEcommerceStore extends Controller
 {
@@ -45,6 +46,32 @@ class ModulesEcommerceStore extends Controller
         $this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
         $this->data['page']['header']['title'] = $storeOwner->name . ' Store';
         $this->data['cart'] = self::getCartContent($request);
+
+        $storeIsReady = false;
+
+        $userDashboardStatus = [];
+        $storeOwnerUsers = $storeOwner->users;
+        $userId = $storeOwnerUsers["data"][0]["id"];
+        $userDashboardStatusKey = 'userDashboardStatus.' . $userId;
+        $user_dashboard_status = Cache::get($userDashboardStatusKey, [
+            'preferences' => [
+                'guide_needed' => true,
+            ],
+            'checklists' => [],
+
+        ]);
+
+        $checklists = [];
+
+        $checklists = Dash::processChecklists($request, $sdk, $user_dashboard_status, $storeOwner);
+
+        $count = collect($checklists)->count();
+        $done = collect($checklists)->where('verification', true)->count();
+
+        $storeIsReady = ($count==$done) ? true : $storeIsReady;
+
+
+        $this->data['storeIsReady'] = $storeIsReady;
 
         $this->storeViewComposer($this->data, $request, $sdk, $storeOwner);
 
@@ -651,7 +678,7 @@ class ModulesEcommerceStore extends Controller
 
         $parsedRoutes = [
             [
-                "id" => "sdd",
+                "id" => "provider-xyz",
                 "name" => $config["name"],
                 "logo" => asset('vendor/modules-ecommerce/providers/' . $config["logo"]),
                 "description" => "Delivery Estimate by " . $config["name"],
