@@ -653,7 +653,7 @@ class ModulesEcommerceStore extends Controller
             [
                 "id" => "sdd",
                 "name" => $config["class"],
-                "logo" => asset('providers/' . $config["logo"]),
+                "logo" => asset('vendor/modules-ecommerce/providers/' . $config["logo"]),
                 "description" => "Delivery Estimate by " . $config["name"],
                 "prices" => [
                     "data" => [
@@ -673,7 +673,6 @@ class ModulesEcommerceStore extends Controller
             "data" => $parsedRoutes,
             "meta" => "",
             "token" => $provider->accessToken,
-            "res" => $res,
             "to" => $to,
             "from" => $from,
             "sellerAdddress" => $sellerAdddress
