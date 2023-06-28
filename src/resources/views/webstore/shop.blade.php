@@ -37,7 +37,7 @@
                     </a>
                 </div>
                 <div class="fbox-desc">
-                    <h3>No products at the moment!<span class="subtitle">The store owner has not added any products to their store.</span></h3>
+                    <h3>No products at the moment!<span class="subtitle">{{ $storeOwner->name }} has not added any products to their store.</span></h3>
                 </div>
             </div>
         </div>
@@ -50,7 +50,7 @@
                     </a>
                 </div>
                 <div class="fbox-desc">
-                    <h3>{{ $storeOwner->name }} is <strong>currently</strong> SETTING UP and getting ready to LAUNCH soon.<br/><br/>Check back soon.</span></h3>
+                    <h3>{{ $storeOwner->name }} is <strong>currently</strong> SETTING UP and getting ready to LAUNCH shortly.<br/><br/><span class="subtitle">Check back soon.</span></h3>
                 </div>
             </div>
         </div>
