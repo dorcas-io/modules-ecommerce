@@ -69,7 +69,9 @@ class ModulesEcommerceStore extends Controller
         $done = collect($checklists)->where('verification', true)->count();
 
         $storeIsReady = ($count==$done) ? true : $storeIsReady;
-
+        
+        
+        $storeIsReady = true; //fix
 
         $this->data['storeIsReady'] = $storeIsReady;
 
@@ -284,9 +286,7 @@ class ModulesEcommerceStore extends Controller
             "seller_state" => "",
             "seller_country" => env('SETTINGS_COUNTRY', 'NG'),
             "settings" => $logistics_settings,
-            "seller_address" => [
-
-            ]
+            "seller_address" => []
         ];
 
         $this->data['env'] = [
@@ -400,52 +400,7 @@ class ModulesEcommerceStore extends Controller
         return view('modules-ecommerce::webstore.cart', $this->data);
     }
 
-    // public function cart2(Request $request)
-    // {
-    //     $storeOwner = $this->getCompanyViaDomain();
-    //     # get the store owner
-    //     $this->data['storeSettings'] = Dashboard::getStoreSettings((array) $storeOwner->extra_data);
-    //     # our store settings container
-    //     if (empty($storeOwner)) {
-    //         abort(404, 'Could not find a store at this URL.');
-    //     }
-    //     $this->data['storeOwner'] = $storeOwner;
-    //     //$this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
-    //     $this->data['page']['title'] = $storeOwner->name . ' | Shopping Cart';
 
-    //     // Process Cart Stages
-    //     $cart_stages = [
-    //         "address" => [
-    //             "title" => "Enter Delivery Address"
-    //         ],
-    //         "shipping" => [
-    //             "title" => "Choose Shipping Type"
-    //         ],
-    //         "review" => [
-    //             "title" => "Review & Finalize Order"
-    //         ]
-    //     ];
-
-    //     $this->data['stages'] = [
-    //         "stage" => "address",
-    //         "data" => $cart_stages
-    //     ];
-
-    //     $stage_present = false;
-    //     if ( !empty($request->stage) && in_array($request->stage, array_keys($cart_stages)) ) {
-    //         $this->data['stages']['stage'] = $request->stage;
-    //         $stage_present = true;
-    //     }
-
-
-    //     $stage_title = $stage_present ? $cart_stages[$stage_title]["title"] : 'Shopping Cart';
-
-    //     $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
-    //     //$this->data['cart'] = Home::getCartContent($request);
-    //     $this->data['cart'] = $this->getCartContent($request);
-
-    //     return view('modules-ecommerce::webstore.cart2', $this->data);
-    // }
 
     /**
      * @param Request $request
@@ -595,17 +550,19 @@ class ModulesEcommerceStore extends Controller
         ];
 
         $to = [
-            "address" => "34 Jaiye Oyedotun Street, Lagos",
-            "name" => "Bolaji",
-            "latitude" => 6.6162878,
-            "longitude" => 3.3684280,
-            "time" => "2023-06-17 09:20:00",
-            "phone" => "+2348185977165",
+            "address" => $cartCache["address"]["address"],
+            "name" => $cartCache["address"]["firstname"] . " " . $cartCache["address"]["lastname"],
+            "latitude" => $cartCache["address"]["latitude"],
+            "longitude" => $cartCache["address"]["longitude"],
+            "time" => Carbon::now(),
+            "phone" => $cartCache["address"]["phone"],
             "has_return_task" => false,
             "is_package_insured" => 0
         ];
 
-        $costs = $provider->getCost($from, $to);
+        $costs = $provider->getCost($sellerAdddress, $to);
+
+        $totalShippingCosts = $costs["ACTUAL_ORDER_PAYABLE_AMOUNT"] + $costs["TOTAL_SERVICE_CHARGE"];
 
         /*
         ^ {#854
@@ -650,15 +607,7 @@ class ModulesEcommerceStore extends Controller
           }
           */
 
-
-        /* KWIK PROCESS
-        - /vendor_login and get access token
-        
-        WHAT IS LOADER??
-
-        - /send_payment_for_task (get charge details according to google distance)
-        - /get_bill_breakdown (get bill details)
-
+        /*
 
         - /create_task_via_vendor (requires /send_payment_for_task and /get_bill_breakdown)
 
@@ -687,8 +636,8 @@ class ModulesEcommerceStore extends Controller
                         [
                             "currency" => "NGN",
                             "unit_price" => [
-                                "raw" => $costs["ACTUAL_ORDER_PAYABLE_AMOUNT"],
-                                "formatted" => number_format($costs["ACTUAL_ORDER_PAYABLE_AMOUNT"])
+                                "raw" => $totalShippingCosts,
+                                "formatted" => number_format($totalShippingCosts)
                             ]
                         ]
                     ]
