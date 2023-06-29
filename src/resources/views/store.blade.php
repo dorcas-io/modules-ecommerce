@@ -101,28 +101,30 @@
 	    			</div>
 	    		</div>
 	    	</div>
-            <div class="col-md-12 col-lg-4">
-                <div class="card p-3">
-                    <div class="d-flex align-items-center">
-                        <span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
-                        <div>
-                            <h4 class="m-0"><a href="javascript:void(0)">Marketplace</a></h4>
-                            <small class="text-muted">
-                                <a href="{{ env('E_COMMERCE_URL' , '') }}"
-                                   target="_blank">
-                                    {{ env('E_COMMERCE_URL' , 'Not Set')  }}
-                                </a>
-                            </small>
+
+            @if ( env('DORCAS_EDITION', 'business') != "business" )
+                <div class="col-md-12 col-lg-4">
+                    <div class="card p-3">
+                        <div class="d-flex align-items-center">
+                            <span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
+                            <div>
+                                <h4 class="m-0"><a href="javascript:void(0)">Marketplace</a></h4>
+                                <small class="text-muted">
+                                    <a href="{{ env('E_COMMERCE_URL', '') }}"
+                                    target="_blank">
+                                        {{ env('E_COMMERCE_URL', 'Not Set')  }}
+                                    </a>
+                                </small>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
 	    </div>
 
 
 
         <div class="row col-md-12">
-            @if (!empty($subdomain))
                 <div class="col-md-12 col-lg-6">
                     <div class="card">
                         <div class="ribbon bg-primary">FIRST</div>
@@ -198,7 +200,7 @@
                         </div>
                     </div>
                 </div>
-            @endif
+
             <div class="col-md-12 col-lg-6">
 
                 <div class="row col-md-12">
@@ -314,7 +316,7 @@
             </div>
 
             @if (empty($subdomain))
-                <div class="col-md-6">
+                <!-- <div class="col-md-6">
 			        @component('layouts.blocks.tabler.empty-fullpage')
 			            @slot('title')
 			                No Subdomain
@@ -326,7 +328,7 @@
                             </a>
 			            @endslot
 			        @endcomponent
-                </div>
+                </div> -->
             @endif
         </div>
 
