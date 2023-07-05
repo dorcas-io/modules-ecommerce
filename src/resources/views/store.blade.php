@@ -68,7 +68,7 @@
     <div class="col-md-9 col-xl-9" id="ecommerce-store">
 
 	    <div class="row row-cards row-deck" id="store-statistics">
-	    	<div class="col-md-12 col-lg-4">
+	    	<div class="col-md-12 col-lg-6">
 	    		<div class="card p-3">
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md {{ empty($subdomain) ? 'bg-red' : 'bg-green' }} mr-3"><i class="fe fe-grid"></i></span>
@@ -79,7 +79,7 @@
 	    			</div>
 	    		</div>
 	    	</div>
-	    	<div class="col-md-12 col-lg-4">
+	    	<div class="col-md-12 col-lg-6">
 	    		<div class="card p-3">
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
@@ -90,7 +90,7 @@
 	    			</div>
 	    		</div>
 	    	</div>
-	    	<div class="col-md-12 col-lg-4">
+	    	<div class="col-md-12 col-lg-6">
 	    		<div class="card p-3">
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
@@ -103,7 +103,7 @@
 	    	</div>
 
             @if ( env('DORCAS_EDITION', 'business') != "business" )
-                <div class="col-md-12 col-lg-4">
+                <div class="col-md-12 col-lg-6">
                     <div class="card p-3">
                         <div class="d-flex align-items-center">
                             <span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
