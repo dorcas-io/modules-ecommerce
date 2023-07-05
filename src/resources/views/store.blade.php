@@ -95,8 +95,9 @@
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
 	    				<div>
-	    					<h4 class="m-0"><a href="javascript:void(0)">Store Domain</a></h4>
-	    					<small class="text-muted"><a href="{{ !empty($subdomain) ? $storeUrl : '#' }}" target="_blank">{{ !empty($subdomain) ? str_replace("https://", "", $storeUrl) : 'Not Reserved' }}</a></small>
+	    					<h4 class="m-0"><a href="javascript:void(0)">Store Address</a></h4>
+	    					<small class="text-muted"><a href="{{ !empty($subdomain) ? $storeUrl : '#' }}" target="_blank">{{ !empty($subdomain) ? $storeUrl : 'Not Reserved' }}</a></small>
+                            <!-- str_replace("https://", "", $storeUrl) -->
 	    				</div>
 	    			</div>
 	    		</div>
@@ -108,7 +109,7 @@
                         <div class="d-flex align-items-center">
                             <span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
                             <div>
-                                <h4 class="m-0"><a href="javascript:void(0)">Marketplace</a></h4>
+                                <h4 class="m-0"><a href="javascript:void(0)">Marketplace Address</a></h4>
                                 <small class="text-muted">
                                     <a href="{{ env('E_COMMERCE_URL', '') }}"
                                     target="_blank">
@@ -125,81 +126,81 @@
 
 
         <div class="row col-md-12">
-                <div class="col-md-12 col-lg-6">
-                    <div class="card">
-                        <div class="ribbon bg-primary">FIRST</div>
-                        <div class="card-body">
-                            <h3 class="card-title">Setup Basic Store Information</h3>
-                            <p class="text-muted">
-                                <form action="" method="post" class="col s12">
-                                    {{ csrf_field() }}
-                                        <div class="row">
-                                            <div class="col-md-12 form-group">
-                                                <input class="form-control" id="store_instagram_id" name="store_instagram_id" type="text"
-                                                    class="validate" v-model="store_settings.store_instagram_id">
-                                                <label class="form-label" for="store_instagram_id">Store Instagram ID</label>
-                                            </div>
-                                            <div class="col-md-12 form-group">
-                                                <input class="form-control" id="store_twitter_id" name="store_twitter_id" type="text" class="validate" v-model="store_settings.store_twitter_id">
-                                                <label class="form-label" for="store_twitter_id">Store Twitter ID</label>
-                                            </div>
+            <div class="col-md-12 col-lg-6">
+                <div class="card">
+                    <div class="ribbon bg-primary">FIRST</div>
+                    <div class="card-body">
+                        <h3 class="card-title">Setup Basic Store Information</h3>
+                        <p class="text-muted">
+                            <form action="" method="post" class="col s12">
+                                {{ csrf_field() }}
+                                    <div class="row">
+                                        <div class="col-md-12 form-group">
+                                            <input class="form-control" id="store_instagram_id" name="store_instagram_id" type="text"
+                                                class="validate" v-model="store_settings.store_instagram_id">
+                                            <label class="form-label" for="store_instagram_id">Store Instagram ID</label>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-12 form-group">
-                                                <input class="form-control" id="store_facebook_page" name="store_facebook_page" type="url"
-                                                    class="validate" v-model="store_settings.store_facebook_page">
-                                                <label class="form-label" for="store_facebook_page">Facebook Page</label>
-                                            </div>
+                                        <div class="col-md-12 form-group">
+                                            <input class="form-control" id="store_twitter_id" name="store_twitter_id" type="text" class="validate" v-model="store_settings.store_twitter_id">
+                                            <label class="form-label" for="store_twitter_id">Store Twitter ID</label>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-12 form-group">
-                                                <input class="form-control" id="store_homepage" name="store_homepage" type="url"
-                                                    class="validate" v-model="store_settings.store_homepage">
-                                                <label class="form-label" for="store_homepage">Website URL (if any)</label>
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 form-group">
+                                            <input class="form-control" id="store_facebook_page" name="store_facebook_page" type="url"
+                                                class="validate" v-model="store_settings.store_facebook_page">
+                                            <label class="form-label" for="store_facebook_page">Facebook Page</label>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-12 form-group">
-                                                <input class="form-control" id="store_paid_notifications_email" name="store_paid_notifications_email" type="email"
-                                                    class="validate" v-model="store_settings.store_paid_notifications_email">
-                                                <label class="form-label" for="store_paid_notifications_email">Email to send notifications on paid orders</label>
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 form-group">
+                                            <input class="form-control" id="store_homepage" name="store_homepage" type="url"
+                                                class="validate" v-model="store_settings.store_homepage">
+                                            <label class="form-label" for="store_homepage">Website URL (if any)</label>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-12 form-group">
-                                                <span>
-                                                    <a href="#" v-on:click.prevent="advanced_store_settings = !advanced_store_settings">Show Additional Settings (Optional)</a>
-                                                </span>
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 form-group">
+                                            <input class="form-control" id="store_paid_notifications_email" name="store_paid_notifications_email" type="email"
+                                                class="validate" v-model="store_settings.store_paid_notifications_email">
+                                            <label class="form-label" for="store_paid_notifications_email">Email to send notifications on paid orders</label>
                                         </div>
-                                        <div class="row" v-show="advanced_store_settings">
-                                            <div class="col-md-12 form-group">
-                                                <input class="form-control" id="store_terms_page" name="store_terms_page" type="url" class="validate" v-model="store_settings.store_terms_page">
-                                                <label class="form-label" for="store_terms_page">Terms of Service URL</label>
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 form-group">
+                                            <span>
+                                                <a href="#" v-on:click.prevent="advanced_store_settings = !advanced_store_settings">Show Additional Settings (Optional)</a>
+                                            </span>
                                         </div>
-                                        <div class="row" v-show="advanced_store_settings"> 
-                                            <div class="col-md-12 form-group">
-                                                <input class="form-control" id="store_ga_tracking_id" name="store_ga_tracking_id" type="text" class="validate" v-model="store_settings.store_ga_tracking_id">
-                                                <label class="form-label" for="store_ga_tracking_id" v-bind:class="{'active': typeof store_settings.store_ga_tracking_id !== 'undefined' && store_settings.store_ga_tracking_id.length > 0}">Google Analytics Tracking ID (UA-XXXXXXXXX-X)</label>
-                                            </div>
+                                    </div>
+                                    <div class="row" v-show="advanced_store_settings">
+                                        <div class="col-md-12 form-group">
+                                            <input class="form-control" id="store_terms_page" name="store_terms_page" type="url" class="validate" v-model="store_settings.store_terms_page">
+                                            <label class="form-label" for="store_terms_page">Terms of Service URL</label>
                                         </div>
-                                        <div class="row" v-show="advanced_store_settings">
-                                            <div class="col-md-12 form-group">
-                                                <textarea class="form-control" id="store_custom_js" name="store_custom_js" v-model="store_settings.store_custom_js"></textarea>
-                                                <label class="form-label" for="store_custom_js">Custom Javascript (Paste the codes you were given)</label>
-                                                <small>This allows you to add popular tools you use to your store site. e.g. Drift, Drip, Intercom, Tawk.to</small>
-                                            </div>
+                                    </div>
+                                    <div class="row" v-show="advanced_store_settings"> 
+                                        <div class="col-md-12 form-group">
+                                            <input class="form-control" id="store_ga_tracking_id" name="store_ga_tracking_id" type="text" class="validate" v-model="store_settings.store_ga_tracking_id">
+                                            <label class="form-label" for="store_ga_tracking_id" v-bind:class="{'active': typeof store_settings.store_ga_tracking_id !== 'undefined' && store_settings.store_ga_tracking_id.length > 0}">Google Analytics Tracking ID (UA-XXXXXXXXX-X)</label>
                                         </div>
-                                        <button type="submit" class="btn btn-primary btn-block">
-                                            Save Store Settings
-                                        </button>
-                                </form>
-                            
-                            </p>
-                        </div>
+                                    </div>
+                                    <div class="row" v-show="advanced_store_settings">
+                                        <div class="col-md-12 form-group">
+                                            <textarea class="form-control" id="store_custom_js" name="store_custom_js" v-model="store_settings.store_custom_js"></textarea>
+                                            <label class="form-label" for="store_custom_js">Custom Javascript (Paste the codes you were given)</label>
+                                            <small>This allows you to add popular tools you use to your store site. e.g. Drift, Drip, Intercom, Tawk.to</small>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        Save Store Settings
+                                    </button>
+                            </form>
+                        
+                        </p>
                     </div>
                 </div>
+            </div>
 
             <div class="col-md-12 col-lg-6">
 
