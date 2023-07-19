@@ -305,7 +305,6 @@
                                         </div>
                                         Currently Selected Option: 
                                         <br/>
-                                        {{  }}
                                     </fieldset>
                                     If you choose <strong>Use Shipping Provider</strong> above, would you like to:
                                     <ul>
