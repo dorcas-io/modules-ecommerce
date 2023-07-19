@@ -95,7 +95,7 @@
 	    			<div class="d-flex align-items-center">
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
 	    				<div>
-	    					<h4 class="m-0"><a href="javascript:void(0)">Store Address</a></h4>
+	    					<h4 class="m-0"><a href="{{ route('ecommerce-domains') }}">Store Address</a></h4>
 	    					<small class="text-muted"><a href="{{ !empty($subdomain) ? $storeUrl : '#' }}" target="_blank">{{ !empty($subdomain) ? $storeUrl : 'Not Reserved' }}</a></small>
                             <!-- str_replace("https://", "", $storeUrl) -->
 	    				</div>
@@ -126,7 +126,24 @@
 
 
         <div class="row col-md-12">
-            <div class="col-md-12 col-lg-6">
+
+            @if (empty($subdomain))
+                <div class="col-md-6">
+			        @component('layouts.blocks.tabler.empty-fullpage')
+			            @slot('title')
+			                Store ID Not Chosen
+			            @endslot
+			            Reserve your <strong>Store ID</strong> to proceed with activating your e-commerce store.
+			            @slot('buttons')
+                            <a class="btn btn-primary" href="{{ route('ecommerce-domains') }}">
+                                Reserve Store ID
+                            </a>
+			            @endslot
+			        @endcomponent
+                </div>
+            @endif
+
+            <div class="col-md-12 col-lg-6" v-if="store_subdomain !== ''">
                 <div class="card">
                     <div class="ribbon bg-primary">FIRST</div>
                     <div class="card-body">
@@ -202,11 +219,11 @@
                 </div>
             </div>
 
-            <div class="col-md-12 col-lg-6">
+            <div class="col-md-12 col-lg-6" v-if="store_subdomain !== ''">
 
-                <div class="row col-md-12">
+                <div class="row">
 
-                    <form action="/mec/ecommerce-payments" method="post" class="col s12">
+                    <form action="/mec/ecommerce-payments" method="post"> <!-- class="col s12" -->
 
                         {{ csrf_field() }}
 
@@ -257,7 +274,7 @@
                 </div>
 
 
-                <div class="row col-md-12">
+                <div class="row">
 
                     <form action="/mec/ecommerce-logistics" method="post" class="col s12">
 
@@ -283,6 +300,9 @@
                                                 </select>
                                             </div>
                                         </div>
+                                        Currently Selected Option: 
+                                        <br/>
+                                        @{{  }}
                                     </fieldset>
                                     If you choose <strong>Use Shipping Provider</strong> above, would you like to:
                                     <ul>
@@ -315,22 +335,8 @@
 
 
             </div>
+            @include('modules-integrations::modals.configurations')
 
-            @if (empty($subdomain))
-                <!-- <div class="col-md-6">
-			        @component('layouts.blocks.tabler.empty-fullpage')
-			            @slot('title')
-			                No Subdomain
-			            @endslot
-			            Reserve your <strong>dorcas sub-domain</strong> to proceed with activating your online store.
-			            @slot('buttons')
-                            <a class="btn btn-primary" href="{{ route('ecommerce-domains') }}">
-                                Reserve SubDomain
-                            </a>
-			            @endslot
-			        @endcomponent
-                </div> -->
-            @endif
         </div>
 
 
@@ -348,11 +354,30 @@
             data: {
                 store_owner: {!! json_encode($business) !!},
                 store_settings: {!! json_encode($storeSettings) !!},
+                store_subdomain: {!! !empty($subdomain) ? json_encode($subdomain) : "" !!},
                 logistics_settings: {!! !empty($logisticsSettings) ? json_encode($logisticsSettings) : ["logistics_shipping" => "shipping_myself", "logistics_fulfilment" => "fulfilment_pickup"] !!},
                 payment_settings: {!! !empty($paymentSettings) ? json_encode($paymentSettings) : ["payment_option" => "use_bank_account", "has_marketplace" => false] !!},
                 logistics_fulfilment_centre: {!! json_encode($logisticsFulfilmentCentre) !!},
-                advanced_store_settings: false
-            }
+                advanced_store_settings: false,
+                integration_index: 0,
+                integration: {!! !empty($integration) ? json_encode($integration) : '[ "name"=>"", "type"=>"", "configurations"=>[] ]' !!},
+                paymentOptionSelection: {!! json_encode($paymentOptionSelection) !!},
+                paymentSettingsAdvice: {!! json_encode($paymentSettingsAdvice) !!},
+
+            },
+            mounted: function() {
+                console.log(this.integration)
+                console.log(this.paymentOptionSelection)
+                console.log(this.paymentSettingsAdvice)
+
+            },
+            methods: {
+                viewPaymentSetting: function () {
+                		let index = $event.target.getAttribute('data-index');
+                		this.integration_index = index;
+                		$('#integration-configurations-modal').modal('show');
+                }
+            },
         });
     </script>
 @endsection

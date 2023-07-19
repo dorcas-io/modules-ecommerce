@@ -77,8 +77,100 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['storeSettings'] = self::getStoreSettings((array) $this->getCompany()->extra_data);
         $this->data['logisticsSettings'] = self::getLogisticsSettings((array) $this->getCompany()->extra_data);
         $this->data['logisticsFulfilmentCentre'] = env("SETTINGS_ECOMMERCE_LOGISTICS_FULFILMENT_CENTRE", false);
-        $this->data['paymentSettings'] = self::getPaymentsSettings((array) $this->getCompany()->extra_data);
-        # our store settings container
+        $paymentSettings = self::getPaymentsSettings((array) $this->getCompany()->extra_data);
+        $this->data['paymentSettings'] = $paymentSettings;
+        # our store, logistics & paymennt settings container
+
+        // Setup Payments
+        $pSettings = (array) $paymentSettings;
+        $payment_option = $pSettings['payment_option'] ?? '';
+        $has_marketplace = $pSettings['has_marketplace'];
+
+        $paymentSettingsAdvice = [];
+        $paymentOptionSelection = "Bank Account";
+
+
+        $availableIntegrations = config('dorcas.integrations');
+        # get all the available integrations
+
+        $installed = $this->getIntegrations($sdk);
+        $installedNames = !empty($installed) && $installed->count() > 0 ? $installed->pluck('name')->all() : [];
+
+        $paymentIntegrations = collect($availableIntegrations);
+
+        $integrationName = "";
+
+        switch ($payment_option) {
+            
+            case "use_bank_account":
+                $paymentOptionSelection = "Bank Account";
+                $integrationName = "";
+                $paymentSettingsAdvice["action"] = "Manage your Bank Account Settings Here";
+                $paymentSettingsAdvice["link_type"] = "route";
+                $paymentSettingsAdvice["link"] = "/mse/settings-banking";
+            break;
+            
+            case "use_online_provider_paystack":
+                $paymentOptionSelection = "Paystack Provider";
+                $integrationName = "paystack";
+                $paymentSettingsAdvice["action"] = "Manage your Paystack Settings Here";
+                $paymentSettingsAdvice["link_type"] = "custom_method";
+                $paymentSettingsAdvice["link"] = "viewPaymentSetting|paystack";
+            break;
+            
+            case "use_online_provider_flutterwave":
+                $integrationName = "rave";
+                $paymentOptionSelection = "Flutterwave Provider";
+                $paymentSettingsAdvice["action"] = "Manage your Fluttterwave Settings Here";
+                $paymentSettingsAdvice["link_type"] = "custom_method";
+                $paymentSettingsAdvice["link"] = "viewPaymentSetting|flutterwave";
+            break;
+
+        }
+
+        // If current Integration is not installed, Install it!
+        if ( !empty($integrationName) && array_search($integrationName, $installedNames, true) === false ) {
+
+            $targetIntegration = $paymentIntegrations->where('name', $integrationName);
+            
+            $installType = $targetIntegration->type;
+            $installName = $targetIntegration->name;
+            $installConfigurations = $targetIntegration->configurations;
+    
+            $integrationId = null;
+    
+            $resource = $sdk->createIntegrationResource($integrationId)->addBodyParam('type', $installType)
+                                                        ->addBodyParam('name', $installName)
+                                                        ->addBodyParam('configuration', $installConfigurations);
+            $query = $resource->send(empty($integrationId) ? 'post' : 'put');
+            # send request
+            if (!$query->isSuccessful()) {
+                // $message = $query->getErrors()[0]['title'] ?? 'Failed while trying to '. (empty($integrationId) ? 'install' : 'update') .' the Integration.';
+                // throw new \RuntimeException($message);
+            }
+            $company = $request->user()->company(true, true);
+            Cache::forget('integrations.'.$company->id);
+        }
+
+        $finalIntegrations = collect([]);
+        $finalInstalled = $this->getIntegrations($sdk);
+        $finalInstalledNames = !empty($finalInstalled) && $finalInstalled->count() > 0 ? $finalInstalled->pluck('name')->all() : [];
+        foreach ($availableIntegrations as $index => $integration) {
+            if (($installedIndex = array_search($integration['name'], $finalInstalledNames, true)) === false) {
+                continue;
+            }
+            $installedIntegration = $finalInstalledNames->get($installedIndex);
+            $integration['id'] = $installedIntegration->id;
+            $integration['configurations'] = $installedIntegration->configuration;
+            # update the values
+            $finalIntegrations->push($integration);
+            # add the integration
+        }
+        $this->data['integration'] = $finalIntegrations->where('name', $integrationName);
+
+        $this->data['paymentOptionSelection'] = $paymentOptionSelection;
+        $this->data['paymentSettingsAdvice'] = $paymentSettingsAdvice;
+
         $query = $sdk->createProductResource()->addQueryArgument('limit', 1)->send('get');
         $this->data['productCount'] = $query->isSuccessful() ? $query->meta['pagination']['total'] ?? 0 : 0;
 
