@@ -231,11 +231,11 @@
                     var name = this.domain_value(subdomain);
                     Swal.fire({
                         title: "Are you sure?",
-                        text: "You are about to release the subdomain " + name,
+                        text: "You are about to delete the address " + name + '\n \n You must choose another after for your store to be active',
                         type: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#DD6B55",
-                        confirmButtonText: "Yes, release it!",
+                        confirmButtonText: "Yes, delete it!",
 		                showLoaderOnConfirm: true,
 		                preConfirm: (domain_release) => {
 		                    return axios.delete("/mec/ecommerce-domains-issuances/" + subdomain.id)

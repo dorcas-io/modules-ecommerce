@@ -143,7 +143,7 @@
                 </div>
             @endif
 
-            <div class="col-md-12 col-lg-6" v-if="store_subdomain !== ''">
+            <div class="col-md-12 col-lg-6" v-if="store_subdomain != ''">
                 <div class="card">
                     <div class="ribbon bg-primary">FIRST</div>
                     <div class="card-body">
@@ -219,7 +219,7 @@
                 </div>
             </div>
 
-            <div class="col-md-12 col-lg-6" v-if="store_subdomain !== ''">
+            <div class="col-md-12 col-lg-6" v-if="store_subdomain != ''">
 
                 <div class="row">
 
@@ -250,6 +250,9 @@
                                                 </select>
                                             </div>
                                         </div>
+                                        Currently Selected Option: 
+                                        <br/>
+                                        {{ $paymentSettingsAdvice }}
                                     </fieldset>
 
                                     <!-- 
@@ -302,12 +305,12 @@
                                         </div>
                                         Currently Selected Option: 
                                         <br/>
-                                        @{{  }}
+                                        {{  }}
                                     </fieldset>
                                     If you choose <strong>Use Shipping Provider</strong> above, would you like to:
                                     <ul>
                                         <li>have the logistics provider come to pick orders at your location</li>
-                                        <li>drop at a fulfilment centre {{ $logisticsFulfilmentCentre ? '' : '(option currently not available)' }}</li>
+                                        <li>drop at a fulfilment centre @{{ logistics_fulfilment_centre ? '' : '(option currently not available)' }}</li>
                                     </ul>
                                     <fieldset class="form-fieldset">
                                         Choose Fulfilment Option: 
@@ -366,6 +369,7 @@
 
             },
             mounted: function() {
+                console.log(this.logistics_fulfilment_centre)
                 console.log(this.integration)
                 console.log(this.paymentOptionSelection)
                 console.log(this.paymentSettingsAdvice)
