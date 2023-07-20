@@ -143,7 +143,8 @@
                 </div>
             @endif
 
-            <div class="col-md-12 col-lg-6" v-if="store_subdomain != ''">
+            @if (!empty($subdomain))
+            <div class="col-md-12 col-lg-6">
                 <div class="card">
                     <div class="ribbon bg-primary">FIRST</div>
                     <div class="card-body">
@@ -218,9 +219,11 @@
                     </div>
                 </div>
             </div>
+            @endif
 
-            <div class="col-md-12 col-lg-6" v-if="store_subdomain != ''">
+            <div class="col-md-12 col-lg-6">
 
+            @if (!empty($subdomain))
                 <div class="row">
 
                     <form action="/mec/ecommerce-payments" method="post"> <!-- class="col s12" -->
@@ -250,9 +253,9 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        Currently Selected Option: 
+                                        Currently Selected Option: <strong>@{{ paymentOptionSelection }}</strong>
                                         <br/>
-                                        {{ $paymentSettingsAdvice }}
+                                        <small class="text-muted"><a href="#" v-on:click.prevent="parsePaymentAdvice(paymentSettingsAdvice)">@{{ paymentSettingsAdvice.action }}</a></small>
                                     </fieldset>
 
                                     <!-- 
@@ -335,6 +338,8 @@
 
                 </div>
 
+                @endif
+
 
             </div>
             @include('modules-integrations::modals.configurations')
@@ -361,6 +366,7 @@
                 payment_settings: {!! !empty($paymentSettings) ? json_encode($paymentSettings) : ["payment_option" => "use_bank_account", "has_marketplace" => false] !!},
                 logistics_fulfilment_centre: {!! json_encode($logisticsFulfilmentCentre) !!},
                 advanced_store_settings: false,
+                integrations: {!! !empty($integrations) ? json_encode($integrations) : '[]' !!},
                 integration_index: 0,
                 integration: {!! !empty($integration) ? json_encode($integration) : '[ "name"=>"", "type"=>"", "configurations"=>[] ]' !!},
                 paymentOptionSelection: {!! json_encode($paymentOptionSelection) !!},
@@ -374,12 +380,103 @@
                 console.log(this.paymentSettingsAdvice)
 
             },
-            methods: {
-                viewPaymentSetting: function () {
-                		let index = $event.target.getAttribute('data-index');
-                		this.integration_index = index;
-                		$('#integration-configurations-modal').modal('show');
+            computed: {
+                showIntegrationId: function () {
+                    return typeof this.integration.id !== 'undefined';
                 }
+            },
+            methods: {
+                parsePaymentAdvice: function (advice) {
+                    if (typeof advice !== 'undefined' && typeof advice === 'object' && advice !== null) {
+
+                        let link_type = advice.link_type;
+                        let link = advice.link;
+
+                        if ( link_type == "route" ) {
+                            var url = `{{ route('${link}') }}`;
+                            window.location.href = url;
+                        } else if ( link_type == "custom" ) {
+                            //viewPaymentSetting|paystack
+                            let link_array = link.split("|");
+                            if (link_array[0] == "viewPaymentSetting") {
+                                let payment_integration = link_array[1];
+                                let integration = typeof this.integration !== 'undefined' ? this.integration : null;
+                                if (integration === null) {
+                                    return;
+                                }
+                                this.integration = integration;
+                                this.integration_index = 0;
+                                $('#integration-configurations-modal').modal('show');
+                            }
+                        }
+                    } else {
+                        return;
+                    }
+
+                },
+		        installIntegration: function ($event) {
+		            var context = this;
+		            //context.installing = true;
+                	let index = $event.target.getAttribute('data-index');
+                	var integration, act, action;
+                    
+                    integration = typeof this.integration !== 'undefined' ? this.integration : null;
+                    act = "update";
+                    action = "Updated";
+                    
+            		if (integration === null) {
+            			return;
+            		}
+
+		            let display_name = integration.display_name;
+		            let integration_name = integration.name;
+		            let integration_type = integration.type;
+		            let integration_configurations = integration.configurations;
+                    
+		            Swal.fire({
+		                title: "Are you sure?",
+		                text: "You are about to " + act + " the " + display_name + " integration.",
+		                type: "info",
+		                showCancelButton: true,
+		                confirmButtonText: "Yes, " + act +" it!",
+		                showLoaderOnConfirm: true,
+		                preConfirm: (install_integration) => {
+		                	this.installing = true;
+				            return axios.post("/mit/integrations", {
+				                type: integration_type,
+				                name: integration_name,
+				                configurations: integration_configurations
+				            }).then(function (response) {
+				                console.log(response);
+		                        $('#integration-configurations-modal').modal('hide');
+		                        context.spliceAllIntegrations(index)
+		                        //window.location = '{{ url()->current() }}';
+				                return swal(action, action + ' the ' + display_name + ' integration to your account.', "success");
+				            }).catch(function (error) {
+				            	this.installing = false;
+				                var message = '';
+				                if (error.response) {
+                                    
+		                            var e = error.response;
+		                            message = e.data.message;
+				                } else if (error.request) {
+                                    
+				                    message = 'The request was made but no response was received';
+				                } else {
+                                    
+				                    message = error.message;
+				                }
+				                context.installing = false;
+				                return swal("Install Failed", message, "warning");
+				            });
+
+
+
+		                },
+		                allowOutsideClick: () => !Swal.isLoading()
+		            });
+		        },
+                
             },
         });
     </script>

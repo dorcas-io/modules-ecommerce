@@ -103,7 +103,7 @@ class ModulesEcommerceStoreController extends Controller {
         switch ($payment_option) {
             
             case "use_bank_account":
-                $paymentOptionSelection = "Bank Account";
+                $paymentOptionSelection = "Use My Bank Account";
                 $integrationName = "";
                 $paymentSettingsAdvice["action"] = "Manage your Bank Account Settings Here";
                 $paymentSettingsAdvice["link_type"] = "route";
@@ -111,16 +111,16 @@ class ModulesEcommerceStoreController extends Controller {
             break;
             
             case "use_online_provider_paystack":
-                $paymentOptionSelection = "Paystack Provider";
+                $paymentOptionSelection = "Use My Paystack Account";
                 $integrationName = "paystack";
                 $paymentSettingsAdvice["action"] = "Manage your Paystack Settings Here";
-                $paymentSettingsAdvice["link_type"] = "custom_method";
+                $paymentSettingsAdvice["link_type"] = "custom";
                 $paymentSettingsAdvice["link"] = "viewPaymentSetting|paystack";
             break;
             
             case "use_online_provider_flutterwave":
                 $integrationName = "rave";
-                $paymentOptionSelection = "Flutterwave Provider";
+                $paymentOptionSelection = "Use My Flutterwave Account";
                 $paymentSettingsAdvice["action"] = "Manage your Fluttterwave Settings Here";
                 $paymentSettingsAdvice["link_type"] = "custom_method";
                 $paymentSettingsAdvice["link"] = "viewPaymentSetting|flutterwave";
