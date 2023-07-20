@@ -393,7 +393,6 @@
                         let link = advice.link;
 
                         if ( link_type == "route" ) {
-                            //var url = `{{ route('${link}') }}`;
                             var url = link;
                             window.location.href = url;
                         } else if ( link_type == "custom" ) {
