@@ -236,11 +236,10 @@
                                 <h3 class="card-title">Setup Payment Details</h3>
                                 <p class="text-muted">
                                     
-                                    How do you wish to handle <strong>payment</strong> for orders placed on your store: <br/><br/>
+                                    How do you wish to handle <strong>payment</strong> for orders placed on your store:
                                     <ul>
-                                        <li>Let them use my bank account</li>
-                                        <li>I have an online payment provider account (e.g. Paystack / Flutterwave)</li>
-                                        <li v-if="payment_settings.has_marketplace">Since you're automatically on the {{ env('DORCAS_PARTNER_PRODUCT_NAME', 'Hub') }} platform, anny orders placed there will use their own online payment provider</li>
+                                        <li>You can choose to either <strong>Use your bank account</strong> OR <strong>Use an online payment provider account (e.g. Paystack / Flutterwave)</strong></li>
+                                        <li v-if="payment_settings.has_marketplace">Note: any orders placed on the {{ env('DORCAS_PARTNER_PRODUCT_NAME', 'Hub') }} Marketplace will use the default online payment gateway and funds will be sent directly to your bank account</li>
                                     </ul>
                                     <fieldset class="form-fieldset">
                                         Choose Payment Option: 
@@ -429,6 +428,7 @@
             		}
 
 		            let display_name = integration.display_name;
+                    let integration_id = context.showIntegrationId ? integration.id : null;
 		            let integration_name = integration.name;
 		            let integration_type = integration.type;
 		            let integration_configurations = integration.configurations;
@@ -443,6 +443,7 @@
 		                preConfirm: (install_integration) => {
 		                	this.installing = true;
 				            return axios.post("/mit/integrations", {
+                                integration_id: integration_id,
 				                type: integration_type,
 				                name: integration_name,
 				                configurations: integration_configurations
