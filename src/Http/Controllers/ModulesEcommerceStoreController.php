@@ -122,7 +122,7 @@ class ModulesEcommerceStoreController extends Controller {
                 $integrationName = "rave";
                 $paymentOptionSelection = "Use My Flutterwave Account";
                 $paymentSettingsAdvice["action"] = "Manage your Fluttterwave Settings Here";
-                $paymentSettingsAdvice["link_type"] = "custom_method";
+                $paymentSettingsAdvice["link_type"] = "custom";
                 $paymentSettingsAdvice["link"] = "viewPaymentSetting|flutterwave";
             break;
 
@@ -132,12 +132,14 @@ class ModulesEcommerceStoreController extends Controller {
         if ( !empty($integrationName) && array_search($integrationName, $installedNames, true) === false ) {
 
             $targetIntegration = $paymentIntegrations->where('name', $integrationName);
+
+            $targetIntegration = $targetIntegration->first();
             
-            $installType = $targetIntegration->type;
-            $installName = $targetIntegration->name;
-            $installConfigurations = $targetIntegration->configurations;
+            $installType = $targetIntegration["type"];
+            $installName = $targetIntegration["name"];
+            $installConfigurations = $targetIntegration[0]["configurations"];
     
-            $integrationId = null;
+            $integrationId = $request->has('integration_id') ? $request->input('integration_id') : null;
     
             $resource = $sdk->createIntegrationResource($integrationId)->addBodyParam('type', $installType)
                                                         ->addBodyParam('name', $installName)
@@ -159,14 +161,14 @@ class ModulesEcommerceStoreController extends Controller {
             if (($installedIndex = array_search($integration['name'], $finalInstalledNames, true)) === false) {
                 continue;
             }
-            $installedIntegration = $finalInstalledNames->get($installedIndex);
+            $installedIntegration = $finalInstalled->get($installedIndex);
             $integration['id'] = $installedIntegration->id;
             $integration['configurations'] = $installedIntegration->configuration;
             # update the values
             $finalIntegrations->push($integration);
             # add the integration
         }
-        $this->data['integration'] = $finalIntegrations->where('name', $integrationName);
+        $this->data['integration'] = !empty($integrationName) ? $finalIntegrations->where('name', $integrationName)->first() : [];
 
         $this->data['paymentOptionSelection'] = $paymentOptionSelection;
         $this->data['paymentSettingsAdvice'] = $paymentSettingsAdvice;

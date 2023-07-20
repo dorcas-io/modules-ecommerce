@@ -366,18 +366,18 @@
                 payment_settings: {!! !empty($paymentSettings) ? json_encode($paymentSettings) : ["payment_option" => "use_bank_account", "has_marketplace" => false] !!},
                 logistics_fulfilment_centre: {!! json_encode($logisticsFulfilmentCentre) !!},
                 advanced_store_settings: false,
-                integrations: {!! !empty($integrations) ? json_encode($integrations) : '[]' !!},
+                //integrations: {!! !empty($integrations) ? json_encode($integrations) : '[]' !!},
                 integration_index: 0,
-                integration: {!! !empty($integration) ? json_encode($integration) : '[ "name"=>"", "type"=>"", "configurations"=>[] ]' !!},
+                integration: {!! json_encode($integration) !!},
                 paymentOptionSelection: {!! json_encode($paymentOptionSelection) !!},
                 paymentSettingsAdvice: {!! json_encode($paymentSettingsAdvice) !!},
 
             },
             mounted: function() {
-                console.log(this.logistics_fulfilment_centre)
+                //console.log(this.logistics_fulfilment_centre)
                 console.log(this.integration)
-                console.log(this.paymentOptionSelection)
-                console.log(this.paymentSettingsAdvice)
+                //console.log(this.paymentOptionSelection)
+                //console.log(this.paymentSettingsAdvice)
 
             },
             computed: {
@@ -393,7 +393,8 @@
                         let link = advice.link;
 
                         if ( link_type == "route" ) {
-                            var url = `{{ route('${link}') }}`;
+                            //var url = `{{ route('${link}') }}`;
+                            var url = link;
                             window.location.href = url;
                         } else if ( link_type == "custom" ) {
                             //viewPaymentSetting|paystack
@@ -449,8 +450,7 @@
 				            }).then(function (response) {
 				                console.log(response);
 		                        $('#integration-configurations-modal').modal('hide');
-		                        context.spliceAllIntegrations(index)
-		                        //window.location = '{{ url()->current() }}';
+		                        window.location = '{{ url()->current() }}';
 				                return swal(action, action + ' the ' + display_name + ' integration to your account.', "success");
 				            }).catch(function (error) {
 				            	this.installing = false;
