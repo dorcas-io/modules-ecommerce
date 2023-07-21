@@ -10,6 +10,7 @@ use App\Http\Controllers\HomeController;
 use Hostville\Dorcas\Sdk;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Collection;
 use GuzzleHttp\Psr7\Uri;
 
@@ -163,8 +164,18 @@ class ModulesEcommerceStoreController extends Controller {
             }
             $installedIntegration = $finalInstalled->get($installedIndex);
             $integration['id'] = $installedIntegration->id;
-            $integration['configurations'] = $installedIntegration->configuration;
+
+            $configurations = collect($installedIntegration->configuration)->map(function ($config) {
+                if ( isset($config['value']) && !empty($config['value']) ) {
+                    $config['value'] = Crypt::decryptString($config['value']);
+                }
+                return $config;
+            })->toArray();
+            # encrypt values
+
+            $integration['configurations'] = $configurations;
             # update the values
+
             $finalIntegrations->push($integration);
             # add the integration
         }
