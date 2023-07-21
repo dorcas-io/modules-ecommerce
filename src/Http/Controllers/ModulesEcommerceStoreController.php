@@ -109,6 +109,8 @@ class ModulesEcommerceStoreController extends Controller {
                 $paymentSettingsAdvice["action"] = "Manage your Bank Account Settings Here";
                 $paymentSettingsAdvice["link_type"] = "route";
                 $paymentSettingsAdvice["link"] = "/mse/settings-banking";
+                $paymentSettingsAdvice["register"] = "";
+                $paymentSettingsAdvice["register_link"] = "";
             break;
             
             case "use_online_provider_paystack":
@@ -117,6 +119,8 @@ class ModulesEcommerceStoreController extends Controller {
                 $paymentSettingsAdvice["action"] = "Manage your Paystack Settings Here";
                 $paymentSettingsAdvice["link_type"] = "custom";
                 $paymentSettingsAdvice["link"] = "viewPaymentSetting|paystack";
+                $paymentSettingsAdvice["register"] = "Open A Paystack Account";
+                $paymentSettingsAdvice["register_link"] = "https://dashboard.paystack.com/#/signup";
             break;
             
             case "use_online_provider_flutterwave":
@@ -125,6 +129,8 @@ class ModulesEcommerceStoreController extends Controller {
                 $paymentSettingsAdvice["action"] = "Manage your Fluttterwave Settings Here";
                 $paymentSettingsAdvice["link_type"] = "custom";
                 $paymentSettingsAdvice["link"] = "viewPaymentSetting|flutterwave";
+                $paymentSettingsAdvice["register"] = "Open A Flutterwave Rave Account";
+                $paymentSettingsAdvice["register_link"] = "https://app.flutterwave.com/register";
             break;
 
         }
