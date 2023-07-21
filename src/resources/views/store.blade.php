@@ -374,7 +374,7 @@
             },
             mounted: function() {
                 //console.log(this.logistics_fulfilment_centre)
-                console.log(this.integration)
+                //console.log(this.integration)
                 //console.log(this.paymentOptionSelection)
                 //console.log(this.paymentSettingsAdvice)
 

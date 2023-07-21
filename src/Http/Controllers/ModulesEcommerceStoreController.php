@@ -137,7 +137,7 @@ class ModulesEcommerceStoreController extends Controller {
             
             $installType = $targetIntegration["type"];
             $installName = $targetIntegration["name"];
-            $installConfigurations = $targetIntegration[0]["configurations"];
+            $installConfigurations = $targetIntegration["configurations"];
     
             $integrationId = $request->has('integration_id') ? $request->input('integration_id') : null;
     
