@@ -78,13 +78,7 @@ class ModulesEcommerceStore extends Controller
 
         $this->data['storeIsReady'] = $storeIsReady;
 
-        $this->data['readinessChecks'] = [
-            "products" => (new Checklists())->checkProducts(),
-            "store" => (new Checklists())->checkPickupAddress(),
-            "address" => (new Checklists())->checkProducts(),
-            "bank" => (new Checklists())->checkBankAccounts(),
-            "shipping" => (new Checklists())->checkShippingCosts(),
-        ];
+        $this->data['readinessChecks'] = Dash::readinessChecks($request, $sdk, $storeOwner);
 
         $this->storeViewComposer($this->data, $request, $sdk, $storeOwner);
 
