@@ -97,10 +97,12 @@
                 page_number: 1,
                 store_settings: {!! json_encode($storeSettings) !!},
                 product_categories: {!! json_encode($productCategories ?: []) !!},
-                storeIsReady: {!! json_encode($storeIsReady) !!}
+                storeIsReady: {!! json_encode($storeIsReady) !!},
+                readinessChecks: {!! json_encode($readinessChecks) !!},
             },
             mounted: function () {
                 this.searchProducts();
+                console.log(this.readinessChecks);
             },
             updated: function () {
                 SEMICOLON.initialize.lightbox();

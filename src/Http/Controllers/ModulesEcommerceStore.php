@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Cache;
 use Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStoreController as Dashboard;
 use Dorcas\ModulesDashboard\Http\Controllers\ModulesDashboardController as Dash;
 use App\Dorcas\Hub\Enum\Banks;
+use Dorcas\ModulesDashboard\Classes\Checklists;
+
 
 class ModulesEcommerceStore extends Controller
 {
@@ -75,6 +77,14 @@ class ModulesEcommerceStore extends Controller
         $storeIsReady = true; //fix
 
         $this->data['storeIsReady'] = $storeIsReady;
+
+        $this->data['readinessChecks'] = [
+            "products" => (new Checklists())->checkProducts(),
+            "store" => (new Checklists())->checkPickupAddress(),
+            "address" => (new Checklists())->checkProducts(),
+            "bank" => (new Checklists())->checkBankAccounts(),
+            "shipping" => (new Checklists())->checkShippingCosts(),
+        ];
 
         $this->storeViewComposer($this->data, $request, $sdk, $storeOwner);
 
@@ -425,7 +435,6 @@ class ModulesEcommerceStore extends Controller
         $this->data['banks'] = collect(Banks::BANK_CODES)->sort()->map(function ($name, $code) {
             return ['name' => $name, 'code' => $code];
         })->values();
-
 
 
         $stage_title = $stage_present ? $cart_stages[$currentStage]["title"] : 'Shopping Cart';
