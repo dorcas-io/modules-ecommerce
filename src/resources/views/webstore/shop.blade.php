@@ -69,6 +69,7 @@
                         <span>@{{ category.products_count }}</span>
                     </li>
                 </ul>
+                <br/><br/>
                 <h4>Ready to Checkout</h4>
                 <a href="{{ route('webstore.cart') }}" class="button button-3d nomargin">View Shopping Cart</a>
             </div>

@@ -220,7 +220,7 @@
             <form method="post" action="" v-on:submit.prevent="checkout()">
                 <!-- Cart Review Begins -->
                 <div class="table-responsive bottommargin" id="cart-container-review">
-                    <table class="table cart">
+                    <table class="table cart" v-if="!isOrderCompleted">
                         <thead>
                         <tr>
                             <th class="cart-product-remove">&nbsp;</th>
@@ -271,9 +271,6 @@
                                     <p><a href="{{ route('webstore') }}" class="button button-3d nomargin fright">Continue Shopping</a></p>
                                 </td>
                             </tr>
-                            <tr v-if="payment_url.length > 0">
-                                <td colspan="6">Your order has been placed, you can also <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Now</a> to complete your order.</td>
-                            </tr>
                             <tr class="cart_item">
                                 <td colspan="6">
                                     <div class="row clearfix">
@@ -301,9 +298,64 @@
                             </tr>
                         </tbody>
                     </table>
+
+                    <!-- Show Payment Information after Order is Placed -->
+                    <table class="table cart" v-if="isOrderCompleted">
+                        <thead>
+                        <tr>
+                            <th>Payment Method</th>
+                            <th>Payment Details</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="cart_item">
+                                <td style="v-align">
+                                    <span href="#" v-if="payment_url.length > 0">
+                                        Online Payment
+                                    </span>
+                                    <span v-else>
+                                        Bank Transfer 
+                                    </span>
+                                </td>
+                                <td>
+                                    <span v-if="payment_url.length > 0">
+                                        Your order has been placed, you can also <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Now</a> to complete your order
+                                    </span>
+                                    <span v-else>
+                                        Amount to Pay: @{{ checkoutCurrency }} @{{ checkoutAmount }}
+                                        @php
+                                            if (isset($payWithDetails) && !empty($payWithDetails["bank_transfer"])) {
+
+                                                $bank_details = $payWithDetails["bank_transfer"];
+                                                
+                                                $bank_name = $banks->where('code', $bank_details["json_data"]["bank_code"]);
+                                                $account_number = $bank_details["account_number"];
+                                                $account_name = $bank_details["account_name"];
+
+                                                $details = "Please make a <strong>Bank Transfer</strong> paymennt to <br/><br/>";
+                                                $details .= "Bank: <strong>$bank_name</strong><br/>";
+                                                $details .= "Account Number: <strong>$account_number</strong><br/>";
+                                                $details .= "Account Name: <strong>$account_name</strong><br/>";
+
+                                            } else {
+
+                                                $details = "<em>No Details Available</em>";
+
+                                            }
+                                            
+                                            echo $details;
+
+                                        @endphp
+                                    </span>
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+
                 </div>
                 <!-- Cart Review Ends -->
-                <button type="submit" class="button button-3d nomargin button-black">Place Order</button>
+                <button type="submit" class="button button-3d nomargin button-black" v-if="!isOrderCompleted">Place Order</button>
             </form>
 
         </div>
@@ -335,6 +387,10 @@
                 env: {!! json_encode($env) !!},
                 states: {!! json_encode($states) !!},
                 countries: {!! json_encode($countries) !!},
+                isOrderCompleted: false,
+                banks: {!! json_encode(!empty($banks) ? $banks : []) !!},
+                checkoutCurrency: 'NGN',
+                checkoutAmount: 0
             },
             mounted: function() {
                 this.loadGoogleMaps();
@@ -504,13 +560,22 @@
                     }, function() {
                         axios.post("/xhr/cart/checkout", context.checkout_form)
                             .then(function (response) {
+
+                                context.checkoutCurrency = context.cart.currency;
+                                context.checkoutAmount = context.cart.total.formatted;
+
                                 context.cart = headerView.cart = [];
-                                // remove the deleted item
+                                
+                                context.isOrderCompleted = true
+
                                 console.log(response.data);
+
+                                // hide order button
+
                                 if (typeof response.data.payment_url !== 'undefined') {
                                     context.payment_url = response.data.payment_url;
                                 }
-                                return swal("Order Placed", "Your order has been submitted, you should get an invoice in your email inbox soon.", "success");
+                                return swal("Order Placed", "Your order has been submitted and an invoice sent via email. Please proceed to make payment", "success");
                             }).catch(function (error) {
                                 var message = '';
                                 if (error.response) {

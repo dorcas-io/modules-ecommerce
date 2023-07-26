@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStoreController as Dashboard;
 use Dorcas\ModulesDashboard\Http\Controllers\ModulesDashboardController as Dash;
+use App\Dorcas\Hub\Enum\Banks;
 
 class ModulesEcommerceStore extends Controller
 {
@@ -399,6 +400,32 @@ class ModulesEcommerceStore extends Controller
         }
         $this->data['stages']['stage'] = $currentStage;
         $this->data['stages']['data'][$currentStage]['active'] = true;
+
+        // Add Bank Transfer Details
+        $payWithDetails = [];
+        $accounts = $this->getBankAccounts($sdk);
+        if (!empty($accounts) && $accounts->count() > 0) {
+            $payWithDetails["bank_transfer"] = $accounts->first();
+            $this->data['account'] = $accounts->first();
+        } else {
+            //$account_name = $request->user()->firstname . ' ' . $request->user()->lastname;
+            $co = $request->user()->company();
+            $account_name = $co["name"];
+            $this->data['bank_transfer_default'] = [
+                'account_number' => '',
+                'account_name' => $account_name,
+                'json_data' => [
+                    'bank_code' => ''
+                ]
+            ];
+        }
+
+        $this->data['payWithDetails'] = $payWithDetails;
+
+        $this->data['banks'] = collect(Banks::BANK_CODES)->sort()->map(function ($name, $code) {
+            return ['name' => $name, 'code' => $code];
+        })->values();
+
 
 
         $stage_title = $stage_present ? $cart_stages[$currentStage]["title"] : 'Shopping Cart';
