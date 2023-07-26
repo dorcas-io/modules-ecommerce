@@ -506,7 +506,7 @@
                             .then(function (response) {
                                 context.cart = headerView.cart = [];
                                 // remove the deleted item
-                                //console.log(response.data);
+                                console.log(response.data);
                                 if (typeof response.data.payment_url !== 'undefined') {
                                     context.payment_url = response.data.payment_url;
                                 }
