@@ -87,8 +87,14 @@ class ModulesEcommerceStoreController extends Controller {
         $payment_option = $pSettings['payment_option'] ?? '';
         $has_marketplace = $pSettings['has_marketplace'];
 
-        $paymentSettingsAdvice = [];
-        $paymentOptionSelection = "Bank Account";
+        $paymentSettingsAdvice = [
+            "action" => "",
+            "link_type" => "",
+            "link" => "",
+            "register" => "",
+            "register_link" => ""
+        ];
+        $paymentOptionSelection = "Unknown";
 
 
         $availableIntegrations = config('dorcas.integrations');
