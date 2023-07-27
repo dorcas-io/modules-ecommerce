@@ -224,9 +224,8 @@
             <div class="col-md-12 col-lg-6">
 
             @if (!empty($subdomain))
-                <div class="row">
 
-                    <form action="/mec/ecommerce-payments" method="post"> <!-- class="col s12" -->
+                    <form action="/mec/ecommerce-payments" method="post">
 
                         {{ csrf_field() }}
 
@@ -278,12 +277,10 @@
 
                     </form>
 
-                </div>
 
+                    <div>&nbsp;</div>
 
-                <div class="row">
-
-                    <form action="/mec/ecommerce-logistics" method="post" class="col s12">
+                    <form action="/mec/ecommerce-logistics" method="post"><!-- class="col s12" -->
 
                         {{ csrf_field() }}
 
@@ -337,7 +334,6 @@
                         
                     </form>
 
-                </div>
 
                 @endif
 
