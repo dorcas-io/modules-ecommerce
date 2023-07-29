@@ -255,7 +255,7 @@
                                         <br/>
                                         <small class="text-muted"><a href="#" v-on:click.prevent="parsePaymentAdvice(paymentSettingsAdvice)">@{{ paymentSettingsAdvice.action }}</a></small>
                                         <br/>
-                                        <small class="text-muted" v-if="paymentSettingsAdvice.register.length != 0"><a href="paymentSettingsAdvice.register_link">@{{ paymentSettingsAdvice.register }}</a></small>
+                                        <small class="text-muted" v-if="paymentSettingsAdvice.register.length != 0"><a :href="paymentSettingsAdvice.register_link" target="_blank">@{{ paymentSettingsAdvice.register }}</a></small>
                                     </fieldset>
 
                                     <!-- 
