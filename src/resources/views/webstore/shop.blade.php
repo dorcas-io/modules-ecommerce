@@ -106,7 +106,7 @@
                 product_categories: {!! json_encode($productCategories ?: []) !!},
                 storeIsReady: {!! json_encode($storeIsReady) !!},
                 readinessChecks: {!! json_encode($readinessChecks) !!},
-                storeAdminLoggedIn: {{ $storeAdminLoggedIn }},
+                storeAdminLoggedIn: '{{ $storeAdminLoggedIn }}',
             },
             mounted: function () {
                 this.searchProducts();

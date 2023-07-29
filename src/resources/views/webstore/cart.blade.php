@@ -322,7 +322,8 @@
                                 </td>
                                 <td>
                                     <span v-if="payment_url.length > 0">
-                                        Your order has been placed, you can also <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Now</a> to complete your order
+                                        Your order has been placed; <strong>make payment</strong> to complete your order.<br/><br/>
+                                        <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Online Now</a>
                                     </span>
                                     <span v-else>
                                         Amount to Pay: @{{ checkoutCurrency }} @{{ checkoutAmount }}
@@ -332,7 +333,7 @@
 
                                                 $bank_details = $payWithDetails["bank_transfer"];
                                                 
-                                                $bank_name = $banks->where('code', $bank_details["json_data"]["bank_code"])->pluck('name');
+                                                $bank_name = $banks->where('code', $bank_details["json_data"]["bank_code"])->pluck('name')->first();
                                                 $account_number = $bank_details["account_number"];
                                                 $account_name = $bank_details["account_name"];
 
@@ -727,18 +728,18 @@
                         shipping_url = "/xhr/cart/get-provider-shipping-routes";
                         shipping_params = {}
                     }
-                    console.log(shippingType)
-                    console.log(shipping_url)
-                    console.log(shipping_params)
+                    //console.log(shippingType)
+                    //console.log(shipping_url)
+                    //console.log(shipping_params)
 
                     axios.get(shipping_url, {
                         params: shipping_params
                     }).then(function (response) {
-                        console.log(response)
+                        //console.log(response)
                         context.is_processing_shipping = false;
                         context.meta = response.data.meta;
                         context.shippingRoutes = response.data.data;
-                        console.log(context.shippingRoutes)
+                        //console.log(context.shippingRoutes)
                     }).catch(function (error) {
                             var message = '';
                             context.is_fetching = false;
