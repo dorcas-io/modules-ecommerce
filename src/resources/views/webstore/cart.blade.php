@@ -26,7 +26,7 @@
             <!-- Cart Address Begins -->
             <div class="row clearfix" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0">
                 <div class="col-md-6 clearfix">
-                    <h4>Delivery Address</h4>
+                    <h4>Enter Delivery Address</h4>
                     <form method="get" action="/cart">
                         {{ csrf_field() }}
                         <div class="col_full">
@@ -36,6 +36,9 @@
                         <a v-if="useAutoComplete && mapIsConfirmed" id="address_confirm" href="#" v-on:click.prevent="confirmAddress" class="button button-3d nomargin button-green">Yes, Address On Map Is Correct</a>
                         <!-- <button v-if="!useAutoComplete && !addressIsConfirmed" class="button button-3d nomargin button-black" action="confirmAddress()">Confirm Address</button> -->
                         <hr>
+                        <br/>
+                        <h4 v-show="addressIsConfirmed">Enter Other Delivery Details</h4>
+                        <br/>
                         <div class="col_half" v-show="addressIsConfirmed">
                             <input type="text" class="sm-form-control" name="address_firstname" id="address_firstname" required placeholder="First Name" v-model="checkout_form.firstname">
                         </div>
@@ -308,7 +311,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                            <tr class="cart_item">
+                            <tr>
                                 <td style="v-align">
                                     <span href="#" v-if="payment_url.length > 0">
                                         Online Payment
@@ -323,23 +326,24 @@
                                     </span>
                                     <span v-else>
                                         Amount to Pay: @{{ checkoutCurrency }} @{{ checkoutAmount }}
+                                        <br/><br/>
                                         @php
                                             if (isset($payWithDetails) && !empty($payWithDetails["bank_transfer"])) {
 
                                                 $bank_details = $payWithDetails["bank_transfer"];
                                                 
-                                                $bank_name = $banks->where('code', $bank_details["json_data"]["bank_code"]);
+                                                $bank_name = $banks->where('code', $bank_details["json_data"]["bank_code"])->pluck('name');
                                                 $account_number = $bank_details["account_number"];
                                                 $account_name = $bank_details["account_name"];
 
-                                                $details = "Please make a <strong>Bank Transfer</strong> paymennt to <br/><br/>";
+                                                $details = "Please make a <strong>Bank Transfer</strong> payment to <br/><br/>";
                                                 $details .= "Bank: <strong>$bank_name</strong><br/>";
                                                 $details .= "Account Number: <strong>$account_number</strong><br/>";
                                                 $details .= "Account Name: <strong>$account_name</strong><br/>";
 
                                             } else {
 
-                                                $details = "<em>No Details Available</em>";
+                                                $details = "<em>No Bank Details Available</em>";
 
                                             }
                                             

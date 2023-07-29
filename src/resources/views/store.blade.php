@@ -146,9 +146,9 @@
             @if (!empty($subdomain))
             <div class="col-md-12 col-lg-6">
                 <div class="card">
-                    <div class="ribbon bg-primary">FIRST</div>
+                    <div class="ribbon bg-primary">BASIC INFORMATION</div>
                     <div class="card-body">
-                        <h3 class="card-title">Setup Basic Store Information</h3>
+                        <h3 class="card-title">Setup Store</h3>
                         <p class="text-muted">
                             <form action="" method="post" class="col s12">
                                 {{ csrf_field() }}
@@ -230,7 +230,7 @@
                         {{ csrf_field() }}
 
                         <div class="card">
-                            <div class="ribbon bg-red">SECOND</div>
+                            <div class="ribbon bg-red">PAYMENT</div>
                             <div class="card-body">
                                 <h3 class="card-title">Setup Payment Details</h3>
                                 <p class="text-muted">
@@ -285,7 +285,7 @@
                         {{ csrf_field() }}
 
                         <div class="card">
-                            <div class="ribbon bg-yellow">THIRD</div>
+                            <div class="ribbon bg-yellow">SHIPPING</div>
                             <div class="card-body">
                                 <h3 class="card-title">Setup Logistics Provider</h3>
                                 <p class="text-muted">

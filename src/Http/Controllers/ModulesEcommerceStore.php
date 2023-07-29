@@ -80,6 +80,12 @@ class ModulesEcommerceStore extends Controller
 
         $this->data['readinessChecks'] = Dash::readinessChecks($request, $sdk, $storeOwner);
 
+        $loggedInUser = !empty(auth()->user()) ? auth()->user() : null;
+
+        $this->data['storeAdminLoggedIn'] = !empty($loggedInUser) ? true : false;
+
+        $this->data['setupRemainingMessage'] = "";
+
         $this->storeViewComposer($this->data, $request, $sdk, $storeOwner);
 
         return view('modules-ecommerce::webstore.shop', $this->data);
@@ -262,6 +268,7 @@ class ModulesEcommerceStore extends Controller
     public function cart(Request $request, Sdk $sdk)
     {
         $storeOwner = $this->getCompanyViaDomain();
+        //$company = $this->getCompany();
         # get the store owner
         $this->data['storeSettings'] = Dashboard::getStoreSettings((array) $storeOwner->extra_data);
         # our store settings container
@@ -407,13 +414,17 @@ class ModulesEcommerceStore extends Controller
 
         // Add Bank Transfer Details
         $payWithDetails = [];
-        $accounts = $this->getBankAccounts($sdk);
+        
+        //$accounts = $this->getBankAccounts($sdk);
+        $companyUsers = $sOwner["users"];
+        $accounts = collect($companyUsers["data"][0]["bank_accounts"]);
+        
         if (!empty($accounts) && $accounts->count() > 0) {
             $payWithDetails["bank_transfer"] = $accounts->first();
             $this->data['account'] = $accounts->first();
         } else {
             //$account_name = $request->user()->firstname . ' ' . $request->user()->lastname;
-            $co = $request->user()->company();
+            $co = (array) $storeOwner; //$request->user()->company();
             $account_name = $co["name"];
             $this->data['bank_transfer_default'] = [
                 'account_number' => '',
@@ -501,7 +512,7 @@ class ModulesEcommerceStore extends Controller
         $customer = $customer->getData(true);
         $orderData = [
             'title' => 'Order #'.($customer->orders_count + 1).' for '.$customer->firstname.' '.$customer->lastname,
-            'description' => 'Order placed on web store at '.Carbon::now()->format('D jS M, Y h:i a'),
+            'description' => 'Order placed on web store at ' . Carbon::now()->format('D jS M, Y h:i a'),
             'currency' => $cart->currency,
             'amount' => $cart->total['raw'],
             'products' => [],

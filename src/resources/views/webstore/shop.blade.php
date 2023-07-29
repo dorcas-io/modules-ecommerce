@@ -41,7 +41,7 @@
                 </div>
             </div>
         </div>
-        <div class="col_full nobottommargin" v-if="!storeIsReady">
+        <div class="col_full nobottommargin" v-if="!verifyReadiness">
             <div class="feature-box center media-box fbox-bg">
                 <div class="fbox-media">
                     <a href="#">
@@ -50,7 +50,14 @@
                     </a>
                 </div>
                 <div class="fbox-desc">
-                    <h3>{{ $storeOwner->name }} is <strong>currently</strong> SETTING UP and getting ready to LAUNCH shortly.<br/><br/><span class="subtitle">Check back soon.</span></h3>
+                    <h3>{{ $storeOwner->name }} is <strong>currently</strong> SETTING UP and getting ready to LAUNCH shortly.
+                    <br/><br/>
+                    <span class="subtitle">Check back soon.</span></h3>
+                </div>
+                <div class="fbox-desc" v-if="storeAdminLoggedIn">
+                    <h3>Hi {{ $storeOwner->name }}, it appears you are <strong>LOGGED IN</strong>.
+                    <br/><br/>
+                    <span class="subtitle">Please ensure <strong>{{ $setupRemainingMessage }}</strong>.</span></h3>
                 </div>
             </div>
         </div>
@@ -99,10 +106,15 @@
                 product_categories: {!! json_encode($productCategories ?: []) !!},
                 storeIsReady: {!! json_encode($storeIsReady) !!},
                 readinessChecks: {!! json_encode($readinessChecks) !!},
+                storeAdminLoggedIn: {{ $storeAdminLoggedIn }},
             },
             mounted: function () {
                 this.searchProducts();
                 console.log(this.readinessChecks);
+                console.log(this.verifyReadiness());
+            },
+            computed: {
+
             },
             updated: function () {
                 SEMICOLON.initialize.lightbox();
@@ -116,6 +128,25 @@
                 }
             },
             methods: {
+
+                verifyReadiness: function() {
+                    let readiness = this.readinessChecks;
+                    for (let x in readiness) {
+                        if (typeof readiness[x] === 'boolean') {
+                            if (readiness[x] !== true) {
+                                return false;
+                            }
+                        }
+                        //else if (typeof readiness[x] === 'object') {
+                        //    if (!this.verifyReadiness(readiness[x])) {
+                        //        return false;
+                        //    }
+                        //}
+                    }
+                    
+                    return true;
+                },
+
                 addToCart: function (id, name, price, photo, quantity) {
                     if (this.is_posting) {
                         // a request still running
