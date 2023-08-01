@@ -96,7 +96,7 @@
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
 	    				<div>
 	    					<h4 class="m-0"><a href="{{ route('ecommerce-domains') }}">Store Address</a></h4>
-	    					<small class="text-muted"><a href="{{ !empty($subdomain) ? $storeUrl : '#' }}" target="_blank">{{ !empty($subdomain) ? \Illuminate\Support\Str::limit($storeUrl, 25, $end='...') : 'Not Reserved' }}</a> | <small class="text-muted"><a href="{{ route('ecommerce-domains') }}">Edit</a></small>
+	    					<small class="text-muted"><a href="{{ !empty($subdomain) ? $storeUrl : '#' }}" target="_blank">{{ !empty($subdomain) ? \Illuminate\Support\Str::limit($storeUrl, 30, $end='...') : 'Not Reserved' }}</a> | <small class="text-muted"><a href="{{ route('ecommerce-domains') }}">Edit</a></small>
                             <!-- str_replace("https://", "", $storeUrl) -->
 	    				</div>
 	    			</div>

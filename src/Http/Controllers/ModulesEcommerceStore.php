@@ -286,6 +286,8 @@ class ModulesEcommerceStore extends Controller
         if (!empty($nigeria)) {
             $this->data['states'] = $this->getDorcasStates($sdk, $nigeria->id);
             # get the states
+        } else {
+            $this->data['states'] = [];
         }
 
         $company_data = (array) $storeOwner->extra_data;
