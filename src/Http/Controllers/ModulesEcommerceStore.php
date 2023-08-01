@@ -279,6 +279,10 @@ class ModulesEcommerceStore extends Controller
         //$this->data['page']['title'] = $storeOwner->name . ' ' . $this->data['page']['title'];
         $this->data['page']['title'] = $storeOwner->name . ' | Shopping Cart';
 
+        $sOwner = (array) $storeOwner;
+
+        $sdk = $this->authorizeSdkByCompany($sdk, $sOwner);
+
         $this->data['countries'] = $countries = $this->getCountries($sdk);
         # get the countries listing
         $nigeria = !empty($countries) && $countries->count() > 0 ? $countries->where('iso_code', 'NG')->first() : null;
@@ -363,8 +367,6 @@ class ModulesEcommerceStore extends Controller
         $location = (array) $location;
         $location['country'] = env('SETTINGS_COUNTRY', 'NG');
         // get Seller Geo Location details
-
-        $sOwner = (array) $storeOwner;
         
         if (isset ($sOwner["extra_data"]["location"])) {
             $location['address'] = $sOwner["extra_data"]['location']['address'] ?? '';
