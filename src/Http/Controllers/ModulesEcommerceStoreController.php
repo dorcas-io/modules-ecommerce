@@ -661,4 +661,135 @@ class ModulesEcommerceStoreController extends Controller {
     
     }
 
+
+
+    public function wallet_index(Request $request, Sdk $sdk)
+    {
+        $this->data['page']['title'] .= ' &rsaquo; Business';
+        $this->data['header']['title'] = 'Business Settings';
+        $this->data['selectedSubMenu'] = 'settings-business';
+        $this->data['submenuAction'] = '';
+
+        $this->setViewUiResponse($request);
+        $this->data['company'] = $company = $request->user()->company(true, true);
+        # get the company information
+        $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']]];
+        # the location information
+        $locations = $this->getLocations($sdk);
+
+        $location = !empty($locations) ? $locations->first() : $location;
+        $this->data['states'] = $sts = Controller::getDorcasStates($sdk, env('SETTINGS_COUNTRY', 'NG'));
+        # get the states
+        $this->data['countries'] = $this->getCountries($sdk);
+        $this->data['location'] = $location;
+        $this->data['env'] = [
+            "SETTINGS_COUNTRY" => env('SETTINGS_COUNTRY', 'NG'),
+            "CREDENTIAL_GOOGLE_API_KEY" => env('CREDENTIAL_GOOGLE_API_KEY', 'ABC'),
+        ];
+
+        $company_data = (array) $company->extra_data;
+
+        $this->data['company_data'] = $company_data;
+
+        if ( empty($company_data['location']) ) {
+            $this->data['company_data']['location'] = ['latitude' => 0, 'longitude' => 0 , 'address' => ''];
+        }
+
+        return view('modules-settings::business', $this->data);
+    }
+
+    public function wallet_post(Request $request, Sdk $sdk)
+    {
+        $this->validate($request, [
+            'name' => 'required_if:action,update_business|string|max:100',
+            'registration' => 'nullable|string|max:30',
+            'phone' => 'required_if:action,update_business|string|max:30',
+            'email' => 'required_if:action,update_business|email|max:80',
+            'website' => 'nullable|string|max:80',
+            'address1' => 'required_if:action,update_location|string|max:100',
+            'address2' => 'nullable|string|max:100',
+            'city' => 'required_if:action,update_location|string|max:100',
+            'state' => 'required_if:action,update_location|string|max:50',
+        ]);
+        # validate the request
+        try {
+            $company = $request->user()->company(true, true);
+            # get the company information
+
+            if ($request->action === 'update_business') {
+                # update the business information
+                $query = $sdk->createCompanyService()
+                                ->addBodyParam('name', $request->name, true)
+                                ->addBodyParam('registration', $request->input('registration', ''))
+                                ->addBodyParam('phone', $request->input('phone', ''))
+                                ->addBodyParam('email', $request->input('email', ''))
+                                ->addBodyParam('website', $request->input('website', ''))
+                                ->send('PUT');
+                # send the request
+                if (!$query->isSuccessful()) {
+                    throw new \RuntimeException('Failed while updating your business information. Please try again.');
+                }
+                $message = ['Successfully updated business information for '.$request->name];
+            } else {
+                # update address information
+
+                $locations = $this->getLocations($sdk);
+                $location = !empty($locations) ? $locations->first() : null;
+                $query = $sdk->createLocationResource();
+                # get the query
+                $query = $query->addBodyParam('address1', $request->address1)
+                                ->addBodyParam('address2', $request->address2)
+                                ->addBodyParam('city', $request->city)
+                                ->addBodyParam('state', $request->state);
+                # add the payload
+                if (!empty($location)) {
+                    $response = $query->send('PUT', [$location->id]);
+                } else {
+                    $response = $query->send('POST');
+                }
+                if (!$response->isSuccessful()) {
+                    throw new \RuntimeException('Sorry but we encountered issues while updating your address information.');
+                }
+                Cache::forget('business.locations.'.$company->id);
+                # forget the cache data
+
+                $updated_locations = $this->getLocations($sdk); // recache immediately
+
+                // Update Geo Location in company meta data
+                $company = $request->user()->company(true, true);
+                
+                $configuration = !empty($company->extra_data) ? $company->extra_data : [];
+
+                if (empty($configuration['location'])) {
+                    $configuration['location'] = [];
+                }
+                $configuration['location']['address'] = $request->input('address1') . " " . $request->input('address2');
+                $configuration['location']['latitude'] = $request->input('latitude');
+                $configuration['location']['longitude'] = $request->input('longitude');
+                $configuration['location']['address'] = $request->input('address1');
+
+                $queryL = $sdk->createCompanyService()->addBodyParam('extra_data', $configuration)
+                                                    ->send('post');
+                # send the request
+                if (!$queryL->isSuccessful()) {
+                    throw new \RuntimeException('Failed while updating your geo-location data. Please try again.');
+                }
+
+
+                $message = ['Successfully updated your company address information.'];
+            }
+            $response = (tabler_ui_html_response($message))->setType(UiResponse::TYPE_SUCCESS);
+        } catch (\Exception $e) {
+            $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
+        }
+
+        $gettingStartedRedirect = \Dorcas\ModulesDashboard\Http\Controllers\ModulesDashboardController::processGettingStartedRedirection($request, 'setup_pickup_address', $response);
+        if ($gettingStartedRedirect) {
+            return redirect(route('dashboard'))->with('UiResponse', $response);
+        }
+
+        return redirect(url()->current())->with('UiResponse', $response);
+    }
+
+
  }

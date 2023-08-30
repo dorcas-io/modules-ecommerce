@@ -48,6 +48,9 @@ Route::group(['namespace' => 'Dorcas\ModulesEcommerce\Http\Controllers', 'middle
 
     Route::post('/payment-verify', 'ModulesEcommerceController@verifyTransaction');
 
+    Route::get('/ecommerce-wallet', 'ModulesEcommerceStoreController@wallet_index')->name('ecommerce-wallet');
+    Route::post('/ecommerce-wallet', 'ModulesEcommerceStoreController@wallet_post');
+
 });
 
 
