@@ -234,6 +234,25 @@
                                 <h3 class="card-title">Setup Payment Details</h3>
                                 <p class="text-muted">
                                     
+
+                                @if ( env('SETTINGS_ECOMMERCE_PAYMENT_USE_WALLET', true) == true )
+
+                                    To receive payments, you need to <strong>activate your Payment Wallet</strong>:
+                                    <ul>
+                                        <li>All your store payments will be deposited into this wallet</li>
+                                        <li>You can make withdrawals into your local bank account</li>
+                                    </ul>
+
+                                    <input type="hidden" name="wallet_request" value="1" />
+                                    <input type="hidden" name="wallet_action" value="activate" />
+
+                                    <div class="col-md-12">
+                                        <button v-if="payment_settings.wallet_request==''" class="btn btn-primary" type="submit" name="action">Activate Payment Wallet</button>
+                                        <a v-if="payment_settings.wallet_request=='1'" class="btn btn-success btn-sm" href="{{ route('ecommerce-wallet') }}">Manage Payment Wallet</a>
+                                    </div>
+
+                                @else
+
                                     How do you wish to handle <strong>payment</strong> for orders placed on your store:
                                     <ul>
                                         <li>You can choose to either <strong>Use your bank account</strong> OR <strong>Use an online payment provider account (e.g. Paystack / Flutterwave)</strong></li>
@@ -269,6 +288,8 @@
                                     <div class="col-md-12">
                                         <button class="btn btn-primary" type="submit" name="action">Save Payments Options</button>
                                     </div>
+
+                                @endif
 
                                 </p>
                             </div>

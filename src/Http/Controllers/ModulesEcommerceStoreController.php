@@ -41,6 +41,8 @@ class ModulesEcommerceStoreController extends Controller {
     protected $storePaymentsFields = [
         'payment_option',
         'has_marketplace',
+        'wallet_request',
+        'wallet_action',
     ];
     
     public function __construct()
@@ -488,6 +490,22 @@ class ModulesEcommerceStoreController extends Controller {
             $configuration = (array) $company->extra_data;
             $paymentsSettings = $configuration['payments_settings'] ?? [];
             # our store settings container
+
+            $wallet_request = $request->has('wallet_request') ? $request->input('wallet_action') : null;
+            # do something with this later
+
+            if ($wallet_request) {
+
+                $params = [];
+
+                $wallet_response = $this->activateWallet($request, $params);
+
+                if ($wallet_response) {
+                    throw new \RuntimeException('Failed while activating Payment Wallet');
+                }
+
+            }
+
             $submitted = $request->only($this->storePaymentsFields);
             # get the submitted data
             foreach ($submitted as $key => $value) {
@@ -508,7 +526,14 @@ class ModulesEcommerceStoreController extends Controller {
                 throw new \RuntimeException('Failed while updating the payments settings. '.$message);
             }
             $this->clearCache($sdk);
-            $response = (tabler_ui_html_response(['Successfully updated your Payments Settings']))->setType(UiResponse::TYPE_SUCCESS);
+            if (empty($wallet_request)) {
+                $success_message = 'Successfully updated your Payments Settings';
+            } else {
+                if ($wallet_request == "activate") {
+                    $success_message = 'Successfully activatetd Payment Wallet';
+                }
+            }
+            $response = (tabler_ui_html_response([$success_message]))->setType(UiResponse::TYPE_SUCCESS);
         } catch (\Exception $e) {
             $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
         }
@@ -563,5 +588,77 @@ class ModulesEcommerceStoreController extends Controller {
         }
     }
 
+
+    /**
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function activateWallet(Request $request)
+    {
+        // Determine active Logistics provider
+        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
+        $country = env('SETTINGS_COUNTRY', 'NG');
+
+        $provider_config = strtolower($provider . '_' . $country) . '.php';
+        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+
+        $provider_config_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_config;
+        $config = require_once($provider_config_path);
+
+        $provider_class_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_class;
+        require_once($provider_class_path);
+
+
+        // Parse Shopper Origin Address
+        $user = $request->user();
+        $company = $user->company();
+
+        $providerParams = [
+            "user_email" => $company->email,
+            "fullname" => $user->firstname . " " . $user->lastname,
+            "email" => $company->email,
+            "phone_number" => $this->format_intl_code($user->phone, "234"),
+            "country" => $country
+        ];
+
+        $c = $config["class"];
+
+        $provider = new $c($providerParams);
+
+        $activation = $provider->activate();
+
+        dd($activation);
+
+        if ($activation === true) {
+
+            $response_message = "Wallet Activation Succcessful";
+
+        } else {
+
+            $response_message = $activation;
+
+        }
+
+        $response = [
+            "status" => $activation,
+            "message" => $respose_message,
+            "data" => [],
+        ];
+        
+        //return response()->json($response);
+        return $response;
+    }
+
+    function format_intl_code($phone, $code) {
+
+        $phone = preg_replace("/\s+/", "", $phone);
+        $phone = str_replace("+" . $code,"", $phone);
+        $phone = str_replace("+","", $phone);
+        $LearnerPhone = substr($phone, 0, 1) == "0" ? $code . substr($phone, 1) : $phone;
+    
+        return $LearnerPhone;
+    
+    }
 
  }

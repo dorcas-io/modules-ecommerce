@@ -590,7 +590,7 @@ class ModulesEcommerceStore extends Controller
 
         //$provider = new $provider_class();
         $providerParams = [
-            "vendor_id" => 3152
+            "vendor_id" => env('KWIK_VENDOR_ID', 3152)
 
         ];
         $c = $config["class"];
@@ -724,6 +724,7 @@ class ModulesEcommerceStore extends Controller
         });
         $viewData["productCategories"] = $categories;
     }
+
 
 
 }
