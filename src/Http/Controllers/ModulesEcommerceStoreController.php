@@ -321,6 +321,8 @@ class ModulesEcommerceStoreController extends Controller {
         $requiredPaymentSettings = [
             'payment_option',
             'has_marketplace',
+            'wallet_request',
+            'wallet_action',
         ];
         $settings = $configuration['payments_settings'] ?? [];
         # our store settings container
