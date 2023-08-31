@@ -29,5 +29,10 @@ return [
     	'title' => 'Online Store',
     	'route' => 'ecommerce-store',
         'icon' => 'fe fe-monitor',
-    ]
+    ],
+    'ecommerce-wallet' => [
+    	'title' => 'Wallet',
+    	'route' => 'ecommerce-wallet',
+        'icon' => 'fe fe-wallet',
+    ],
 ];

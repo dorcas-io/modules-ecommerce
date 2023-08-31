@@ -491,7 +491,7 @@ class ModulesEcommerceStoreController extends Controller {
             $company = $this->getCompany();
             $configuration = (array) $company->extra_data;
             $paymentsSettings = $configuration['payments_settings'] ?? [];
-            # our store settings container
+            # our payment settings container
 
             $wallet_request = $request->has('wallet_request') ? $request->input('wallet_action') : null;
             # do something with this later
@@ -502,9 +502,33 @@ class ModulesEcommerceStoreController extends Controller {
 
                 $wallet_response = $this->activateWallet($request, $params);
 
-                if ($wallet_response) {
-                    throw new \RuntimeException('Failed while activating Payment Wallet');
+                if (!$wallet_response->status) {
+                    throw new \RuntimeException('Failed while activating Payment Wallet (' . $wallet_response->message  . ')');
                 }
+
+                //process wallet reponse
+                // {
+                //     "status": "success",
+                //     "message": "Payout subaccount created",
+                //     "data": {
+                //         "id": 195950,
+                //         "account_reference": "PSA0E649679F84901775",
+                //         "account_name": "Example User",
+                //         "barter_id": "234000002650333",
+                //         "email": "user@gmail.com",
+                //         "mobilenumber": "09010000000",
+                //         "country": "US",
+                //         "nuban": "8543374352",
+                //         "bank_name": "Wema Bank PLC",
+                //         "bank_code": "035",
+                //         "status": "ACTIVE",
+                //         "created_at": "2023-08-30T19:48:25.000Z"
+                //     }
+                // }
+                $paymentsSettings["wallet"] = [
+                    "status" => "succcess",
+                    "data" => (array) $wallet_response->data
+                ];
 
             }
 
@@ -617,12 +641,12 @@ class ModulesEcommerceStoreController extends Controller {
         $company = $user->company();
 
         $providerParams = [
-            "user_email" => $company->email,
-            "fullname" => $user->firstname . " " . $user->lastname,
-            "email" => $company->email,
-            "phone_number" => $this->format_intl_code($user->phone, "234"),
+            "account_name" => $user->firstname . " " . $user->lastname,
+            "email" => $user->email,
+            "mobilenumber" => $this->format_intl_code($user->phone, "234"),
             "country" => $country
         ];
+
 
         $c = $config["class"];
 
@@ -630,26 +654,19 @@ class ModulesEcommerceStoreController extends Controller {
 
         $activation = $provider->activate();
 
-        dd($activation);
+        $response_status = $activation->status === "success" ? true : false;
 
-        if ($activation === true) {
+        $response_message = $activation->status === "success" ? "Wallet Activation Succcessful" : "Wallet Activation Succcessful (" . $activation->message . ")";
 
-            $response_message = "Wallet Activation Succcessful";
-
-        } else {
-
-            $response_message = $activation;
-
-        }
+        $response_data = $activation->status === "success" ? $activation->data : [];
 
         $response = [
-            "status" => $activation,
+            "status" => $response_status,
             "message" => $respose_message,
-            "data" => [],
+            "data" => $response_data,
         ];
         
-        //return response()->json($response);
-        return $response;
+        return response()->json($response);
     }
 
     function format_intl_code($phone, $code) {
@@ -667,37 +684,26 @@ class ModulesEcommerceStoreController extends Controller {
 
     public function wallet_index(Request $request, Sdk $sdk)
     {
-        $this->data['page']['title'] .= ' &rsaquo; Business';
-        $this->data['header']['title'] = 'Business Settings';
-        $this->data['selectedSubMenu'] = 'settings-business';
+        $this->data['page']['title'] .= ' &rsaquo; Wallet';
+        $this->data['header']['title'] = 'eCommerce Wallet';
+        $this->data['selectedSubMenu'] = 'ecommerce-wallet';
         $this->data['submenuAction'] = '';
 
         $this->setViewUiResponse($request);
         $this->data['company'] = $company = $request->user()->company(true, true);
         # get the company information
-        $location = ['address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']]];
-        # the location information
-        $locations = $this->getLocations($sdk);
-
-        $location = !empty($locations) ? $locations->first() : $location;
-        $this->data['states'] = $sts = Controller::getDorcasStates($sdk, env('SETTINGS_COUNTRY', 'NG'));
-        # get the states
-        $this->data['countries'] = $this->getCountries($sdk);
-        $this->data['location'] = $location;
-        $this->data['env'] = [
-            "SETTINGS_COUNTRY" => env('SETTINGS_COUNTRY', 'NG'),
-            "CREDENTIAL_GOOGLE_API_KEY" => env('CREDENTIAL_GOOGLE_API_KEY', 'ABC'),
-        ];
 
         $company_data = (array) $company->extra_data;
-
         $this->data['company_data'] = $company_data;
 
-        if ( empty($company_data['location']) ) {
-            $this->data['company_data']['location'] = ['latitude' => 0, 'longitude' => 0 , 'address' => ''];
-        }
+        $paymentsSettings = $company_data['payments_settings'] ?? [];
+        # our payment settings container
+        
+        $this->data['wallet_enabled'] = isset($paymentsSettings['wallet']) && !empty($paymentsSettings['wallet']) ? true : false;
 
-        return view('modules-settings::business', $this->data);
+        $this->data['wallet_data'] = isset($paymentsSettings['wallet']) && !empty($paymentsSettings['wallet']) ? $paymentsSettings['wallet']['data'] : [];
+
+        return view('modules-ecommerce::wallet', $this->data);
     }
 
     public function wallet_post(Request $request, Sdk $sdk)

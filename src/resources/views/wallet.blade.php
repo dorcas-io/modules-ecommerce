@@ -34,43 +34,20 @@
                 <form class="card" action="" method="post">
                     {{ csrf_field() }}
                     <div class="card-body">
-                        <h3 class="card-title">Business Information</h3>
+                        <h3 class="card-title">Manage Payment Wallet</h3>
                       
                         <div class="row">
 
                             <div class="col-md-12">
-                                <div class="form-group">
-                                    <label class="form-label" for="name"  @if ($errors->has('name')) data-error="{{ $errors->first('name') }}" @endif>Business Name</label>
-                                    <input id="name" type="text" name="name" maxlength="80" v-model="company.name" required class="form-control {{ $errors->has('name') ? ' invalid' : '' }}" >
-                                </div>
+                                <h4>Status</h4>
+                                <span v-if="wallet_enabled">Enabled</span>
+                                <span v-if="!wallet_enabled">Not Enabled</span>
                             </div>
             
                             <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label" for="registration" @if ($errors->has('registration')) data-error="{{ $errors->first('registration') }}" @endif>Registration Number</label>
-                                    <input id="registration" type="text" name="registration" v-model="company.registration" maxlength="30" class="form-control {{ $errors->has('registration') ? ' invalid' : '' }}">
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label" for="phone"  @if ($errors->has('phone')) data-error="{{ $errors->first('phone') }}" @endif>Contact Phone</label>
-                                    <input id="phone" type="text" name="phone" v-model="company.phone" maxlength="30" class="form-control {{ $errors->has('phone') ? ' invalid' : '' }}">
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label" for="email" class="active"  @if ($errors->has('email')) data-error="{{ $errors->first('email') }}" @endif>Email Address</label>
-                                    <input id="email" type="email" name="email" v-model="company.email" maxlength="80" class="form-control {{ $errors->has('email') ? ' invalid' : '' }}">
-                                </div>
-                            </div>
-
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label" for="website" class="active"  @if ($errors->has('website')) data-error="{{ $errors->first('website') }}" @endif>Website</label>
-                                    <input id="website" type="text" name="website" v-model="company.website" maxlength="80" class="form-control {{ $errors->has('website') ? ' invalid' : '' }}">
+                                <div v-if="wallet_enabled">
+                                    <span>{{ $wallet_data["account_reference"] }}</span>
+                                    <div>@{{ wallet_data.bank_name }}</div>
                                 </div>
                             </div>
 
@@ -92,7 +69,7 @@
                 <form class="card" action="" method="post">
                     {{ csrf_field() }}
                     <div class="card-body">
-                        <h3 class="card-title">Address Information</h3>
+                        <h3 class="card-title">Transfer Wallet Funds</h3>
                         <div class="row">
 
                             <div class="col-md-12">
@@ -231,15 +208,9 @@
         data: {
             company: {!! json_encode($company) !!},
             company_data: {!! json_encode($company_data) !!},
-            location: {!! json_encode($location) !!},
-            states: {!! json_encode($states) !!},
-            countries: {!! json_encode($countries) !!},
-            env: {!! json_encode($env) !!},
+            wallet_enabled: {!! json_encode($wallet_enabled) !!},
+            wallet_data: {!! json_encode($wallet_data) !!},
             loggedInUser: headerAuthVue.loggedInUser,
-            addressIsConfirmed: false,
-            useAutoComplete: true,
-            locationLatitude: 0,
-            locationLongitude: 0
         },
         mounted: function() {
             if (this.company_data.location.latitude > 0 && this.company_data.location.longitude > 0) {

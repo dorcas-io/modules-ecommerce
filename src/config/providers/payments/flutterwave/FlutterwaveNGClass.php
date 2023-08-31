@@ -7,13 +7,6 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
-use \Flutterwave\Flutterwave;
-use \Flutterwave\Helper\Config;
-use Flutterwave\Payload;
-use Flutterwave\Customer;
-use Flutterwave\Service\CollectionSubaccount;
-use Flutterwave\Service\PayoutSubaccount;
-
 
 class FlutterwaveNGClass
 {
@@ -24,7 +17,7 @@ class FlutterwaveNGClass
 
     private $publicKey;
 
-    private $privateKey;
+    private $secretKey;
 
     private $encryptionKey;
 
@@ -33,24 +26,17 @@ class FlutterwaveNGClass
     private $providerParams;
 
     private $config;
+
+    private $baseUrl;
     
     public function __construct(array $providerParams)
     {
+
+        $this->baseUrl = 'https://api.flutterwave.com/v3';
         $this->publicKey = env('CREDENTIAL_FLUTTERWAVE_KEY_PUBLIC', 'xyz');
-        $this->privateKey = env('CREDENTIAL_FLUTTERWAVE_KEY_SECRET', 'xyz');
+        $this->secretKey = env('CREDENTIAL_FLUTTERWAVE_KEY_SECRET', 'xyz');
         $this->encryptionKey = env('CREDENTIAL_FLUTTERWAVE_KEY_ENCRYPTION', 'xyz');
         $this->env = 'production';
-
-
-        # your config must implement Flutterwave\Contract\ConfigInterface
-        $myConfig = Config::setUp(
-            $this->privateKey,
-            $this->publicKey,
-            $this->encryptionKey,
-            $this->env
-        ); 
-        //Flutterwave::bootstrap($myConfig);
-        $this->config = $myConfig;
         
         $this->user_email = $providerParams["user_email"];
 
@@ -64,7 +50,7 @@ class FlutterwaveNGClass
     }
 
 
-    private function connect($path, $postParams, $accessToken = null)
+    private function connect($path, $method = 'POST', $postParams)
     {
         // Connect To API
         $ch = curl_init();
@@ -75,7 +61,8 @@ class FlutterwaveNGClass
         curl_setopt($ch, CURLOPT_POST, TRUE);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postParams));
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            "Content-Type: application/json"
+            "Content-Type: application/json",
+            "Authorization: Bearer " . $this->secretKey
         ));
         
         $response = curl_exec($ch);
@@ -115,9 +102,7 @@ class FlutterwaveNGClass
      */
     public function activate()
     {
-        $response = $this->createSubAccount('payout', $this->getProviderParams);
-
-        //$output = (array) $response->data;
+        $response = $this->createSubAccount('payout', $this->providerParams);
 
         return $response;
 
@@ -128,7 +113,7 @@ class FlutterwaveNGClass
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function createSubAccount($type, $param)
+    public function createSubAccount($type, $params)
     {
         $config = $this->config;
         //Flutterwave::bootstrap($this->config);
@@ -136,18 +121,8 @@ class FlutterwaveNGClass
         switch ($type) {
 
             case "payout":
-
-                $customer = new Customer();
-                $customer->set("fullname", $param["fullname"]);
-                $customer->set("email", $param["email"]);
-                $customer->set("phone_number", $param["phone_number"]);
-
-                $payload = new Payload();
-                $payload->set("country",  $param["country"]);
-                $payload->set("customer", $customer);
-
-                $service = new PayoutSubaccount($config);
-                $request = $service->create($payload);
+                
+                $response = $this->connect('/payout-subaccounts', 'POST', $params);
 
                 break;
 
