@@ -54,8 +54,12 @@ class FlutterwaveNGClass
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HEADER, FALSE);
         curl_setopt($ch, CURLOPT_ENCODING, '');
-        curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postParams));
+
+        if ($method == 'POST') {
+            curl_setopt($ch, CURLOPT_POST, TRUE);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postParams));
+        }
+
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             "Content-Type: application/json",
             "Authorization: Bearer " . $this->secretKey
@@ -65,28 +69,6 @@ class FlutterwaveNGClass
         curl_close($ch);
         
         return json_decode($response);
-
-    }
-
-
-    public function rest($path, $postParams, $accessToken = null)
-    {
-        // Connect To API
-        $params = $this->getProviderParams('vendor_login');
-        $response = $this->connect('/vendor_login', $params, null);
-        
-        $this->accessToken = $response->data->access_token;
-
-    }
-    
-
-    private function getToken()
-    {
-        // Connect To API
-        $params = $this->getProviderParams('vendor_login');
-        $response = $this->connect('/vendor_login', $params, null);
-        
-        $this->accessToken = $response->data->access_token;
 
     }
 
@@ -123,16 +105,16 @@ class FlutterwaveNGClass
                 break;
 
             case "collection":
-                $payload = new Payload();
-                $payload->set("account_bank", "044");
-                $payload->set("account_number", "06900000".mt_rand(29, 40));
-                $payload->set("business_name", "Maxi Ventures");
-                $payload->set("split_value", "0.5"); // 50%
-                $payload->set("business_mobile", "09087930450");
-                $payload->set("business_email", "vicomma@gmail.com");
-                $payload->set("country", "NG");
-                $service = new CollectionSubaccount($config);
-                $response = $service->create($payload);
+                // $payload = new Payload();
+                // $payload->set("account_bank", "044");
+                // $payload->set("account_number", "06900000".mt_rand(29, 40));
+                // $payload->set("business_name", "Maxi Ventures");
+                // $payload->set("split_value", "0.5"); // 50%
+                // $payload->set("business_mobile", "09087930450");
+                // $payload->set("business_email", "vicomma@gmail.com");
+                // $payload->set("country", "NG");
+                // $service = new CollectionSubaccount($config);
+                $response = [];
                 break;
         }
 
@@ -142,33 +124,19 @@ class FlutterwaveNGClass
 
     }
 
-
-
-
     /**
-     * @param array $route
+     * @param Request     $request
      *
-     * @return array
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function getProviderParams($route, $input = [])
+    public function getWalletBalancecs()
     {
-        switch ($route) {
+        $params = $this->providerParams;
+        
+        $response = $this->connect('/' . $params['account_reference'] . '/payout-subaccounts', 'GET', $params);
 
-            case 'vendor_login':
-                $params = [
-                    'domain_name' => $this->domainName,
-                    'email' => $this->userName,
-                    'password' => $this->userPassword,
-                    'api_login' => 1,
-                ];
-            break;
+        return $response;
 
-            default:
-                $params = [];
-            break;
-        }
-
-        return $params;
     }
 
 

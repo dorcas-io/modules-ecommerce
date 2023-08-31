@@ -527,7 +527,7 @@ class ModulesEcommerceStoreController extends Controller {
                 // }
                 $paymentsSettings["wallet"] = [
                     "status" => "succcess",
-                    "data" => (array) $wallet_response->data
+                    "data" => (array) $wallet_response->getData()->data
                 ];
 
             }
@@ -614,61 +614,6 @@ class ModulesEcommerceStoreController extends Controller {
         }
     }
 
-
-    /**
-     * @param Request $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function activateWallet(Request $request)
-    {
-        // Determine active Logistics provider
-        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
-        $country = env('SETTINGS_COUNTRY', 'NG');
-
-        $provider_config = strtolower($provider . '_' . $country) . '.php';
-        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
-
-        $provider_config_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_config;
-        $config = require_once($provider_config_path);
-
-        $provider_class_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_class;
-        require_once($provider_class_path);
-
-
-        // Parse Shopper Origin Address
-        $user = $request->user();
-        $company = $user->company();
-
-        $providerParams = [
-            "account_name" => $user->firstname . " " . $user->lastname,
-            "email" => $user->email,
-            "mobilenumber" => $this->format_intl_code($user->phone, "234"),
-            "country" => $country
-        ];
-
-
-        $c = $config["class"];
-
-        $provider = new $c($providerParams);
-
-        $activation = $provider->activate();
-
-        $response_status = $activation->status === "success" ? true : false;
-
-        $response_message = $activation->status === "success" ? "Wallet Activation Succcessful" : "Wallet Activation Failed &raquo; " . $activation->message;
-
-        $response_data = $activation->status === "success" ? $activation->data : [];
-
-        $response = [
-            "status" => $response_status,
-            "message" => $response_message,
-            "data" => $response_data,
-        ];
-        
-        return response()->json($response);
-    }
-
     function format_intl_code($phone, $code) {
 
         $phone = preg_replace("/\s+/", "", $phone);
@@ -702,6 +647,18 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['wallet_enabled'] = isset($paymentsSettings['wallet']) && !empty($paymentsSettings['wallet']) ? true : false;
 
         $this->data['wallet_data'] = isset($paymentsSettings['wallet']) && !empty($paymentsSettings['wallet']) ? $paymentsSettings['wallet']['data'] : [];
+
+        $wallet_balances = [];
+
+        if (isset($paymentsSettings['wallet']['data']) && isset($paymentsSettings['wallet']['data']['account_reference']) && !empty($paymentsSettings['wallet']['data']['account_reference']) ) {
+            $wb = $this->getWalletBalances($request, $paymentsSettings['wallet']['data']['account_reference']);
+            if ($wb->getData()->status) {
+                $wallet_balances = (array) $wb->getData()->data;
+            }
+        }
+
+        $this->data['wallet_balances'] = $wallet_balances;
+
 
         return view('modules-ecommerce::wallet', $this->data);
     }
@@ -798,6 +755,116 @@ class ModulesEcommerceStoreController extends Controller {
 
         return redirect(url()->current())->with('UiResponse', $response);
     }
+
+
+    /**
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function activateWallet(Request $request)
+    {
+        // Determine active Logistics provider
+        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
+        $country = env('SETTINGS_COUNTRY', 'NG');
+
+        $provider_config = strtolower($provider . '_' . $country) . '.php';
+        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+
+        $provider_config_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_config;
+        $config = require_once($provider_config_path);
+
+        $provider_class_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_class;
+        require_once($provider_class_path);
+
+
+        // Parse Shopper Origin Address
+        $user = $request->user();
+        $company = $user->company();
+
+        $providerParams = [
+            "account_name" => $user->firstname . " " . $user->lastname,
+            "email" => $user->email,
+            "mobilenumber" => $this->format_intl_code($user->phone, "234"),
+            "country" => $country
+        ];
+
+
+        $c = $config["class"];
+
+        $provider = new $c($providerParams);
+
+        $activation = $provider->activate();
+
+        $response_status = $activation->status === "success" ? true : false;
+
+        $response_message = $activation->status === "success" ? "Wallet Activation Succcessful" : "Wallet Activation Failed &raquo; " . $activation->message;
+
+        $response_data = $activation->status === "success" ? $activation->data : [];
+
+        $response = [
+            "status" => $response_status,
+            "message" => $response_message,
+            "data" => $response_data,
+        ];
+        
+        return response()->json($response);
+    }
+
+
+
+    /**
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getWalletBalances(Request $request, $accountReference)
+    {
+        // Determine active Logistics provider
+        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
+        $country = env('SETTINGS_COUNTRY', 'NG');
+
+        $provider_config = strtolower($provider . '_' . $country) . '.php';
+        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+
+        $provider_config_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_config;
+        $config = require_once($provider_config_path);
+
+        $provider_class_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_class;
+        require_once($provider_class_path);
+
+
+        // Parse Shopper Origin Address
+        $user = $request->user();
+        $company = $user->company();
+
+        $providerParams = [
+            "account_reference" => $accountReference
+        ];
+
+
+        $c = $config["class"];
+
+        $provider = new $c($providerParams);
+
+        $balances = $provider->getWalletBalances();
+
+        $response_status = $balances->status === "success" ? true : false;
+
+        $response_message = $balances->status === "success" ? "Wallet Balance Fetch Successful" : "Wallet Balance Fetch Failed &raquo; " . $balances->message;
+
+        $response_data = $balances->status === "success" ? $balances->data : [];
+
+        $response = [
+            "status" => $response_status,
+            "message" => $response_message,
+            "data" => [$response_data], //assume there are multiple?
+        ];
+        
+        return response()->json($response);
+    }
+    
+
 
 
  }
