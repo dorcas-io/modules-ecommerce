@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Collection;
 use GuzzleHttp\Psr7\Uri;
+use App\Dorcas\Hub\Enum\Banks;
 
 
 class ModulesEcommerceStoreController extends Controller {
@@ -659,6 +660,73 @@ class ModulesEcommerceStoreController extends Controller {
 
         $this->data['wallet_balances'] = $wallet_balances;
 
+        $transfer_available = false;
+        $transfer_bank_available = false;
+        $transfer_amount_available = 0;
+        $transfer_status = "";
+
+        $bank_details = [
+            "bank_name" => "",
+            "account_name" => "",
+            "account_number" => ""
+        ];
+
+        $accounts = $this->getBankAccounts($sdk);
+
+        if (!empty($accounts) && $accounts->count() > 0) {
+
+            $bank = $accounts->first();
+
+            $banks = collect(Banks::BANK_CODES)->sort()->map(function ($name, $code) {
+                return ['name' => $name, 'code' => $code];
+            })->values();
+
+            $bank_name = $banks->where('code', $bank["json_data"]["bank_code"])->pluck('name')->first();
+            $account_number = $bank["account_number"];
+            $account_name = $bank["account_name"];
+
+            $this->data['bank_details'] = $bank_details = [
+                "bank_name" => $bank_name,
+                "account_name" => $account_name,
+                "account_number" => $account_number
+            ];
+
+            $transfer_bank_available = false;
+
+        } else {
+
+            $transfer_status = "Transfer Unavailable &raquo; Setup Banking Information | ";
+
+        }
+
+
+        // determine transfer amount available
+        $total_available = $wallet_balances[0]["available_balance"];
+
+        if ($total_available > 0) {
+            // estimate amount to transfer that
+            $te = $this->getTransferEstimate()->getData()->data;
+            //$transfer_estimate = $te->getData()->data;
+            // "currency": "NGN",
+            // "fee_type": "value",
+            // "fee": 26.875
+            $transfer_estimate = $te["fee"];
+            $transfer_net = $total_available - $transfer_estimate;
+            $transfer_amount_available = $transfer_net > 0 ? $transfer_net : 0;
+        } else {
+            $transfer_status = "Transfer Unavailable &raquo; Insufficient Balance | ";
+        }
+        dd([$total_available, $transfer_amount_available, $bank_details]);
+
+
+        if ($transfer_bank_available && $transfer_amount_available > 0) {
+            $transfer_available = true;
+        }
+        
+        $this->data['transfer_bank_available'] = $transfer_bank_available;
+        $this->data['transfer_available'] = $transfer_available;
+        $this->data['transfer_amount_available'] = $transfer_amount_available;
+        $this->data['transfer_status'] = $transfer_status;
 
         return view('modules-ecommerce::wallet', $this->data);
     }
@@ -755,6 +823,29 @@ class ModulesEcommerceStoreController extends Controller {
 
         return redirect(url()->current())->with('UiResponse', $response);
     }
+
+    /**
+     * @param Request $request
+     *
+     */
+    private function setupProvider(Request $request)
+    {
+        // Determine active Paayment provider
+        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
+        $country = env('SETTINGS_COUNTRY', 'NG');
+
+        $provider_config = strtolower($provider . '_' . $country) . '.php';
+        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+
+        $provider_config_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_config;
+        $config = require_once($provider_config_path);
+
+        $provider_class_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_class;
+        require_once($provider_class_path);
+
+        return $config["class"];
+    }
+
 
 
     /**
@@ -859,6 +950,44 @@ class ModulesEcommerceStoreController extends Controller {
             "status" => $response_status,
             "message" => $response_message,
             "data" => [$response_data], //assume there are multiple?
+        ];
+        
+        return response()->json($response);
+    }
+
+
+
+    /**
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTransferEstimate(Request $request, $amount, $currency = "NGN")
+    {
+        $c = $this->setupProvider($request);
+
+        $user = $request->user();
+        $company = $user->company();
+
+        $providerParams = [
+            "amount" => $amount,
+            "currency" => $currency
+        ];
+
+        $provider = new $c($providerParams);
+
+        $estimate = $provider->getTransferEstimate();
+
+        $response_status = $estimate->status === "success" ? true : false;
+
+        $response_message = $estimate->status === "success" ? "Transfer Estimate Fetch Successful" : "Transfer Estimate Fetch Failed &raquo; " . $estimate->message;
+
+        $response_data = $estimate->status === "success" ? $estimate->data : [];
+
+        $response = [
+            "status" => $response_status,
+            "message" => $response_message,
+            "data" => $response_data, //assume there are multiple?
         ];
         
         return response()->json($response);

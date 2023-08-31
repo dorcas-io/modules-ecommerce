@@ -247,7 +247,7 @@
                                     <input type="hidden" name="wallet_action" value="activate" />
 
                                     <div class="col-md-12">
-                                        <button v-if="payment_settings.wallet_request==''" class="btn btn-primary" type="submit" name="action">Activate Payment Wallet</button>
+                                        <button v-if="payment_settings.wallet_request==''" class="btn btn-primary" :class="{'btn-loading': button_activate_loading}" type="submit" name="action" id="activate_wallet_button" onclick="disableActivateButton()">Activate Payment Wallet</button>
                                         <a v-if="payment_settings.wallet_request=='1'" class="btn btn-success btn-sm" href="{{ route('ecommerce-wallet') }}">Manage Payment Wallet</a>
                                     </div>
 
@@ -388,7 +388,7 @@
                 integration: {!! json_encode($integration) !!},
                 paymentOptionSelection: {!! json_encode($paymentOptionSelection) !!},
                 paymentSettingsAdvice: {!! json_encode($paymentSettingsAdvice) !!},
-
+                button_activate_loading: false
             },
             mounted: function() {
                 //console.log(this.logistics_fulfilment_centre)
@@ -403,6 +403,10 @@
                 }
             },
             methods: {
+                disableActivateButton: function (advice) {
+                    document.getElementById("activate_wallet_button").disabled = true;
+                    this.button_activate_loading = true;
+                },
                 parsePaymentAdvice: function (advice) {
                     if (typeof advice !== 'undefined' && typeof advice === 'object' && advice !== null) {
 

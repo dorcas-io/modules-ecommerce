@@ -129,11 +129,26 @@ class FlutterwaveNGClass
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getWalletBalancecs()
+    public function getWalletBalances()
     {
         $params = $this->providerParams;
         
-        $response = $this->connect('/' . $params['account_reference'] . '/payout-subaccounts', 'GET', $params);
+        $response = $this->connect('/payout-subaccounts/' . $params['account_reference'] . '/balances', 'GET', $params);
+
+        return $response;
+
+    }
+
+    /**
+     * @param Request     $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTransferEstimate()
+    {
+        $params = $this->providerParams;
+        
+        $response = $this->connect('/transfers/fee', 'GET', $params);
 
         return $response;
 
