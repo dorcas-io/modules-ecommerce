@@ -13,8 +13,6 @@ class FlutterwaveNGClass
 
     public $accessToken = null;
 
-    private $user_email;
-
     private $publicKey;
 
     private $secretKey;
@@ -37,8 +35,6 @@ class FlutterwaveNGClass
         $this->secretKey = env('CREDENTIAL_FLUTTERWAVE_KEY_SECRET', 'xyz');
         $this->encryptionKey = env('CREDENTIAL_FLUTTERWAVE_KEY_ENCRYPTION', 'xyz');
         $this->env = 'production';
-        
-        $this->user_email = $providerParams["user_email"];
 
         $this->providerParams = $providerParams;
 
@@ -136,13 +132,13 @@ class FlutterwaveNGClass
                 $payload->set("business_email", "vicomma@gmail.com");
                 $payload->set("country", "NG");
                 $service = new CollectionSubaccount($config);
-                $request = $service->create($payload);
+                $response = $service->create($payload);
                 break;
         }
 
         //$output = (array) $request->data;
 
-        return $request;
+        return $response;
 
     }
 

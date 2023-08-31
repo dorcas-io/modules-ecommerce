@@ -46,7 +46,7 @@
             
                             <div class="col-md-6">
                                 <div v-if="wallet_enabled">
-                                    <span>{{ $wallet_data["account_reference"] }}</span>
+                                    <span>@{{ wallet_data.account_reference }}</span>
                                     <div>@{{ wallet_data.bank_name }}</div>
                                 </div>
                             </div>
@@ -74,53 +74,19 @@
 
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label class="form-label" for="address1"  @if ($errors->has('address1')) data-error="{{ $errors->first('address1') }}" @endif>Address Line 1</label>
-                                    <input id="address1" type="text" name="address1" v-model="location.address1" maxlength="100" required class="form-control {{ $errors->has('address1') ? ' invalid' : '' }}">
+                                    
                                 </div>
                             </div>
 
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label class="form-label" for="address2"  @if ($errors->has('address2')) data-error="{{ $errors->first('address2') }}" @endif>Address Line 2</label>
-                                    <input id="address2" type="text" name="address2" v-model="location.address2" maxlength="100" class="form-control {{ $errors->has('address2') ? ' invalid' : '' }}">
-                                </div>
-                            </div>
-                                                        
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label" for="city"  @if ($errors->has('city')) data-error="{{ $errors->first('city') }}" @endif>City</label>
-                                    <input id="city" type="text" name="city" maxlength="100" v-model="location.city" required class="form-control {{ $errors->has('city') ? ' invalid' : '' }}">
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label" for="state"  @if ($errors->has('state')) data-error="{{ $errors->first('state') }}" @endif>State</label>
-                                    <select name="state" id="state" v-model="location.state.data.id" class="form-control {{ $errors->has('state') ? ' invalid' : '' }}">
-                                        <option v-for="state in states" :value="state.id" :key="state.id">@{{ state.name }}</option>
-                                    </select>
-                                </div>
-                            </div>
+                            
                         
                         </div>
                         <div class="row">
-                            <div class="col-md-12" v-if="!addressIsConfirmed">
-                                <p>
-                                    For the purpose of shipping/logistics (when you have to send orders to your customers), we need to properly <strong>geolocate</strong> your address above.
-                                    <em>Click the <strong>Geo-Locate</strong> Address button to do this</em>
-                                </p>
-                                <button name="check_address" value="check_address" class="btn btn-success" v-on:click.prevent="addressConfirm">Geo-Locate Address</button>
-                            </div>
-                            <div class="col-md-12" v-if="addressIsConfirmed">
-                                If you would like to change the GeoLocation of your address (for shipping/logistics purposes),
-                                <a href="#" v-on:click.prevent="addressReConfirm">RE-LOCATE ADDRESS</a>
-                            </div>
 
                         </div>
                     </div>
                     <div class="card-footer text-right">
-                        <input type="hidden" name="latitude" id="latitude" v-model="company_data.location.latitude">
-                        <input type="hidden" name="longitude" id="longitude" v-model="company_data.location.longitude">
+                        <input type="hidden" name="latitude" id="latitude">
                         <button :disabled="!addressIsConfirmed" type="submit" name="action" value="update_location" class="btn btn-primary">Save Address</button>
                     </div>
 

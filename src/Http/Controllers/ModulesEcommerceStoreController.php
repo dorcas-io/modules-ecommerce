@@ -502,8 +502,8 @@ class ModulesEcommerceStoreController extends Controller {
 
                 $wallet_response = $this->activateWallet($request, $params);
 
-                if (!$wallet_response->status) {
-                    throw new \RuntimeException('Failed while activating Payment Wallet (' . $wallet_response->message  . ')');
+                if (!$wallet_response->getData()->status) {
+                    throw new \RuntimeException('Failed while activating Payment Wallet (' . $wallet_response->getData()->message  . ')');
                 }
 
                 //process wallet reponse
@@ -656,13 +656,13 @@ class ModulesEcommerceStoreController extends Controller {
 
         $response_status = $activation->status === "success" ? true : false;
 
-        $response_message = $activation->status === "success" ? "Wallet Activation Succcessful" : "Wallet Activation Succcessful (" . $activation->message . ")";
+        $response_message = $activation->status === "success" ? "Wallet Activation Succcessful" : "Wallet Activation Failed &raquo; " . $activation->message;
 
         $response_data = $activation->status === "success" ? $activation->data : [];
 
         $response = [
             "status" => $response_status,
-            "message" => $respose_message,
+            "message" => $response_message,
             "data" => $response_data,
         ];
         
