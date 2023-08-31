@@ -664,6 +664,8 @@ class ModulesEcommerceStoreController extends Controller {
         $transfer_bank_available = false;
         $transfer_amount_available = 0;
         $transfer_status = "";
+        $transfer_currency = "NGN";
+        $transfer_fee = 0;
 
         $bank_details = [
             "bank_name" => "",
@@ -710,9 +712,10 @@ class ModulesEcommerceStoreController extends Controller {
             // "currency": "NGN",
             // "fee_type": "value",
             // "fee": 26.875
-            $transfer_estimate = $te["fee"];
-            $transfer_net = $total_available - $transfer_estimate;
+            $transfer_fee = $te["fee"];
+            $transfer_net = $total_available - $transfer_fee;
             $transfer_amount_available = $transfer_net > 0 ? $transfer_net : 0;
+            $transfer_currency = $te["currency"];
         } else {
             $transfer_status = "Transfer Unavailable &raquo; Insufficient Balance | ";
         }
@@ -726,7 +729,10 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['transfer_bank_available'] = $transfer_bank_available;
         $this->data['transfer_available'] = $transfer_available;
         $this->data['transfer_amount_available'] = $transfer_amount_available;
+        $this->data['transfer_amount_maximum'] = $transfer_amount_maximum;
+        $this->data['transfer_currency'] = $transfer_currency;
         $this->data['transfer_status'] = $transfer_status;
+        $this->data['transfer_fee'] = $transfer_fee;
 
         return view('modules-ecommerce::wallet', $this->data);
     }

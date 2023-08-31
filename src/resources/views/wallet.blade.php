@@ -105,12 +105,13 @@
                             </div>
                             
                             <div class="col-md-12">
-                                Status: 
+                                <p id="transfer_fee">Fee: <strong>@{{ transfer_currency + ' ' + transfer_fee.toLocaleString("en-US") }}</strong></p>
+                            </div>
+                            
+                            <div class="col-md-12">
+                                <p id="transfer_status">Status: <strong>@{{ transfer_status }}</strong></p>
                             </div>
 
-                            <div class="col-md-12">
-                                <button class="btn btn-primary" name="action">Initiate Transfer</button>
-                            </div>
                         </p>
 
                         <div class="row">
@@ -130,7 +131,7 @@
                     </div>
                     <div class="card-footer text-right">
                         <input type="hidden" name="latitude" id="latitude">
-                        <button :disabled="!addressIsConfirmed" type="submit" name="action" value="update_location" class="btn btn-primary">Save Address</button>
+                        <button :disabled="!transfer_available" class="btn btn-primary" :class="{'btn-loading': is_transferring}" name="action" id="wallet_transfer_button" v-on:click.prevent="transferToBank">Initiate Transfer</button>
                     </div>
 
                 </form>
@@ -160,8 +161,14 @@
             wallet_balances: {!! json_encode($wallet_balances) !!},
             transfer_bank_available: {!! json_encode($transfer_bank_available) !!},
             transfer_amount_available: {!! json_encode($transfer_amount_available) !!},
+            transfer_amount_maximum: {!! json_encode($transfer_amount_maximum) !!},
             transfer_available: {!! json_encode($transfer_available) !!},
+            transfer_status: {!! json_encode($transfer_status) !!},
+            transfer_currency: {!! json_encode($transfer_currency) !!},
+            transfer_fee: {!! json_encode($transfer_fee) !!},
             bank_details: {!! json_encode($bank_details) !!},
+            wallet_transfer_step: 1,
+            is_transferring: false,
         },
         mounted: function() {
             
@@ -170,7 +177,78 @@
             
         },
         methods: {
-            getWalletBalance: function () {
+            transferToBank: function () {
+
+                this.is_transferring = true;
+                let transfer_amount = this.transfer_amount_available;
+                if (transfer_amount > this.transfer_amount_maximum) {
+                    return Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "You can't transfer more than the available balance!",
+                        footer: '<a href="#">Reduce Transfer amount to not exceed ' + this.transfer_currency + ' ' + this.transfer_amount_maximum.toLocaleString("en-US") + '</a>'
+                    });
+                }
+
+                Swal.fire({
+                    title: 'Are you sure you wish to transfer ' + this.transfer_currency + ' ' + this.transfer_amount.toLocaleString("en-US") + ' to your Bank Account?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, proceeed!'
+                    showLoaderOnConfirm: true,
+                    preConfirm: (login) => {
+                        return axios.put("/mec/ecommerce-wallet-transfer/", {
+                            amount: this.transfer_amount,
+                            update_slug: true
+                        }).then(function (response) {
+                            console.log(response);
+                            //return swal("Success", "The transfer was successfull", "success");
+                            //return response.json() //return it to upper then
+                            return Swal.fire({
+                                title: '<strong>Transfer Done</strong>',
+                                icon: 'success',
+                                html:
+                                    '<p>Amount ' + this.transfer_currency + '<b>' + this.transfer_amount + '</b></p><br/>' +
+                                    '<p>Reference <b>' + this.transfer_amount + '</b></p><br/>' +
+                                    '<p>Amount <b>' + this.transfer_amount + '</b></p><br/>' +
+                                showCloseButton: true,
+                                showCancelButton: true,
+                                focusConfirm: false,
+                                confirmButtonText:
+                                    '<i class="fa fa-thumbs-up"></i> Great!',
+                                confirmButtonAriaLabel: 'Thumbs up, great!',
+                                // cancelButtonText:
+                                //     '<i class="fa fa-thumbs-down"></i>',
+                                // cancelButtonAriaLabel: 'Thumbs down'
+                            })
+                        }).catch(function (error) {
+                            var message = '';
+                            if (error.response) {
+                                var e = error.response;
+                                message = e.data.message;
+                            } else if (error.request) {
+                                message = 'The request was made but no response was received';
+                            } else {
+                                message = error.message;
+                            }
+                            return swal("Oops!", message, "warning");
+                            //Swal.showValidationMessage(`Request failed: ${message}`)
+                        });
+
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                })
+                // .then((result) => {
+                //     if (result.isConfirmed) {
+                //         Swal.fire({
+                //         title: `${result.value.login}'s avatar`,
+                //         imageUrl: result.value.avatar_url
+                //         })
+                //     }
+                // })
                 
             },
         }
