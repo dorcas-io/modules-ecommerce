@@ -737,94 +737,53 @@ class ModulesEcommerceStoreController extends Controller {
         return view('modules-ecommerce::wallet', $this->data);
     }
 
-    public function wallet_post(Request $request, Sdk $sdk)
+    public function wallet_transfer(Request $request, Sdk $sdk)
     {
         $this->validate($request, [
-            'name' => 'required_if:action,update_business|string|max:100',
-            'registration' => 'nullable|string|max:30',
-            'phone' => 'required_if:action,update_business|string|max:30',
-            'email' => 'required_if:action,update_business|email|max:80',
-            'website' => 'nullable|string|max:80',
-            'address1' => 'required_if:action,update_location|string|max:100',
-            'address2' => 'nullable|string|max:100',
-            'city' => 'required_if:action,update_location|string|max:100',
-            'state' => 'required_if:action,update_location|string|max:50',
+            'destination' => 'required|in:bank,wallet',
+            'amount' => 'required|numeric',
+            //'phone' => 'required_if:destination,bank|string|max:30',
         ]);
         # validate the request
         try {
             $company = $request->user()->company(true, true);
             # get the company information
 
-            if ($request->action === 'update_business') {
-                # update the business information
-                $query = $sdk->createCompanyService()
-                                ->addBodyParam('name', $request->name, true)
-                                ->addBodyParam('registration', $request->input('registration', ''))
-                                ->addBodyParam('phone', $request->input('phone', ''))
-                                ->addBodyParam('email', $request->input('email', ''))
-                                ->addBodyParam('website', $request->input('website', ''))
-                                ->send('PUT');
-                # send the request
-                if (!$query->isSuccessful()) {
-                    throw new \RuntimeException('Failed while updating your business information. Please try again.');
-                }
-                $message = ['Successfully updated business information for '.$request->name];
+            $accounts = $this->getBankAccounts($sdk);
+
+            if (!empty($accounts) && $accounts->count() > 0) {
+    
+                $bank = $accounts->first();
+    
+                $banks = collect(Banks::BANK_CODES)->sort()->map(function ($name, $code) {
+                    return ['name' => $name, 'code' => $code];
+                })->values();
+    
+                $bank_name = $banks->where('code', $bank["json_data"]["bank_code"])->pluck('name')->first();
+                $account_number = $bank["account_number"];
+                $account_name = $bank["account_name"];
+    
+                $this->data['bank_details'] = $bank_details = [
+                    "bank_name" => $bank_name,
+                    "account_name" => $account_name,
+                    "account_number" => $account_number
+                ];
+    
+                $transfer_bank_available = false;
+    
             } else {
-                # update address information
-
-                $locations = $this->getLocations($sdk);
-                $location = !empty($locations) ? $locations->first() : null;
-                $query = $sdk->createLocationResource();
-                # get the query
-                $query = $query->addBodyParam('address1', $request->address1)
-                                ->addBodyParam('address2', $request->address2)
-                                ->addBodyParam('city', $request->city)
-                                ->addBodyParam('state', $request->state);
-                # add the payload
-                if (!empty($location)) {
-                    $response = $query->send('PUT', [$location->id]);
-                } else {
-                    $response = $query->send('POST');
-                }
-                if (!$response->isSuccessful()) {
-                    throw new \RuntimeException('Sorry but we encountered issues while updating your address information.');
-                }
-                Cache::forget('business.locations.'.$company->id);
-                # forget the cache data
-
-                $updated_locations = $this->getLocations($sdk); // recache immediately
-
-                // Update Geo Location in company meta data
-                $company = $request->user()->company(true, true);
-                
-                $configuration = !empty($company->extra_data) ? $company->extra_data : [];
-
-                if (empty($configuration['location'])) {
-                    $configuration['location'] = [];
-                }
-                $configuration['location']['address'] = $request->input('address1') . " " . $request->input('address2');
-                $configuration['location']['latitude'] = $request->input('latitude');
-                $configuration['location']['longitude'] = $request->input('longitude');
-                $configuration['location']['address'] = $request->input('address1');
-
-                $queryL = $sdk->createCompanyService()->addBodyParam('extra_data', $configuration)
-                                                    ->send('post');
-                # send the request
-                if (!$queryL->isSuccessful()) {
-                    throw new \RuntimeException('Failed while updating your geo-location data. Please try again.');
-                }
-
-
-                $message = ['Successfully updated your company address information.'];
+    
+                $transfer_status = "Transfer Unavailable &raquo; Setup Banking Information | ";
+    
             }
-            $response = (tabler_ui_html_response($message))->setType(UiResponse::TYPE_SUCCESS);
-        } catch (\Exception $e) {
-            $response = (tabler_ui_html_response([$e->getMessage()]))->setType(UiResponse::TYPE_ERROR);
-        }
 
-        $gettingStartedRedirect = \Dorcas\ModulesDashboard\Http\Controllers\ModulesDashboardController::processGettingStartedRedirection($request, 'setup_pickup_address', $response);
-        if ($gettingStartedRedirect) {
-            return redirect(route('dashboard'))->with('UiResponse', $response);
+
+
+
+
+            
+        } catch (\Exception $e) {
+            
         }
 
         return redirect(url()->current())->with('UiResponse', $response);
@@ -907,7 +866,6 @@ class ModulesEcommerceStoreController extends Controller {
         
         return response()->json($response);
     }
-
 
 
     /**
@@ -994,6 +952,62 @@ class ModulesEcommerceStoreController extends Controller {
             "status" => $response_status,
             "message" => $response_message,
             "data" => $response_data, //assume there are multiple?
+        ];
+        
+        return response()->json($response);
+    }
+
+
+    /**
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function transferFromWallet(Request $request, $destination, $params)
+    {
+        $c = $this->setupProvider($request);
+
+        $user = $request->user();
+        $company = $user->company();
+
+        // "account_bank": "FMM",
+        // "account_number": "676064566",
+        // "amount": 15000,
+        // "narration": "Test francophone transfer",
+        // "currency": "XAF",
+        // "beneficiary_name": "Cornelius Ashley-Osuzoka",
+        // "reference": "Sample_PMCK",
+        // "debit_currency": "XAF",
+        // "meta": {
+        //     "first_name": "Cornelius",
+        //     "last_name": "Ashley-Osuzoka",
+        //     "email": "user@gmail.com",
+        //     "mobile_number": "676064566",
+        //     "recipient_address": "Immueble CiSo, Boulevard de la liberte, Akwa Douala"
+        // }
+
+        $providerParams = [
+            "destination" => $destination,
+            "account_number" => $params["account_number"]
+        ];
+        
+
+        $c = $config["class"];
+
+        $provider = new $c($providerParams);
+
+        $transfer = $provider->transferFromWallet();
+
+        $response_status = $transfer->status === "success" ? true : false;
+
+        $response_message = $transfer->status === "success" ? "Transfer Successful" : "Transfer Failed &raquo; " . $transfer->message;
+
+        $response_data = $transfer->status === "success" ? $transfer->data : [];
+
+        $response = [
+            "status" => $response_status,
+            "message" => $response_message,
+            "data" => $response_data,
         ];
         
         return response()->json($response);

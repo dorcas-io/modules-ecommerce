@@ -202,7 +202,7 @@
                     preConfirm: (login) => {
                         return axios.put("/mec/ecommerce-wallet-transfer/", {
                             amount: this.transfer_amount,
-                            update_slug: true
+                            destination: 'bank'
                         }).then(function (response) {
                             console.log(response);
                             //return swal("Success", "The transfer was successfull", "success");
