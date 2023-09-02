@@ -235,12 +235,9 @@ class ModulesEcommerceStoreController extends Controller {
     
             $storeURL = $dorcas_store_url;
 
-
-            
             // $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
             // $storeUrl = $scheme . $storeUrl;
             $storeUrl = $storeURL;
-            
             
 
             $this->data['storeUrl'] = $storeUrl;
@@ -258,6 +255,36 @@ class ModulesEcommerceStoreController extends Controller {
                 </div>
             ';
         }
+
+
+        $transfer_bank_available = false;
+
+        $accounts = $this->getBankAccounts($sdk);
+
+        if (!empty($accounts) && $accounts->count() > 0) {
+
+            $bank = $accounts->first();
+
+            $banks = collect(Banks::BANK_CODES)->sort()->map(function ($name, $code) {
+                return ['name' => $name, 'code' => $code];
+            })->values();
+
+            $bank_name = $banks->where('code', $bank["json_data"]["bank_code"])->pluck('name')->first();
+            $account_number = $bank["account_number"];
+            $account_name = $bank["account_name"];
+
+            $this->data['bank_details'] = $bank_details = [
+                "bank_name" => $bank_name,
+                "account_name" => $account_name,
+                "account_number" => $account_number
+            ];
+
+            $transfer_bank_available = true;
+
+        }
+
+        $tthis->data['transfer_bank_available'] = $transfer_bank_available;
+
 
         return view('modules-ecommerce::store', $this->data);
     }
@@ -538,7 +565,7 @@ class ModulesEcommerceStoreController extends Controller {
                 $success_message = 'Successfully updated your Payments Settings';
             } else {
                 if ($wallet_request == "activate") {
-                    $success_message = 'Successfully activatetd Payment Wallet';
+                    $success_message = 'Successfully activated Payment Wallet';
                 }
             }
             $response = (tabler_ui_html_response([$success_message]))->setType(UiResponse::TYPE_SUCCESS);
@@ -646,6 +673,7 @@ class ModulesEcommerceStoreController extends Controller {
         $transfer_amount_available = 0;
         $transfer_status = "";
         $transfer_currency = "NGN";
+        $transfer_amount_maximum = 0;
         $transfer_fee = 0;
 
         $bank_details = [
@@ -674,7 +702,7 @@ class ModulesEcommerceStoreController extends Controller {
                 "account_number" => $account_number
             ];
 
-            $transfer_bank_available = false;
+            $transfer_bank_available = true;
 
         } else {
 
@@ -684,7 +712,7 @@ class ModulesEcommerceStoreController extends Controller {
 
 
         // determine transfer amount available
-        $total_available = $wallet_balances[0]["available_balance"];
+        $total_available = ($wallet_balances[0])->available_balance;
 
         if ($total_available > 0) {
             // estimate amount to transfer that
@@ -700,7 +728,6 @@ class ModulesEcommerceStoreController extends Controller {
         } else {
             $transfer_status = "Transfer Unavailable &raquo; Insufficient Balance | ";
         }
-        dd([$total_available, $transfer_amount_available, $bank_details]);
 
 
         if ($transfer_bank_available && $transfer_amount_available > 0) {
@@ -708,6 +735,7 @@ class ModulesEcommerceStoreController extends Controller {
         }
         
         $this->data['transfer_bank_available'] = $transfer_bank_available;
+        $this->data['bank_details'] = $bank_details;
         $this->data['transfer_available'] = $transfer_available;
         $this->data['transfer_amount_available'] = $transfer_amount_available;
         $this->data['transfer_amount_maximum'] = $transfer_amount_maximum;

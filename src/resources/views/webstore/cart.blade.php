@@ -322,7 +322,8 @@
                                 </td>
                                 <td>
                                     <span v-if="payment_url.length > 0">
-                                        Your order has been placed; <strong>make payment</strong> to complete your order.<br/><br/>
+                                        Your order has been placed; <strong>make payment</strong> to complete your order
+                                        <br/><br/>
                                         <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Online Now</a>
                                     </span>
                                     <span v-else>
@@ -371,6 +372,7 @@
 @endsection
 @section('body_js')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+<script src="https://checkout.flutterwave.com/v3.js"></script>
     <script>
         var cartView = new Vue({
             el: '#main_content_container',
@@ -395,7 +397,9 @@
                 isOrderCompleted: false,
                 banks: {!! json_encode(!empty($banks) ? $banks : []) !!},
                 checkoutCurrency: 'NGN',
-                checkoutAmount: 0
+                checkoutAmount: 0,
+                use_wallet: {!! json_encode($use_wallet) !!},
+                providers: {!! json_encode($providers) !!},
             },
             mounted: function() {
                 this.loadGoogleMaps();
@@ -415,6 +419,14 @@
                         photo = product.images.data[0].url;
                     }
                     return photo;
+                },
+                callWalletPaymentProvider: function() {
+                    let provider = this.providers.payment;
+                    if (provider == 'flutterwave') {
+                        loadFlutterwavePayment();
+                    } else if (provider == 'paystack') {
+
+                    }
                 },
                 shippingSelected: function() {
                     //check cart if shipping is among

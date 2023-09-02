@@ -87,8 +87,7 @@
                             You can transfer funds from your wallet to your corporate bank account<br/><br/>
 
                             <ul v-if="!transfer_bank_available">
-                                <li>It appears you have not setup your bank account information</li>
-                                <li><a href="{{ route('settings-banking') }}">Setup Banking</a></li>
+                                <li>It appears you have not setup your bank account information &raquo; <a href="{{ route('settings-banking') }}">Setup Banking Information</a></li>
                             </ul>
 
                             <ul v-if="transfer_bank_available">
@@ -197,7 +196,7 @@
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, proceeed!'
+                    confirmButtonText: 'Yes, proceeed!',
                     showLoaderOnConfirm: true,
                     preConfirm: (login) => {
                         return axios.put("/mec/ecommerce-wallet-transfer/", {
@@ -214,7 +213,7 @@
                                 html:
                                     '<p>Amount ' + this.transfer_currency + '<b>' + this.transfer_amount + '</b></p><br/>' +
                                     '<p>Reference <b>' + this.transfer_amount + '</b></p><br/>' +
-                                    '<p>Amount <b>' + this.transfer_amount + '</b></p><br/>' +
+                                    '<p>Amount <b>' + this.transfer_amount + '</b></p><br/>',
                                 showCloseButton: true,
                                 showCancelButton: true,
                                 focusConfirm: false,

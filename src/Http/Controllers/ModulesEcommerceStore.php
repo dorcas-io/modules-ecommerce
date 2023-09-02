@@ -307,10 +307,6 @@ class ModulesEcommerceStore extends Controller
             "seller_address" => []
         ];
 
-        $this->data['env'] = [
-            "CREDENTIAL_GOOGLE_API_KEY" => env('CREDENTIAL_GOOGLE_API_KEY', 'ABC'),
-        ];
-
         // Fetch/Initiate Cache
         
         $cartCacheKey = "cartCache";
@@ -451,6 +447,18 @@ class ModulesEcommerceStore extends Controller
         $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
         //$this->data['cart'] = Home::getCartContent($request);
         $this->data['cart'] = $this->getCartContent($request);
+
+        $this->data['env'] = [
+            "CREDENTIAL_GOOGLE_API_KEY" => env('CREDENTIAL_GOOGLE_API_KEY', 'ABC'),
+            "CREDENTIAL_PAYSTACK_KEY_PUBLIC" => env('CREDENTIAL_PAYSTACK_KEY_PUBLIC', 'ABC'),
+            "CREDENTIAL_FLUTTERWAVE_KEY_PUBLIC" => env('CREDENTIAL_FLUTTERWAVE_KEY_PUBLIC', 'ABC'),
+        ];
+
+        $this->data['use_wallet'] = env('SETTINGS_ECOMMERCE_PAYMENT_USE_WALLET', true);
+        $this->data['providers'] = [
+            'payment' => env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave'),
+            'logistics' => env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik'),
+        ];
 
         return view('modules-ecommerce::webstore.cart', $this->data);
     }

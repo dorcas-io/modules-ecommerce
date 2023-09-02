@@ -246,9 +246,13 @@
                                     <input type="hidden" name="wallet_request" value="1" />
                                     <input type="hidden" name="wallet_action" value="activate" />
 
-                                    <div class="col-md-12">
+                                    <div class="col-md-12" v-if="transfer_bank_available">
                                         <button v-if="payment_settings.wallet_request==''" class="btn btn-primary" :class="{'btn-loading': button_activate_loading}" type="submit" name="action" id="activate_wallet_button" onclick="disableActivateButton()">Activate Payment Wallet</button>
                                         <a v-if="payment_settings.wallet_request=='1'" class="btn btn-success btn-sm" href="{{ route('ecommerce-wallet') }}">Manage Payment Wallet</a>
+                                    </div>
+
+                                    <div class="col-md-12" v-if="!transfer_bank_available">
+                                        It appears you have not setup your bank account information &raquo; <a href="{{ route('settings-banking') }}">Setup Banking Information</a>
                                     </div>
 
                                 @else
@@ -388,6 +392,7 @@
                 integration: {!! json_encode($integration) !!},
                 paymentOptionSelection: {!! json_encode($paymentOptionSelection) !!},
                 paymentSettingsAdvice: {!! json_encode($paymentSettingsAdvice) !!},
+                transfer_bank_available: {!! json_encode($transfer_bank_available) !!},
                 button_activate_loading: false
             },
             mounted: function() {

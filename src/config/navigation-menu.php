@@ -20,11 +20,13 @@ return [
     // 	'route' => 'ecommerce-blog',
     //     'icon' => 'fe fe-file-text',
     // ],
-/*    'ecommerce-adverts' => [
+    /* 
+        'ecommerce-adverts' => [
     	'title' => 'Adverts',
     	'route' => 'ecommerce-adverts',
         'icon' => 'fe fe-grid',
-    ],*/
+        ],
+    */
     'ecommerce-store' => [
     	'title' => 'Online Store',
     	'route' => 'ecommerce-store',
