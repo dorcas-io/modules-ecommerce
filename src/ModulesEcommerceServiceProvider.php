@@ -10,7 +10,7 @@ class ModulesEcommerceServiceProvider extends ServiceProvider {
 		$this->loadRoutesFrom(__DIR__.'/routes/web.php');
 		$this->loadViewsFrom(__DIR__.'/resources/views', 'modules-ecommerce');
 		$this->publishes([
-			__DIR__.'/config/modules-ecommerce.php' => config_path('modules-ecommerce.php'),
+			__DIR__.'/Config/modules-ecommerce.php' => config_path('modules-ecommerce.php'),
 		], 'dorcas-modules');
 		$this->publishes([
 			__DIR__.'/assets' => public_path('vendor/modules-ecommerce')
@@ -21,7 +21,7 @@ class ModulesEcommerceServiceProvider extends ServiceProvider {
 	{
 		//add menu config
 		$this->mergeConfigFrom(
-	        __DIR__.'/config/navigation-menu.php', 'navigation-menu.modules-ecommerce.sub-menu'
+	        __DIR__.'/Config/navigation-menu.php', 'navigation-menu.modules-ecommerce.sub-menu'
 	     );
 	}
 
