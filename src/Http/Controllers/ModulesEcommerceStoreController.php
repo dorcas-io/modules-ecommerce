@@ -831,13 +831,13 @@ class ModulesEcommerceStoreController extends Controller {
         $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
         $country = env('SETTINGS_COUNTRY', 'NG');
 
-        $provider_config = strtolower($provider . '_' . $country) . '.php';
+        $provider_config = ucfirst($provider). strtoupper($country) . '.php';
         $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
 
-        $provider_config_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_config;
+        $provider_config_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config;
         $config = require_once($provider_config_path);
 
-        $provider_class_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_class;
+        $provider_class_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class;
         require_once($provider_class_path);
 
         return $config["class"];
@@ -856,13 +856,13 @@ class ModulesEcommerceStoreController extends Controller {
         $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
         $country = env('SETTINGS_COUNTRY', 'NG');
 
-        $provider_config = strtolower($provider . '_' . $country) . '.php';
+        $provider_config = ucfirst($provider). strtoupper($country) . '.php';
         $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
 
-        $provider_config_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_config;
+        $provider_config_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config;
         $config = require_once($provider_config_path);
 
-        $provider_class_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_class;
+        $provider_class_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class;
         require_once($provider_class_path);
 
 
@@ -911,13 +911,13 @@ class ModulesEcommerceStoreController extends Controller {
         $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
         $country = env('SETTINGS_COUNTRY', 'NG');
 
-        $provider_config = strtolower($provider . '_' . $country) . '.php';
+        $provider_config = ucfirst($provider). strtoupper($country) . '.php';
         $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
 
-        $provider_config_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_config;
+        $provider_config_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config;
         $config = require_once($provider_config_path);
 
-        $provider_class_path = __DIR__.'/../../config/providers/payments/' . $provider. '/' . $provider_class;
+        $provider_class_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class;
         require_once($provider_class_path);
 
 

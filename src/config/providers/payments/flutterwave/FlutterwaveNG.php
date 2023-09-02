@@ -2,7 +2,7 @@
 return [
     'name' => 'Flutterwave',
     'logo' => 'kwik_logo.png',
-    'class' => 'Dorcas\ModulesEcommerce\config\providers\payments\FlutterwaveNGClass',
+    'class' => 'Dorcas\ModulesEcommerce\Config\Providers\Payments\FlutterwaveNGClass',
     'param' => [
         
     ]

@@ -2,7 +2,7 @@
 return [
     'name' => 'Kwik',
     'logo' => 'kwik_logo.png',
-    'class' => 'Dorcas\ModulesEcommerce\config\providers\logistics\KwikNGClass',
+    'class' => 'Dorcas\ModulesEcommerce\Config\Providers\Logistics\KwikNGClass',
     'origin' => [
         'local' => [
             'Lagos'

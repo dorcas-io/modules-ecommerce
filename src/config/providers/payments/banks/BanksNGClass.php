@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Dorcas\Hub\Enum;
+namespace Dorcas\ModulesEcommerce\Config\Providers\Banks;
 
 class BanksNGClass
 {

@@ -559,13 +559,13 @@ class ModulesEcommerceStore extends Controller
         $provider = env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik');
         $country = env('SETTINGS_COUNTRY', 'NG');
 
-        $provider_config = strtolower($provider . '_' . $country) . '.php';
+        $provider_config = ucfirst($provider). strtoupper($country) . '.php';
         $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
 
-        $provider_config_path = __DIR__.'/../../config/providers/logistics/' . $provider. '/' . $provider_config;
+        $provider_config_path = __DIR__.'/../../Config/Providers/Logistics/' . ucfirst($provider). '/' . $provider_config;
         $config = require_once($provider_config_path);
 
-        $provider_class_path = __DIR__.'/../../config/providers/logistics/' . $provider. '/' . $provider_class;
+        $provider_class_path = __DIR__.'/../../Config/Providers/Logistics/' . ucfirst($provider). '/' . $provider_class;
         require_once($provider_class_path);
 
         // Get Destination Address Details

@@ -1,6 +1,6 @@
 <?php
 
-namespace Dorcas\ModulesEcommerce\config\providers\payments;
+namespace Dorcas\ModulesEcommerce\Config\Providers\Payments;
 
 use Hostville\Dorcas\Sdk;
 use Illuminate\Http\Request;

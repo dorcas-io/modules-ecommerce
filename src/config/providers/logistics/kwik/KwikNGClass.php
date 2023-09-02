@@ -1,6 +1,6 @@
 <?php
 
-namespace Dorcas\ModulesEcommerce\config\providers\logistics;
+namespace Dorcas\ModulesEcommerce\Config\Providers\Logistics;
 
 use Hostville\Dorcas\Sdk;
 use Illuminate\Http\Request;
