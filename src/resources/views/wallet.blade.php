@@ -105,11 +105,11 @@
                             </div>
                             
                             <div class="col-md-12">
-                                <p id="transfer_fee">Fee: <strong>@{{ transfer_currency + ' ' + transfer_fee.toLocaleString("en-US") }}</strong></p>
+                                <p id="transfer_fee">Transfer Fee (Maximum): <strong>@{{ transfer_currency + ' ' + transfer_fee.toLocaleString("en-US") }}</strong></p>
                             </div>
                             
                             <div class="col-md-12">
-                                <p id="transfer_status">Status: <strong>@{{ transfer_status }}</strong></p>
+                                <p id="transfer_status">Transfer Status: <strong>@{{ transfer_status }}</strong></p>
                             </div>
 
                         </p>
@@ -202,6 +202,7 @@
                     preConfirm: (login) => {
                         return axios.put("/mec/ecommerce-wallet-transfer/", {
                             amount: this.transfer_amount,
+                            currency: this.transfer_currency,
                             destination: 'bank'
                         }).then(function (response) {
                             console.log(response);

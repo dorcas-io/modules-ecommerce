@@ -507,25 +507,6 @@ class ModulesEcommerceStoreController extends Controller {
                     throw new \RuntimeException('Failed while activating Payment Wallet (' . $wallet_response->getData()->message  . ')');
                 }
 
-                //process wallet reponse
-                // {
-                //     "status": "success",
-                //     "message": "Payout subaccount created",
-                //     "data": {
-                //         "id": 195950,
-                //         "account_reference": "PSA0E649679F84901775",
-                //         "account_name": "Example User",
-                //         "barter_id": "234000002650333",
-                //         "email": "user@gmail.com",
-                //         "mobilenumber": "09010000000",
-                //         "country": "US",
-                //         "nuban": "8543374352",
-                //         "bank_name": "Wema Bank PLC",
-                //         "bank_code": "035",
-                //         "status": "ACTIVE",
-                //         "created_at": "2023-08-30T19:48:25.000Z"
-                //     }
-                // }
                 $paymentsSettings["wallet"] = [
                     "status" => "succcess",
                     "data" => (array) $wallet_response->getData()->data
@@ -742,12 +723,22 @@ class ModulesEcommerceStoreController extends Controller {
         $this->validate($request, [
             'destination' => 'required|in:bank,wallet',
             'amount' => 'required|numeric',
+            'currency' => 'required',
             //'phone' => 'required_if:destination,bank|string|max:30',
         ]);
         # validate the request
+
+        $transfer_issue = "";
+
         try {
-            $company = $request->user()->company(true, true);
+
+            $user = $request->user();
+
+            $company = $user->company(true, true);
             # get the company information
+
+            $company_data = (array) $company->extra_data;
+            # get the company meta data
 
             $accounts = $this->getBankAccounts($sdk);
 
@@ -763,30 +754,71 @@ class ModulesEcommerceStoreController extends Controller {
                 $account_number = $bank["account_number"];
                 $account_name = $bank["account_name"];
     
-                $this->data['bank_details'] = $bank_details = [
-                    "bank_name" => $bank_name,
-                    "account_name" => $account_name,
-                    "account_number" => $account_number
-                ];
-    
-                $transfer_bank_available = false;
-    
             } else {
     
-                $transfer_status = "Transfer Unavailable &raquo; Setup Banking Information | ";
+                $transfer_issue = "Transfer Unavailable &raquo; Setup Banking Information | ";
     
             }
 
+            $transfer_address = "";
+            # get actual address
+
+            $debit_subaccount = "";
+
+            $paymentsSettings = $company_data['payments_settings'] ?? [];
+    
+            if (isset($paymentsSettings['wallet']['data']) && isset($paymentsSettings['wallet']['data']['account_reference']) && !empty($paymentsSettings['wallet']['data']['account_reference']) ) {
+                $debit_subaccount = $paymentsSettings['wallet']['data']['account_reference'];
+            } else {
+                $transfer_issue = "Transfer Unavailable &raquo; Unable to Get Wallet Account Reference | ";
+            }
+
+            $transfer_params = [
+                "debit_subaccount" => $debit_subaccount,
+                "account_bank" => $bank_name,
+                "account_number" => $account_number,
+                "amount" => $request->amount,
+                "narration" => "Wallet Transfer",
+                "currency" => $request->currency,
+                "beneficiary_name" => $account_name,
+                "reference" => "Wallet Transfer",
+                "debit_currency" => $request->currency,
+                "meta" => [
+                    "first_name" => $user->firstname,
+                    "last_name" => $user->lastname,
+                    "email" => $user->email,
+                    "mobile_number" => $user->email,
+                    "recipient_address" => $transfer_address
+                ]
+            ];
 
 
+            if (empty($transfer_issue)) {
 
+                $transfer = $this->transferFromWallet($request, $request->destination, $transfer_params);
 
+            }
             
         } catch (\Exception $e) {
+
+            //throw new \RuntimeException($e->getMessage());
+            $transfer_issue = $e->getMessage();
             
         }
 
-        return redirect(url()->current())->with('UiResponse', $response);
+        $response_status = empty($transfer_issue) ? true : false;
+
+        $response_message = empty($transfer_issue) ? "Transfer Succcessful" : "Transfer Failed with Error: " . $transfer_issue;
+
+        $response_data = empty($transfer_issue) ? $transfer->data : [];
+
+        $response = [
+            "status" => $response_status,
+            "message" => $response_message,
+            "data" => $response_data,
+        ];
+
+        return response()->json($response);
     }
 
     /**
@@ -970,27 +1002,10 @@ class ModulesEcommerceStoreController extends Controller {
         $user = $request->user();
         $company = $user->company();
 
-        // "account_bank": "FMM",
-        // "account_number": "676064566",
-        // "amount": 15000,
-        // "narration": "Test francophone transfer",
-        // "currency": "XAF",
-        // "beneficiary_name": "Cornelius Ashley-Osuzoka",
-        // "reference": "Sample_PMCK",
-        // "debit_currency": "XAF",
-        // "meta": {
-        //     "first_name": "Cornelius",
-        //     "last_name": "Ashley-Osuzoka",
-        //     "email": "user@gmail.com",
-        //     "mobile_number": "676064566",
-        //     "recipient_address": "Immueble CiSo, Boulevard de la liberte, Akwa Douala"
-        // }
-
         $providerParams = [
             "destination" => $destination,
-            "account_number" => $params["account_number"]
+            "params_transfer" => $params
         ];
-        
 
         $c = $config["class"];
 

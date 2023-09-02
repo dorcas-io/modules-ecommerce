@@ -154,6 +154,22 @@ class FlutterwaveNGClass
 
     }
 
+    /**
+     * @param Request     $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function doTransfer()
+    {
+        $params = $this->providerParams;
+        
+        $response = $this->connect('/transfers', 'POST', $params["params_transfer"]);
+
+        return $response;
+
+    }
+
+
 
 
 }
