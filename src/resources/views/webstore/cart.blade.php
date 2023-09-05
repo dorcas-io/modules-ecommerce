@@ -313,7 +313,7 @@
                         <tbody>
                             <tr>
                                 <td style="v-align">
-                                    <span href="#" v-if="payment_url.length > 0">
+                                    <span href="#" v-if="payment_url.length > 0 || use_wallet">
                                         Online Payment
                                     </span>
                                     <span v-else>
@@ -321,10 +321,15 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span v-if="payment_url.length > 0">
+                                    <span v-if="payment_url.length > 0 && !use_wallet">
                                         Your order has been placed; <strong>make payment</strong> to complete your order
                                         <br/><br/>
                                         <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Online Now</a>
+                                    </span>
+                                    <span v-else-if="use_wallet">
+                                        Your order has been placed; <strong>make payment</strong> to complete your order
+                                        <br/><br/>
+                                        <a v-on:click.prevent="callWalletPaymentProvider" class="button button-3d nomargin button-black">Pay Online Now</a>
                                     </span>
                                     <span v-else>
                                         Amount to Pay: @{{ checkoutCurrency }} @{{ checkoutAmount }}
@@ -400,6 +405,7 @@
                 checkoutAmount: 0,
                 use_wallet: {!! json_encode($use_wallet) !!},
                 providers: {!! json_encode($providers) !!},
+                provider_payment_link: {!! json_encode($provider_payment_link) !!},
             },
             mounted: function() {
                 this.loadGoogleMaps();
@@ -423,10 +429,19 @@
                 callWalletPaymentProvider: function() {
                     let provider = this.providers.payment;
                     if (provider == 'flutterwave') {
-                        loadFlutterwavePayment();
+                        loadPaymentwithFlutterwave();
                     } else if (provider == 'paystack') {
-
+                        loadPaymentwithPaystack();
                     }
+                },
+                loadPaymentwithFlutterwave: function() {
+                    
+                    // Use Standard Method, protect sub_account IDs, get link from server and load it
+
+
+                },
+                loadPaymentwithPaystack: function() {
+                    
                 },
                 shippingSelected: function() {
                     //check cart if shipping is among

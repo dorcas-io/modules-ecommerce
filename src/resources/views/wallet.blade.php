@@ -44,7 +44,6 @@
                                 <p v-if="wallet_enabled" class="card-alert alert alert-success mb-0"><strong>Enabled</strong></p>
                                 <p v-if="!wallet_enabled" class="card-alert alert alert-danger mb-0"><strong>Not Enabled</strong></p>
                                 <br/>
-                                <br/>
                                 <h4>Details</h4>
                                 <div v-if="wallet_enabled">
                                     <div>Account Reference: @{{ wallet_data.account_reference }}</div>

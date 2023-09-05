@@ -145,7 +145,9 @@
             @if (!empty($subdomain))
             <div class="col-md-12 col-lg-6">
                 <div class="card">
-                    <div class="ribbon bg-primary">BASIC INFORMATION</div>
+                    <div class="ribbon" :class="{'bg-green': ecommerce_ready.store, 'bg-red': !ecommerce_ready.store}">
+                    @{{ ecommerce_ready.store ? 'COMPLETE' : 'INCOMPLETE' }}
+                    </div>
                     <div class="card-body">
                         <h3 class="card-title">Setup Store</h3>
                         <p class="text-muted">
@@ -229,7 +231,9 @@
                         {{ csrf_field() }}
 
                         <div class="card">
-                            <div class="ribbon bg-red">PAYMENT</div>
+                            <div class="ribbon" :class="{'bg-green': ecommerce_ready.payment, 'bg-red': !ecommerce_ready.payment}">
+                                @{{ ecommerce_ready.payment ? 'COMPLETE' : 'INCOMPLETE' }}
+                            </div>
                             <div class="card-body">
                                 <h3 class="card-title">Setup Payment Details</h3>
                                 <p class="text-muted">
@@ -237,7 +241,14 @@
 
                                 @if ( env('SETTINGS_ECOMMERCE_PAYMENT_USE_WALLET', true) == true )
 
-                                    To receive payments, you need to <strong>activate your Payment Wallet</strong>:
+                                    <span v-if="payment_settings.wallet_request==''">
+                                        To receive payments, you need to <strong>activate your Payment Wallet</strong>
+                                    </span>
+
+                                    <span v-if="payment_settings.wallet_request=='1'">
+                                        You have <strong>activated your Payment Wallet</strong>:
+                                    </span>
+
                                     <ul>
                                         <li>All your store payments will be deposited into this wallet</li>
                                         <li>You can make withdrawals into your local bank account</li>
@@ -309,7 +320,9 @@
                         {{ csrf_field() }}
 
                         <div class="card">
-                            <div class="ribbon bg-yellow">SHIPPING</div>
+                            <div class="ribbon" :class="{'bg-green': ecommerce_ready.logistics, 'bg-red': !ecommerce_ready.logistics}">
+                                @{{ ecommerce_ready.logistics ? 'COMPLETE' : 'INCOMPLETE' }}
+                            </div>
                             <div class="card-body">
                                 <h3 class="card-title">Setup Logistics Provider</h3>
                                 <p class="text-muted">
@@ -393,7 +406,8 @@
                 paymentOptionSelection: {!! json_encode($paymentOptionSelection) !!},
                 paymentSettingsAdvice: {!! json_encode($paymentSettingsAdvice) !!},
                 transfer_bank_available: {!! json_encode($transfer_bank_available) !!},
-                button_activate_loading: false
+                button_activate_loading: false,
+                ecommerce_ready: {!! json_encode($ecommerce_ready) !!},
             },
             mounted: function() {
                 //console.log(this.logistics_fulfilment_centre)

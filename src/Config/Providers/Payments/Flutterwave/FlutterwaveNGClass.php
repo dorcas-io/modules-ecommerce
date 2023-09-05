@@ -38,11 +38,6 @@ class FlutterwaveNGClass
 
         $this->providerParams = $providerParams;
 
-        // Get Access Token
-        // if (empty($this->accessToken)) {
-        //     $this->getToken();
-        // }
-
     }
 
 
@@ -169,6 +164,21 @@ class FlutterwaveNGClass
 
     }
 
+
+    /**
+     * @param Request     $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function createWalletPaymentLink()
+    {
+        $params = $this->providerParams;
+        
+        $response = $this->connect('/payments', 'POST', $params);
+
+        return $response;
+
+    }
 
 
 

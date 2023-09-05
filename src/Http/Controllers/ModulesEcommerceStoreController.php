@@ -78,12 +78,37 @@ class ModulesEcommerceStoreController extends Controller {
         $multiTenant = config('dorcas.edition','business') === 'business' ? false : true;
 
         $this->setViewUiResponse($request);
-        $this->data['storeSettings'] = self::getStoreSettings((array) $this->getCompany()->extra_data);
-        $this->data['logisticsSettings'] = self::getLogisticsSettings((array) $this->getCompany()->extra_data);
+        $this->data['storeSettings'] = $settingsStore = self::getStoreSettings((array) $this->getCompany()->extra_data);
+        $this->data['logisticsSettings'] = $settingsLogistics = self::getLogisticsSettings((array) $this->getCompany()->extra_data);
         $this->data['logisticsFulfilmentCentre'] = env("SETTINGS_ECOMMERCE_LOGISTICS_FULFILMENT_CENTRE", false);
         $paymentSettings = self::getPaymentsSettings((array) $this->getCompany()->extra_data);
-        $this->data['paymentSettings'] = $paymentSettings;
-        # our store, logistics & paymennt settings container
+        $this->data['paymentSettings'] = $settingsPayments = $paymentSettings;
+        # our store, logistics & payment settings container
+
+
+        // Assess minimal readiness of Store, Payments & Logistics
+
+        $nonEmptyStore = false;
+        $nonEmptyPayment = false;
+        $nonEmptyLogistics = false;
+
+        collect($settingsStore)->each(function ($item) use (&$nonEmptyStore) {
+            if (!empty($item)) { $nonEmptyStore = true; return false; }
+        });
+        collect($settingsPayments)->each(function ($item) use (&$nonEmptyPayment) {
+            if (!empty($item)) { $nonEmptyPayment = true; return false; }
+        });
+        collect($settingsLogistics)->each(function ($item) use (&$nonEmptyLogistics) {
+            if (!empty($item)) { $nonEmptyLogistics = true; return false; }
+        });
+        
+        $ecommerce_ready = [
+            "store" => $nonEmptyStore,
+            "payment" => $nonEmptyPayment,
+            "logistics" => $nonEmptyLogistics,
+        ];
+
+        $this->data['ecommerce_ready'] = $ecommerce_ready;
 
         // Setup Payments
         $pSettings = (array) $paymentSettings;
@@ -263,7 +288,7 @@ class ModulesEcommerceStoreController extends Controller {
 
         if (!empty($accounts) && $accounts->count() > 0) {
 
-            $bank = $accounts->first();
+            $bank = (array) $accounts->first();
 
             $banks = collect(Banks::BANK_CODES)->sort()->map(function ($name, $code) {
                 return ['name' => $name, 'code' => $code];
@@ -283,7 +308,7 @@ class ModulesEcommerceStoreController extends Controller {
 
         }
 
-        $tthis->data['transfer_bank_available'] = $transfer_bank_available;
+        $this->data['transfer_bank_available'] = $transfer_bank_available;
 
 
         return view('modules-ecommerce::store', $this->data);
@@ -528,16 +553,43 @@ class ModulesEcommerceStoreController extends Controller {
 
                 $params = [];
 
-                $wallet_response = $this->activateWallet($request, $params);
-
-                if (!$wallet_response->getData()->status) {
-                    throw new \RuntimeException('Failed while activating Payment Wallet (' . $wallet_response->getData()->message  . ')');
-                }
-
-                $paymentsSettings["wallet"] = [
-                    "status" => "succcess",
-                    "data" => (array) $wallet_response->getData()->data
+                $preset_wallet_data = [
+                    "id" => 196918,
+                    "account_reference" => "PSABF203684A54329288",
+                    "account_name" => "Admin User",
+                    "barter_id" => "234000002657462",
+                    "email" => "support@dorcas.io",
+                    "mobilenumber" => "2348012345678",
+                    "country" => "US",
+                    "nuban" => "8543388709",
+                    "bank_name" => "Wema Bank PLC",
+                    "bank_code" => "035",
+                    "status" => "ACTIVE",
+                    "created_at" => "2023-09-02T14:18:53.000Z"
                 ];
+                $use_preset_wallet_data = true;
+
+                if (!$use_preset_wallet_data) {
+
+                    $wallet_response = $this->activateWallet($request, $params);
+
+                    if (!$wallet_response->getData()->status) {
+                        throw new \RuntimeException('Failed while activating Payment Wallet (' . $wallet_response->getData()->message  . ')');
+                    }
+    
+                    $paymentsSettings["wallet"] = [
+                        "status" => "succcess",
+                        "data" => (array) $wallet_response->getData()->data
+                    ];
+
+                } else {
+
+                    $paymentsSettings["wallet"] = [
+                        "status" => "succcess",
+                        "data" => $preset_wallet_data
+                    ];
+
+                }
 
             }
 
@@ -686,7 +738,7 @@ class ModulesEcommerceStoreController extends Controller {
 
         if (!empty($accounts) && $accounts->count() > 0) {
 
-            $bank = $accounts->first();
+            $bank = (array) $accounts->first();
 
             $banks = collect(Banks::BANK_CODES)->sort()->map(function ($name, $code) {
                 return ['name' => $name, 'code' => $code];
@@ -779,6 +831,7 @@ class ModulesEcommerceStoreController extends Controller {
                 })->values();
     
                 $bank_name = $banks->where('code', $bank["json_data"]["bank_code"])->pluck('name')->first();
+                $bank_code = $bank["json_data"]["bank_code"];
                 $account_number = $bank["account_number"];
                 $account_name = $bank["account_name"];
     
@@ -803,7 +856,7 @@ class ModulesEcommerceStoreController extends Controller {
 
             $transfer_params = [
                 "debit_subaccount" => $debit_subaccount,
-                "account_bank" => $bank_name,
+                "account_bank" => $bank_code, //$bank_name,
                 "account_number" => $account_number,
                 "amount" => $request->amount,
                 "narration" => "Wallet Transfer",

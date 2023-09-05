@@ -460,6 +460,105 @@ class ModulesEcommerceStore extends Controller
             'logistics' => env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik'),
         ];
 
+        // calculate splitting of money into SALES (the SMEs, VAS money), SHIPPING (the shipping charge), PARTER fee, and DORCAS fee
+        // both partner + dorcas + flutterwave fees constitute transaction fees
+
+        $globalPartnerSettingsECommerce = [
+            "transfer_fees" => [
+                "total" => 10,
+                "partner" => 2.5,
+                "dorcas" => 7.5
+            ],
+            "subaccounts" => [
+                "sales_sme" => "", //tthis is a joint escrow type for all SMEs
+                "sales_vas" => "",
+                "logistics" => "",
+                "partner" => "",
+                "dorcas" => ""
+            ]
+        ];
+        # get this form the partner global settings
+
+        // Calculated moneys
+        $total_product = 0;
+        $total_shipping = 0;
+
+
+        $amount_sales_sme = 0;
+        $amount_logistics = 0;
+
+        $total_fees = 0;
+
+        $amount_partner = 0;
+        $amount_dorcas = 0;
+
+        // calculate payment data
+        $payment_provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
+        if ($payment_provider == 'flutterwave') {
+
+
+
+        } elseif ($payment_provider == 'paystack') {
+
+
+
+        }
+
+        $this->data['flutterwave'] = [
+            "payment" => [
+                "public_key" => "",
+                "tx_ref" => "",
+                "amount" => "",
+                "currency" => "",
+                "payment_options" => "card, ussd",
+                "redirect_url" => "",
+                "meta" => [
+                    "consumer_id" => "",
+                    "consumer_mac" => ""
+                ],
+                "customer" => [
+                    "email" => "",
+                    "phone_number" => "",
+                    "name" => ""
+                ],
+                "customizations" => [
+                    "title" => "",
+                    "description" => "",
+                    "logo" => ""
+                ],
+                "subaccounts" => [
+                    [
+                        "id" => $globalPartnerSettingsECommerce["subaccounts"]["sales_sme"],
+                        "transaction_charge_type" => "flat_subaccount",
+                        "transaction_charge" => $amount_sales_sme,
+                    ],
+                    [
+                        "id" => $globalPartnerSettingsECommerce["subaccounts"]["logistics"],
+                        "transaction_charge_type" => "flat_subaccount",
+                        "transaction_charge" => $amount_logistics,
+                    ],
+                    [
+                        "id" => $globalPartnerSettingsECommerce["subaccounts"]["partner"],
+                        "transaction_charge_type" => "flat_subaccount",
+                        "transaction_charge" => $amount_partner,
+                    ],
+                    [
+                        "id" => $globalPartnerSettingsECommerce["subaccounts"]["dorcas"],
+                        "transaction_charge_type" => "flat_subaccount",
+                        "transaction_charge" => $amount_dorcas,
+                    ],
+                ]
+
+            ]
+        ];
+
+
+        $provider_payment_link = "";
+
+        $this->data['provider_payment_link'] = $provider_payment_link;
+
+
+
         return view('modules-ecommerce::webstore.cart', $this->data);
     }
 
@@ -731,6 +830,60 @@ class ModulesEcommerceStore extends Controller
             });
         });
         $viewData["productCategories"] = $categories;
+    }
+
+
+    /**
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function createWalletPaymentLink(Request $request)
+    {
+        // Determine active Logistics provider
+        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
+        $country = env('SETTINGS_COUNTRY', 'NG');
+
+        $provider_config = ucfirst($provider). strtoupper($country) . '.php';
+        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+
+        $provider_config_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config;
+        $config = require_once($provider_config_path);
+
+        $provider_class_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class;
+        require_once($provider_class_path);
+
+
+        // Parse Shopper Origin Address
+        $company = (array) $this->getCompanyViaDomain();
+        $user = $company["users"]["data"][0];
+
+        $providerParams = [
+            "provider" => $provider,
+            "user" => $user,
+            "company" => $company
+        ];
+
+
+        $c = $config["class"];
+
+        $provider = new $c($providerParams);
+
+        $link = $provider->createWalletPaymentLink();
+
+        $response_status = $link->status === "success" ? true : false;
+
+        $response_message = $link->status === "success" ? "Payment Link Generation Successful" : "Payment Link Generation Failed &raquo; " . $link->message;
+
+        $response_data = $link->status === "success" ? $link->data : [];
+
+        $response = [
+            "status" => $response_status,
+            "message" => $response_message,
+            "data" => $response_data,
+        ];
+        
+        return response()->json($response);
     }
 
 
