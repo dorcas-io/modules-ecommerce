@@ -1,6 +1,6 @@
 @extends('modules-ecommerce::webstore.layouts.shop')
 @section('head_meta')
-    <meta property="og:site_name" content="Dorcas Hub" />
+    <meta property="og:site_name" content="{{ $storeOwner->name }}" />
     <meta property="og:url" content="{{ route('webstore.products.details', [$product->id]) }}" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="{{ $product->name }}" />

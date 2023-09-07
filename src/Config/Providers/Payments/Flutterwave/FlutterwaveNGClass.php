@@ -41,7 +41,7 @@ class FlutterwaveNGClass
     }
 
 
-    private function connect($path, $method = 'POST', $postParams)
+    public function connect($path, $method = 'POST', $postParams)
     {
         // Connect To API
         $ch = curl_init();
@@ -173,8 +173,30 @@ class FlutterwaveNGClass
     public function createWalletPaymentLink()
     {
         $params = $this->providerParams;
+
+        $provider = $params["provider"];
         
-        $response = $this->connect('/payments', 'POST', $params);
+        $response = $this->connect($params["path"], 'POST', $params["params"]);
+
+        return $response;
+
+    }
+
+
+    /**
+     * @param Request     $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function verifyTransaction()
+    {
+        $params = $this->providerParams;
+
+        $provider = $params["provider"];
+        $method = $params["method"];
+        $path = $params["path"];
+        
+        $response = $this->connect($path, $method, $params["params"]);
 
         return $response;
 

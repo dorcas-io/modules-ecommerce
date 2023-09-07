@@ -9,10 +9,13 @@ use App\Http\Controllers\Controller;
 //use App\Http\Controllers\ECommerce\OnlineStore;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Dorcas\ModulesEcommerce\Http\Controllers\ModulesEcommerceStoreController as Dashboard;
 use Dorcas\ModulesDashboard\Http\Controllers\ModulesDashboardController as Dash;
 use App\Dorcas\Hub\Enum\Banks;
 use Dorcas\ModulesDashboard\Classes\Checklists;
+use Ramsey\Uuid\Uuid;
 
 
 class ModulesEcommerceStore extends Controller
@@ -446,7 +449,7 @@ class ModulesEcommerceStore extends Controller
 
         $this->data['page']['header']['title'] = $storeOwner->name . ' Store' . ' | ' . $stage_title;
         //$this->data['cart'] = Home::getCartContent($request);
-        $this->data['cart'] = $this->getCartContent($request);
+        $this->data['cart'] = $cartContents = $this->getCartContent($request);
 
         $this->data['env'] = [
             "CREDENTIAL_GOOGLE_API_KEY" => env('CREDENTIAL_GOOGLE_API_KEY', 'ABC'),
@@ -459,105 +462,6 @@ class ModulesEcommerceStore extends Controller
             'payment' => env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave'),
             'logistics' => env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik'),
         ];
-
-        // calculate splitting of money into SALES (the SMEs, VAS money), SHIPPING (the shipping charge), PARTER fee, and DORCAS fee
-        // both partner + dorcas + flutterwave fees constitute transaction fees
-
-        $globalPartnerSettingsECommerce = [
-            "transfer_fees" => [
-                "total" => 10,
-                "partner" => 2.5,
-                "dorcas" => 7.5
-            ],
-            "subaccounts" => [
-                "sales_sme" => "", //tthis is a joint escrow type for all SMEs
-                "sales_vas" => "",
-                "logistics" => "",
-                "partner" => "",
-                "dorcas" => ""
-            ]
-        ];
-        # get this form the partner global settings
-
-        // Calculated moneys
-        $total_product = 0;
-        $total_shipping = 0;
-
-
-        $amount_sales_sme = 0;
-        $amount_logistics = 0;
-
-        $total_fees = 0;
-
-        $amount_partner = 0;
-        $amount_dorcas = 0;
-
-        // calculate payment data
-        $payment_provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
-        if ($payment_provider == 'flutterwave') {
-
-
-
-        } elseif ($payment_provider == 'paystack') {
-
-
-
-        }
-
-        $this->data['flutterwave'] = [
-            "payment" => [
-                "public_key" => "",
-                "tx_ref" => "",
-                "amount" => "",
-                "currency" => "",
-                "payment_options" => "card, ussd",
-                "redirect_url" => "",
-                "meta" => [
-                    "consumer_id" => "",
-                    "consumer_mac" => ""
-                ],
-                "customer" => [
-                    "email" => "",
-                    "phone_number" => "",
-                    "name" => ""
-                ],
-                "customizations" => [
-                    "title" => "",
-                    "description" => "",
-                    "logo" => ""
-                ],
-                "subaccounts" => [
-                    [
-                        "id" => $globalPartnerSettingsECommerce["subaccounts"]["sales_sme"],
-                        "transaction_charge_type" => "flat_subaccount",
-                        "transaction_charge" => $amount_sales_sme,
-                    ],
-                    [
-                        "id" => $globalPartnerSettingsECommerce["subaccounts"]["logistics"],
-                        "transaction_charge_type" => "flat_subaccount",
-                        "transaction_charge" => $amount_logistics,
-                    ],
-                    [
-                        "id" => $globalPartnerSettingsECommerce["subaccounts"]["partner"],
-                        "transaction_charge_type" => "flat_subaccount",
-                        "transaction_charge" => $amount_partner,
-                    ],
-                    [
-                        "id" => $globalPartnerSettingsECommerce["subaccounts"]["dorcas"],
-                        "transaction_charge_type" => "flat_subaccount",
-                        "transaction_charge" => $amount_dorcas,
-                    ],
-                ]
-
-            ]
-        ];
-
-
-        $provider_payment_link = "";
-
-        $this->data['provider_payment_link'] = $provider_payment_link;
-
-
 
         return view('modules-ecommerce::webstore.cart', $this->data);
     }
@@ -643,15 +547,148 @@ class ModulesEcommerceStore extends Controller
         if (!$checkout->isSuccessful()) {
             throw new \RuntimeException('Could not add your order to the record. Please try again later.');
         }
+
+        $data = $checkout->getData();
+        if (!empty($checkout->meta) && !empty($checkout->meta['payment_url'])) {
+            $data['payment_url'] = $checkout->meta['payment_url'];
+        }
+
+
+        // calculate splitting of money into SALES (the SMEs, VAS money), SHIPPING (the shipping charge), PARTER fee, and DORCAS fee
+        // both partner + dorcas + flutterwave fees constitute transaction fees
+
+        $partnerAdmin = DB::connection('core_mysql')->table("companies")->where('id', 1)->first(); 
+        # get company data of admin
+        $company_data = (array) $partnerAdmin->extra_data;
+        if (isset($company_data["global_partner_settings"]["ecommerce"]) && !empty($company_data["global_partner_settings"]["ecommerce"]) ) {
+            $partnerECommerce = $company_data["global_partner_settings"]["ecommerce"];
+        } else {
+            $partnerECommerce = [
+                "transaction_fees" => [
+                    "total" => 10,
+                    "partner" => 2.5,
+                    "dorcas" => 7.5
+                ],
+                "subaccounts" => [
+                    "sales_sme" => "", //tthis is a joint escrow type for all SMEs
+                    "sales_vas" => "",
+                    "logistics" => "",
+                    "partner" => "",
+                    "dorcas" => ""
+                ]
+            ];
+        }
+
+        //$total_all = $cartContents["total"]["raw"];
+        $cartItems = $cart->items;
+
+        $sumSalesSME = 0;
+        $sumLogistics = 0;
+
+        foreach ($cartItems as $item) {
+            $sumSalesSME += ( $item["isShipping"] == "no" ) ? ($item["unit_price"] * $item["quantity"]) : 0;
+            $sumLogistics += ( $item["isShipping"] == "yes" ) ? ($item["unit_price"] * $item["quantity"]) : 0;
+        }
+
+        // Calculated moneys
+        $total_shipping = $sumLogistics;
+        $total_product = $sumSalesSME;
+
+        $fees = $partnerECommerce["transaction_fees"];
+
+        //dd([$sumSalesSME, $sumLogistics, $total_fees, ($sumSalesSME + $sumLogistics)]);
+
+        $total_fees = round ( ($fees["total"]/100) * $sumSalesSME, 2);
+
+        $amount_sales_sme = $sumSalesSME - $total_fees;
+        $amount_logistics = $sumLogistics;
+
+        $amount_partner = round ( ($fees["partner"]/100) * $total_fees, 2);
+        $amount_dorcas = $total_fees - $amount_partner;
+
+        $provider_payment_link = "";
+
+        $paymentDataFlutterwave = [
+            "tx_ref" => $data->id,
+            "amount" => $cart->total['raw'],
+            "currency" => $cart->currency,
+            "payment_options" => "card, ussd",
+            "redirect_url" => url(route('webstore') . "/orders", [$data->id, 'verify-payment']) . '?' . http_build_query(['channel' => 'flutterwave', 'customer' => $customer->id]),
+            // "meta" => [
+            //     "consumer_id" => "",
+            //     "consumer_mac" => ""
+            // ],
+            "customer" => [
+                "email" => $customer->email,
+                "phone_number" => $customer->phone,
+                "name" => $customer->firstname . " " . $customer->lastname
+            ],
+            "customizations" => [
+                "title" => $storeOwner->name,
+                "description" => "",
+                "logo" => $storeOwner->logo
+            ],
+            "subaccounts" => [
+                [
+                    "id" => $partnerECommerce["subaccounts"]["sales_sme"],
+                    "transaction_charge_type" => "flat_subaccount",
+                    "transaction_charge" => $amount_sales_sme,
+                ],
+                [
+                    "id" => $partnerECommerce["subaccounts"]["logistics"],
+                    "transaction_charge_type" => "flat_subaccount",
+                    "transaction_charge" => $amount_logistics,
+                ],
+                [
+                    "id" => $partnerECommerce["subaccounts"]["partner"],
+                    "transaction_charge_type" => "flat_subaccount",
+                    "transaction_charge" => $amount_partner,
+                ],
+                [
+                    "id" => $partnerECommerce["subaccounts"]["dorcas"],
+                    "transaction_charge_type" => "flat_subaccount",
+                    "transaction_charge" => $amount_dorcas,
+                ],
+            ]
+
+        ];
+
+
+        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
+        $country = env('SETTINGS_COUNTRY', 'NG');
+        $provider_config = ucfirst($provider). strtoupper($country) . '.php';
+        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+        $provider_config_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config);
+        $config = require_once($provider_config_path);
+        $provider_class_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class);
+        require_once($provider_class_path);
+        
+        $c = $config["class"];
+
+        $providerParams = [
+            "provider" => $provider,
+            "path" => "/payments",
+            "params" => $paymentData
+        ];
+        
+        $provider = new $c($providerParams);
+        
+        $payment_link = $provider->createWalletPaymentLink();
+        
+        
+        if ($payment_link->status !== "success") {
+            $provider_payment_link = $wallet_creation->data->link;
+        }
+
+        $this->data['provider_payment_link'] = $provider_payment_link;
+
+        // CLEAN UP TASKS
         Cache::forget('crm.customers.'.$storeOwner->id);
         $request->session()->forget('cartCache');
         # clear the cache
         $cartManager->clear();
         # clear the cart
-        $data = $checkout->getData();
-        if (!empty($checkout->meta) && !empty($checkout->meta['payment_url'])) {
-            $data['payment_url'] = $checkout->meta['payment_url'];
-        }
+
         return response()->json($data, 202);
     }
 
@@ -725,12 +762,9 @@ class ModulesEcommerceStore extends Controller
 
         - /create_task_via_vendor (requires /send_payment_for_task and /get_bill_breakdown)
 
-
-
         - /getVehicle to get details e.g base fare, etc
         */
         
-
 
         // Estimate Cost
 
@@ -835,55 +869,244 @@ class ModulesEcommerceStore extends Controller
 
     /**
      * @param Request $request
+     * @param string  $id
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return string
+     * @throws AuthorizationException
      */
-    public function createWalletPaymentLink(Request $request)
+    public function verifyProviderPayment(Request $request, string $id)
     {
-        // Determine active Logistics provider
-        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
-        $country = env('SETTINGS_COUNTRY', 'NG');
 
-        $provider_config = ucfirst($provider). strtoupper($country) . '.php';
-        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+        $storeOwner = $this->getCompanyViaDomain();
+        if (empty($storeOwner)) {
+            abort(404, 'Could not find a store at this URL.');
+        }
+        $sOwner = (array) $storeOwner;
+        $sdk = $this->authorizeSdkByCompany($sdk, $sOwner);
 
-        $provider_config_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config;
-        $config = require_once($provider_config_path);
+        if (empty($id)) {
+            abort(404, 'Could not find an Order ID in your request');
+        }
+        $response = $sdk->createOrderResource($id)->addQueryArgument('include', 'customers:limit(10000|0)')->send('get');
 
-        $provider_class_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class;
-        require_once($provider_class_path);
+        if (!$response->isSuccessful()) {
+            abort(404, 'Could not find the order at this URL.');
+        }
+        $order = $response->getData(true);
+        # try to get the order
+        $company = $order->company;
+        # retrieve the company
+        if (!$request->has('channel') || !in_array($request->has('channel'), ['flutterwave', 'paystack'])) {
+            abort(400, 'No valid payment channel was provided in the payment URL.');
+        }
+
+        // if (!$request->has('customer')) {
+        //     abort(400, 'No customer id was provided in the payment URL.');
+        // }
+
+        if (!empty($request->customer)) {
+            $response_customer = $sdk->createCustomerResource($request->customer)->send('get');
+            # try to get the customer
+            if (!$response_customer->isSuccessful()) {
+                abort(500, 'We could not retrieve the customer information for this payment.');
+            }
+            $customer_record = $response_customer->getData();
+            $customer = $customer->id === $customer_record->id ? $customer_record : $customer;
+            # is this necessary
+        }
 
 
-        // Parse Shopper Origin Address
-        $company = (array) $this->getCompanyViaDomain();
-        $user = $company["users"]["data"][0];
+        $transaction = null;
+        # our transaction object
 
-        $providerParams = [
-            "provider" => $provider,
-            "user" => $user,
-            "company" => $company
+        try {
+            switch ($request->channel) {
+                case 'flutterwave':
+                    if (!$request->has('tx_ref')) {
+                        abort(400, 'No payment reference was provided by the R payment gateway.');
+                    }
+                    if ($request->has('cancelled') && $request->cancelled == 'true') {
+                        return 'You cancelled the payment. You may try again at a later time.';
+                    }
+                    $reference = $request->tx_ref;
+                    $transaction_id = $request->transaction_id;
+                    $status = $request->status;
+
+                    if ( $status == 'successful' ) {
+                        
+                        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
+                        $country = env('SETTINGS_COUNTRY', 'NG');
+                        $provider_config = ucfirst($provider). strtoupper($country) . '.php';
+                        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+                        $provider_config_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config);
+                        $config = require_once($provider_config_path);
+                        $provider_class_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class);
+                        require_once($provider_class_path);
+                        
+                        $c = $config["class"];
+    
+                        $providerParams = [
+                            "provider" => $provider,
+                            "path" => "/transactions/verify_by_reference",
+                            "method" => "GET",
+                            "params" => [
+                                "tx_ref" => $reference
+                            ]
+                        ];
+                        
+                        $provider = new $c($providerParams);
+                        
+                        $verify = $provider->verifyTransaction();
+                        
+                        if ($verify->status !== "success") {
+                            $transaction = $verify->data;
+                        } else {
+                            $transaction = [
+                                'channel' => 'flutterwave',
+                                'reference' => $reference,
+                                'amount' => null,
+                                'response_code' => null,
+                                'response_description' => null,
+                                'json_payload' => '',
+                                'is_successful' => false
+                            ];
+                        }
+
+                    } else {
+
+                        $transaction = [
+                            'channel' => 'flutterwave',
+                            'reference' => $reference,
+                            'amount' => null,
+                            'response_code' => null,
+                            'response_description' => null,
+                            'json_payload' => '',
+                            'is_successful' => false
+                        ];
+
+                    }
+
+
+                    
+                    break;
+                case 'paystack':
+                    // if (!$request->has('reference')) {
+                    //     abort(400, 'No payment reference was provided by the P payment gateway.');
+                    // }
+                    // $reference = $request->reference;
+                    // $transaction = payment_verify_paystack($privateKeyDecrypted, $reference, $order);
+                    break;
+            }
+        } catch (\UnexpectedValueException $e) {
+            abort(400, $e->getMessage());
+        } catch (\HttpException $e) {
+            abort(500, $e->getMessage());
+        } catch (\Throwable $e) {
+            abort(500, 'Something went wrong: '. $e->getMessage());
+        }
+
+        // $txn = $order->transactions()->firstOrNew([
+        //     'reference' => $reference,
+        //     'channel' => $transaction['channel']
+        // ]);
+
+        $txn_data = [
+            ['reference' => $reference],
+            ['channel' => $transaction['channel']],
+            ['customer_id' => $customer_record->id],
         ];
 
+        $txn = DB::table('payment_transactions')->where($data)->first();
 
-        $c = $config["class"];
+        if (!$txn) {
 
-        $provider = new $c($providerParams);
+            try {
 
-        $link = $provider->createWalletPaymentLink();
+                $txn_data['uuid'] = Uuid::uuid1()->toString();
+                $txn_data['order_id'] = $order->id;
+                $txn_data['amount'] = $transaction['amount'];
+                $txn_data['currency'] = $transaction['currency'];
+                $txn_data['response_code'] = $transaction['response_code'];
+                $txn_data['response_description'] = $transaction['response_description'];
+                $txn_data['json_payload'] = $transaction['json_payload'] ?? '';
+                $txn_data['is_successful'] = $transaction['is_successful'] ?? false;
+    
+                $insertedId = DB::table('payment_transactions')->insertGetId($txn_data);
+                $txn = DB::table('payment_transactions')->find($insertedId);
 
-        $response_status = $link->status === "success" ? true : false;
+            } catch (\Exception $e) {
+                abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $e->getMessage());
+            }
 
-        $response_message = $link->status === "success" ? "Payment Link Generation Successful" : "Payment Link Generation Failed &raquo; " . $link->message;
+        }
 
-        $response_data = $link->status === "success" ? $link->data : [];
 
-        $response = [
-            "status" => $response_status,
-            "message" => $response_message,
-            "data" => $response_data,
+        # we try to get the instance if necessary
+        if (!empty($txn->customer_id) && $txn->customer_id !== $customer->id) {
+            # a different customer owns this transaction, than the person verifying it
+            throw new AuthorizationException('This transaction does not belong to your account.');
+        }
+
+        # try to create the transaction, if required
+        if (!$txn->is_successful) {
+            abort(400, 'The payment transaction failed, try and make a successful payment to continue.');
+        }
+
+        $customer_order_model = $sdk->createOrderResource($order->id)->addBodyParam('id', $customer->id)
+        ->addBodyParam('paid_at', Carbon::now())
+        ->addBodyParam('is_paid', true);
+        $customer_order_response = $customer_order_model->send('put',  ['customers']);
+        if (!$customer_order_response->isSuccessful()) {
+            $m = $customer_order_response->errors[0]['title'] ?? 'Failed while updating the customer order information.';
+            //throw new \RuntimeException($m);
+            abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $m);
+        }
+
+
+        // $customer = $order->customers()->where('customer_id', $customer->id)->first();
+        // # get the customer with the Pivot
+        // if (!$customer->pivot instanceof CustomerOrder) {
+        //     abort(500, 'Something went wrong, we could not retrieve your purchase. Please report this to support along with your Payment reference: '.$reference);
+        // }
+        // $customerOrder = $customer->pivot;
+        // $customerOrder->is_paid = true;
+        // $customerOrder->paid_at = Carbon::now();
+
+        // if (!$customerOrder->save()) {
+        //     abort(500, 'Something went wrong, we could not mark your purchase as paid. Please report this to support along with your Payment reference: '.$reference);
+        // }
+
+        // http request to post to core endpoint
+        $notification_params = [
+            "user" => $company, //uuid
+            "order" => $order,
+            "customer" => $customer,
+            "txn" => $txn,
         ];
+        $notification_url = env('DORCAS_HOST_API', 'https://core.sample-dorcas.io') . "/notification-paid-invoice";
         
-        return response()->json($response);
+        $notification_response = Http::post($notification_url, $notification_params);
+        if ($notification_response->successful()) {
+            $data = $notification_response->json(); // Assuming the response is JSON
+        } else {
+            $statusCode = $notification_response->status();
+            $error = $notification_response->body();
+            abort(500, 'We encountered issues while sending an invoice notification. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $statusCode . ": " . $error);
+        }
+        //Notification::send($company->users->first(), new InvoicePaid($order, $customer, $txn));
+        # send the notification to members of the company
+
+        $data = [
+            'reference' => $reference,
+            'txn' => $txn,
+            'message' => 'Successfully completed order payment. Your reference is: ' . $reference,
+            'company_name' => $company->name,
+            'company_logo' => $company->logo,
+            //'webstore_url' => "https://" . $company->domainIssuances->first()->prefix . ".store.dorcas.io"
+            'webstore_url' => "https://" . $company->domainIssuances->first()->prefix . "." . env("DORCAS_BASE_DOMAIN", "store.dorcas.io")
+        ];
+        //return view('payment.payment-complete-response', $data);
+        return view('modules-ecommerce::webstore.payment-response', $data);
     }
 
 

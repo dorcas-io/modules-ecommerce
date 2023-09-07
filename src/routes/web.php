@@ -79,6 +79,10 @@ Route::domain($storeSubDomain)->namespace('Dorcas\ModulesEcommerce\Http\Controll
     Route::post('/xhr/cart/checkout', 'ModulesEcommerceStore@checkoutXhr');
     Route::put('/xhr/cart/update-quantities', 'ModulesEcommerceStore@updateCartQuantitiesXhr');
     Route::get('/xhr/cart/get-provider-shipping-routes', 'ModulesEcommerceStore@getProviderShippingRoutesXhr');
+
+    Route::get('/orders/{id}/verify-payment', 'ModulesEcommerceStore@verifyProviderPayment');
+    Route::post('/orders/{id}/verify-payment', 'ModulesEcommerceStore@verifyProviderPayment');
+
 });
 
 
