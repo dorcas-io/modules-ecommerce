@@ -154,7 +154,7 @@ class FlutterwaveNGClass
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function doTransfer()
+    public function transferFromWallet()
     {
         $params = $this->providerParams;
         

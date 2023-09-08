@@ -203,26 +203,47 @@
                             currency: this.transfer_currency,
                             destination: 'bank'
                         }).then(function (response) {
+
                             console.log(response);
-                            //return swal("Success", "The transfer was successfull", "success");
-                            //return response.json() //return it to upper then
-                            return Swal.fire({
-                                title: '<strong>Transfer Done</strong>',
-                                icon: 'success',
-                                html:
-                                    '<p>Amount ' + this.transfer_currency + '<b>' + this.transfer_amount + '</b></p><br/>' +
-                                    '<p>Reference <b>' + this.transfer_amount + '</b></p><br/>' +
-                                    '<p>Amount <b>' + this.transfer_amount + '</b></p><br/>',
-                                showCloseButton: true,
-                                showCancelButton: true,
-                                focusConfirm: false,
-                                confirmButtonText:
-                                    '<i class="fa fa-thumbs-up"></i> Great!',
-                                confirmButtonAriaLabel: 'Thumbs up, great!',
-                                // cancelButtonText:
-                                //     '<i class="fa fa-thumbs-down"></i>',
-                                // cancelButtonAriaLabel: 'Thumbs down'
-                            })
+
+                            let wallet_response = response.data;
+                            //wallet_response.message
+                            //wallet_response.data
+                            
+                            if (wallet_response.status) {
+
+                                return Swal.fire({
+                                    title: '<strong>Transfer Done</strong>',
+                                    icon: 'success',
+                                    html:
+                                        '<p>Amount ' + this.transfer_currency + '<b>' + this.transfer_amount + '</b></p><br/>' +
+                                        '<p>Reference <b>' + this.transfer_amount + '</b></p><br/>' +
+                                        '<p>Amount <b>' + this.transfer_amount + '</b></p><br/>',
+                                    showCloseButton: true,
+                                    showCancelButton: true,
+                                    focusConfirm: false,
+                                    confirmButtonText:
+                                        '<i class="fa fa-thumbs-up"></i> Great!',
+                                    confirmButtonAriaLabel: 'Thumbs up, great!',
+                                    // cancelButtonText:
+                                    //     '<i class="fa fa-thumbs-down"></i>',
+                                    // cancelButtonAriaLabel: 'Thumbs down'
+                                });
+                                //return swal("Success", "The transfer was successfull", "success");
+                                //return response.json() //return it to upper then
+
+                            } else {
+
+                                return Swal.fire({
+                                    icon: 'error',
+                                    title: 'Oops...',
+                                    text: "Your Transfer has not been made due to an error!",
+                                    footer: '<a href="#">Error: ' + wallet_response.message + '</a>'
+                                });
+
+                            }
+
+
                         }).catch(function (error) {
                             var message = '';
                             if (error.response) {
