@@ -758,13 +758,13 @@ class ModulesEcommerceStoreController extends Controller {
 
         } else {
 
-            $transfer_status = "Transfer Unavailable &raquo; Setup Banking Information | ";
+            $transfer_status = "Transfer Unavailable -> Setup Banking Information | ";
 
         }
 
 
         // determine transfer amount available
-        $total_available = ($wallet_balances[0])->available_balance;
+        $total_available = !empty($wallet_balances) ? ($wallet_balances[0])->available_balance : 0;
 
         if ($total_available > 0) {
             // estimate amount to transfer that
@@ -778,7 +778,11 @@ class ModulesEcommerceStoreController extends Controller {
             $transfer_amount_available = $transfer_net > 0 ? $transfer_net : 0;
             $transfer_currency = $te["currency"];
         } else {
-            $transfer_status = "Transfer Unavailable &raquo; Insufficient Balance | ";
+            $transfer_status = "Transfer Unavailable -> Insufficient Balance | ";
+        }
+
+        if (!empty($wallet_balances)) {
+            $transfer_status = "Transfer Unavailable -> Wallet Not Yet Setup ";
         }
 
 
@@ -837,7 +841,7 @@ class ModulesEcommerceStoreController extends Controller {
     
             } else {
     
-                $transfer_issue = "Transfer Unavailable &raquo; Setup Banking Information | ";
+                $transfer_issue = "Transfer Unavailable -> Setup Banking Information | ";
     
             }
 
@@ -851,7 +855,7 @@ class ModulesEcommerceStoreController extends Controller {
             if (isset($paymentsSettings['wallet']['data']) && isset($paymentsSettings['wallet']['data']['account_reference']) && !empty($paymentsSettings['wallet']['data']['account_reference']) ) {
                 $debit_subaccount = $paymentsSettings['wallet']['data']['account_reference'];
             } else {
-                $transfer_issue = "Transfer Unavailable &raquo; Unable to Get Wallet Account Reference | ";
+                $transfer_issue = "Transfer Unavailable -> Unable to Get Wallet Account Reference | ";
             }
 
             $transfer_params = [
@@ -967,7 +971,7 @@ class ModulesEcommerceStoreController extends Controller {
 
         $response_status = $activation->status === "success" ? true : false;
 
-        $response_message = $activation->status === "success" ? "Wallet Activation Succcessful" : "Wallet Activation Failed &raquo; " . $activation->message;
+        $response_message = $activation->status === "success" ? "Wallet Activation Succcessful" : "Wallet Activation Failed -> " . $activation->message;
 
         $response_data = $activation->status === "success" ? $activation->data : [];
 
@@ -1019,7 +1023,7 @@ class ModulesEcommerceStoreController extends Controller {
 
         $response_status = $balances->status === "success" ? true : false;
 
-        $response_message = $balances->status === "success" ? "Wallet Balance Fetch Successful" : "Wallet Balance Fetch Failed &raquo; " . $balances->message;
+        $response_message = $balances->status === "success" ? "Wallet Balance Fetch Successful" : "Wallet Balance Fetch Failed -> " . $balances->message;
 
         $response_data = $balances->status === "success" ? $balances->data : [];
 
@@ -1057,7 +1061,7 @@ class ModulesEcommerceStoreController extends Controller {
 
         $response_status = $estimate->status === "success" ? true : false;
 
-        $response_message = $estimate->status === "success" ? "Transfer Estimate Fetch Successful" : "Transfer Estimate Fetch Failed &raquo; " . $estimate->message;
+        $response_message = $estimate->status === "success" ? "Transfer Estimate Fetch Successful" : "Transfer Estimate Fetch Failed -> " . $estimate->message;
 
         $response_data = $estimate->status === "success" ? $estimate->data : [];
 
@@ -1096,7 +1100,7 @@ class ModulesEcommerceStoreController extends Controller {
 
         $response_status = $transfer->status === "success" ? true : false;
 
-        $response_message = $transfer->status === "success" ? "Transfer Successful" : "Transfer Failed &raquo; " . $transfer->message;
+        $response_message = $transfer->status === "success" ? "Transfer Successful" : "Transfer Failed -> " . $transfer->message;
 
         $response_data = $transfer->status === "success" ? $transfer->data : [];
 

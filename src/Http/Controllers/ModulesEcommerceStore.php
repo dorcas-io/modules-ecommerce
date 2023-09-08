@@ -680,7 +680,7 @@ class ModulesEcommerceStore extends Controller
             $provider_payment_link = $wallet_creation->data->link;
         }
 
-        $this->data['provider_payment_link'] = $provider_payment_link;
+        $data['provider_payment_link'] = $provider_payment_link;
 
         // CLEAN UP TASKS
         Cache::forget('crm.customers.'.$storeOwner->id);

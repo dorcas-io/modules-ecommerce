@@ -42,7 +42,11 @@
                             <div class="col-md-12">
                                 <h4>Status</h4>
                                 <p v-if="wallet_enabled" class="card-alert alert alert-success mb-0"><strong>Enabled</strong></p>
-                                <p v-if="!wallet_enabled" class="card-alert alert alert-danger mb-0"><strong>Not Enabled</strong></p>
+                                <p v-if="!wallet_enabled" class="card-alert alert alert-danger mb-0">
+                                    <strong>Not Enabled</strong>
+                                    <br/><br/>
+                                    <a class="btn btn-success btn-sm" href="{{ route('ecommerce-store') }}">Setup Wallet</a>
+                                </p>
                                 <br/>
                                 <h4>Details</h4>
                                 <div v-if="wallet_enabled">

@@ -404,8 +404,8 @@
                 checkoutCurrency: 'NGN',
                 checkoutAmount: 0,
                 use_wallet: {!! json_encode($use_wallet) !!},
-                providers: {!! json_encode($providers) !!},
-                provider_payment_link: {!! json_encode($provider_payment_link) !!},
+                providers: {!! json_encode($providers) !!}
+                provider_payment_link: ''
             },
             mounted: function() {
                 this.loadGoogleMaps();
@@ -427,17 +427,32 @@
                     return photo;
                 },
                 callWalletPaymentProvider: function() {
+
                     let provider = this.providers.payment;
+
                     if (provider == 'flutterwave') {
+
                         loadPaymentwithFlutterwave();
+
                     } else if (provider == 'paystack') {
+
                         loadPaymentwithPaystack();
+
                     }
+                    
                 },
                 loadPaymentwithFlutterwave: function() {
                     
-                    // Use Standard Method, protect sub_account IDs, get link from server and load it
+                    let url = this.provider_payment_link;
 
+                    if (url.length > 1) {
+                        // redirect to Flutterwave URL
+                        window.location = url;
+                    } else {
+
+                        return swal("Payment Failed", "Invalid Payment Link Generated. Please contact technical support", "warning");
+
+                    }
 
                 },
                 loadPaymentwithPaystack: function() {
@@ -607,6 +622,12 @@
                                 if (typeof response.data.payment_url !== 'undefined') {
                                     context.payment_url = response.data.payment_url;
                                 }
+
+                                if (typeof response.data.provider_payment_link !== 'undefined') {
+                                    context.provider_payment_link = response.data.provider_payment_link;
+                                }
+
+
                                 return swal("Order Placed", "Your order has been submitted and an invoice sent via email. Please proceed to make payment", "success");
                             }).catch(function (error) {
                                 var message = '';

@@ -328,7 +328,7 @@
                                 <p class="text-muted">
                                     How do you wish to handle <strong>shipping / delivery</strong> of orders placed on your store: <br/><br/>
                                     <ul>
-                                        <li>You can choose to handle your shipments yourself and have customers choose from routes whose prices you set manually</li>
+                                        <li>You can choose to handle your shipments yourself and have customers choose from shipping routes whose prices you <a href="{{ route('sales-shipping-routes') }}">set manually</a></li>
                                         <li>You can choose to have a logistics provider handle shipping; shipping costs are automatically calculated when your customers enter their delivery addresses</li>
                                     </ul>
                                     <fieldset class="form-fieldset">
