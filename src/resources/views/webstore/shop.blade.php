@@ -62,7 +62,7 @@
             </div>
         </div>
     </div>
-    <div class="sidebar nobottommargin" v-if="product_categories.length > 0">
+    <div class="sidebar nobottommargin" v-if="verifyReadiness && product_categories.length > 0">
         <div class="sidebar-widgets-wrap">
             <div class="widget widget-filter-links clearfix">
                 <h4>Select Category</h4>
@@ -110,11 +110,21 @@
             },
             mounted: function () {
                 this.searchProducts();
-                console.log(this.readinessChecks);
-                console.log(this.verifyReadiness());
             },
             computed: {
-
+                
+                verifyReadiness: function() {
+                    let readiness = this.readinessChecks;
+                    for (let x in readiness) {
+                        if (typeof readiness[x] === 'boolean') {
+                            if (readiness[x] !== true) {
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    return true;
+                },
             },
             updated: function () {
                 SEMICOLON.initialize.lightbox();
@@ -128,24 +138,6 @@
                 }
             },
             methods: {
-
-                verifyReadiness: function() {
-                    let readiness = this.readinessChecks;
-                    for (let x in readiness) {
-                        if (typeof readiness[x] === 'boolean') {
-                            if (readiness[x] !== true) {
-                                return false;
-                            }
-                        }
-                        //else if (typeof readiness[x] === 'object') {
-                        //    if (!this.verifyReadiness(readiness[x])) {
-                        //        return false;
-                        //    }
-                        //}
-                    }
-                    
-                    return true;
-                },
 
                 addToCart: function (id, name, price, photo, quantity) {
                     if (this.is_posting) {
