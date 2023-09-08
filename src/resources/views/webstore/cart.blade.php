@@ -404,7 +404,7 @@
                 checkoutCurrency: 'NGN',
                 checkoutAmount: 0,
                 use_wallet: {!! json_encode($use_wallet) !!},
-                providers: {!! json_encode($providers) !!}
+                providers: {!! json_encode($providers) !!},
                 provider_payment_link: ''
             },
             mounted: function() {
@@ -439,7 +439,7 @@
                         loadPaymentwithPaystack();
 
                     }
-                    
+
                 },
                 loadPaymentwithFlutterwave: function() {
                     

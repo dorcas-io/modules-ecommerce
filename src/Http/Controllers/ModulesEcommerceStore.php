@@ -81,6 +81,9 @@ class ModulesEcommerceStore extends Controller
 
         $this->data['storeIsReady'] = $storeIsReady;
 
+        $sOwnerx = (array) $storeOwner;
+        $newSdk = $this->authorizeSdkByCompany($sdk, $sOwnerx);
+
         $this->data['readinessChecks'] = Dash::readinessChecks($request, $sdk, $storeOwner);
 
         $loggedInUser = !empty(auth()->user()) ? auth()->user() : null;

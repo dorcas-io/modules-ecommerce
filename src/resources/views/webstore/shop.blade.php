@@ -1,13 +1,13 @@
 @extends('modules-ecommerce::webstore.layouts.shop')
 @section('body_main_content_container_body')
     <div class="nobottommargin col_last" v-bind:class="{'postcontent': product_categories.length > 0}">
-        <div class="progress" v-if="storeIsReady && is_posting">
+        <div class="progress" v-if="verifyReadiness && is_posting">
             <div class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar"
                  aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
                 <span class="sr-only">Processing...</span>
             </div>
         </div>
-        <div id="shop" class="shop product-3 grid-container clearfix" data-layout="fitRows" v-if="storeIsReady && products.length > 0">
+        <div id="shop" class="shop product-3 grid-container clearfix" data-layout="fitRows" v-if="verifyReadiness && products.length > 0">
             <webstore-product v-for="product in products" :key="product.id" :product_json="product"
                               v-on:add-to-cart="addToCart"></webstore-product>
             <div class="col_full">
@@ -22,13 +22,13 @@
                 </ul>
             </div>
         </div><!-- #shop end -->
-        <div class="progress" v-if="storeIsReady && is_fetching">
+        <div class="progress" v-if="verifyReadiness && is_fetching">
             <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
                  aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
                 <span class="sr-only">Querying store...</span>
             </div>
         </div>
-        <div class="col_full nobottommargin" v-if="storeIsReady && products.length === 0 && !is_fetching">
+        <div class="col_full nobottommargin" v-if="verifyReadiness && products.length === 0 && !is_fetching">
             <div class="feature-box center media-box fbox-bg">
                 <div class="fbox-media">
                     <a href="#">
