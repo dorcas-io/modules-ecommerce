@@ -2,18 +2,18 @@
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title" id="dorcas-sub-domain-modalLabel">Reserve Your Dorcas Sub Domain</h4>
+        <h4 class="modal-title" id="dorcas-sub-domain-modalLabel">Reserve Your Prefix</h4>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form action="" id="form-dorcas-sub-domain" method="post">
             {{ csrf_field() }}
-            <h5>Check &amp; Reserve your <strong>Dorcas Sub Domain</strong> (<em>a unique prefix for services such as website, online store, blog, etc</em>)</h5>
+            <h5>Check &amp; Reserve your <strong>Prefix</strong> (<em>a unique prefix for services such as online store, etc</em>)</h5>
             <fieldset class="form-fieldset">
                 <div class="row">
                     <div class="col-md-12 form-group">
                         <input class="form-control" id="domain" type="text" name="domain" maxlength="80" v-model="domain" required v-on:keyup="removeStatus()">
-                        <label class="form-label" for="domain">Desired Domain</label>
+                        <label class="form-label" for="domain">Desired Prefix</label>
                     </div>
                     <div class="col-md-12">
                         <div class="card">

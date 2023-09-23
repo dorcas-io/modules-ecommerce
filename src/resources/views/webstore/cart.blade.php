@@ -26,31 +26,35 @@
             <!-- Cart Address Begins -->
             <div class="row clearfix" v-if="typeof cart.items !== 'undefined' && cart.items.length > 0">
                 <div class="col-md-6 clearfix">
-                    <h4>Delivery Address</h4>
+                    <h4>Enter Delivery Address</h4>
                     <form method="get" action="/cart">
                         {{ csrf_field() }}
                         <div class="col_full">
                             <input v-if="useAutoComplete" type="text" class="sm-form-control" name="address_address" id="address_address" required placeholder="Enter Delivery Address" v-model="checkout_form.address">
                         </div>
-                        <div v-if="useAutoComplete" id="address_map" class="col_full"></div>
-                        <a v-if="useAutoComplete" id="address_confirm" href="#" v-on:click.prevent="addressConfirm" class="btn btn-success btn-block">Address Is Correct</a>
+                        <div v-if="useAutoComplete" id="address_map" style="width:100%; height: 300px;" class="col_full"></div>
+                        <a v-if="useAutoComplete && mapIsConfirmed" id="address_confirm" href="#" v-on:click.prevent="confirmAddress" class="button button-3d nomargin button-green">Yes, Address On Map Is Correct</a>
+                        <!-- <button v-if="!useAutoComplete && !addressIsConfirmed" class="button button-3d nomargin button-black" action="confirmAddress()">Confirm Address</button> -->
                         <hr>
-                        <div class="col_half">
+                        <br/>
+                        <h4 v-show="addressIsConfirmed">Enter Other Delivery Details</h4>
+                        <br/>
+                        <div class="col_half" v-show="addressIsConfirmed">
                             <input type="text" class="sm-form-control" name="address_firstname" id="address_firstname" required placeholder="First Name" v-model="checkout_form.firstname">
                         </div>
-                        <div class="col_half col_last">
+                        <div class="col_half col_last" v-show="addressIsConfirmed">
                             <input type="text" class="sm-form-control" name="address_lastname" id="address_lastname" required placeholder="Lastname" v-model="checkout_form.lastname">
                         </div>
-                        <div class="col_half">
+                        <div class="col_half" v-show="addressIsConfirmed">
                             <input type="email" class="sm-form-control" name="address_email" id="address_email" required placeholder="Email address" v-model="checkout_form.email">
                         </div>
-                        <div class="col_half col_last">
+                        <div class="col_half col_last" v-show="addressIsConfirmed">
                             <input type="text" class="sm-form-control" name="address_phone" id="address_phone" required placeholder="Phone number" v-model="checkout_form.phone">
                         </div>
                         <div class="col_full">
                             <textarea v-if="!useAutoComplete" class="form-control summernote"  name="address_address" id="address_address" maxlength="250" v-model="checkout_form.address" required rows="4" placeholder="Delivery Address"></textarea>
                         </div>
-                        <div class="col_half">
+                        <div class="col_half" v-show="addressIsConfirmed">
                             <select class="sm-form-control" name="address_state" id="address_state" v-model="checkout_form.state">
                                 <option value="">Choose your State</option>
                                 @if (!empty($states))
@@ -61,7 +65,7 @@
                                 <option value="non-local">Non-Local (Include In Address Above)</option>
                             </select>
                         </div>
-                        <div class="col_half col_last">
+                        <div class="col_half col_last" v-show="addressIsConfirmed">
                             <select class="sm-form-control" name="address_country" id="address_country" v-model="checkout_form.country" required>
                                 <option value="">Choose your Country</option>
                                 @if (!empty($countries))
@@ -75,7 +79,7 @@
                         <input type="hidden" name="address_latitude" id="address_latitude" v-model="checkout_form.latitude">
                         <input type="hidden" name="address_longitude" id="address_longitude" v-model="checkout_form.longitude">
                         <button v-if="addressIsConfirmed" type="submit" class="button button-3d nomargin button-black">Confirm & Save Address</button>
-                        <button v-if="!UseAutoComplete && !addressIsConfirmed" class="button button-3d nomargin button-black" action="confirmAddress()">Confirm Address</button>
+                        <button v-if="!useAutoComplete && !addressIsConfirmed" class="button button-3d nomargin button-black" action="confirmAddress()">Confirm Address</button>
                         @include('modules-ecommerce::modals.confirm-address')
                     </form>
                 </div>
@@ -164,7 +168,7 @@
                             </td>
                             <td class="cart-product-thumbnail">
                                 <a href="#">
-                                    <img width="64" height="64" v-bind:src="productPhoto" v-bind:alt="shippingRoute.name">
+                                    <img width="64" height="64" v-bind:src="providerPhoto(shippingRoute)" v-bind:alt="shippingRoute.name">
                                 </a>
                             </td>
                             <td class="cart-product-name">
@@ -219,7 +223,7 @@
             <form method="post" action="" v-on:submit.prevent="checkout()">
                 <!-- Cart Review Begins -->
                 <div class="table-responsive bottommargin" id="cart-container-review">
-                    <table class="table cart">
+                    <table class="table cart" v-if="!isOrderCompleted">
                         <thead>
                         <tr>
                             <th class="cart-product-remove">&nbsp;</th>
@@ -270,9 +274,6 @@
                                     <p><a href="{{ route('webstore') }}" class="button button-3d nomargin fright">Continue Shopping</a></p>
                                 </td>
                             </tr>
-                            <tr v-if="payment_url.length > 0">
-                                <td colspan="6">Your order has been placed, you can also <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Now</a> to complete your order.</td>
-                            </tr>
                             <tr class="cart_item">
                                 <td colspan="6">
                                     <div class="row clearfix">
@@ -300,9 +301,72 @@
                             </tr>
                         </tbody>
                     </table>
+
+                    <!-- Show Payment Information after Order is Placed -->
+                    <table class="table cart" v-if="isOrderCompleted">
+                        <thead>
+                        <tr>
+                            <th>Payment Method</th>
+                            <th>Payment Details</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="v-align">
+                                    <span href="#" v-if="payment_url.length > 0 || use_wallet">
+                                        Online Payment
+                                    </span>
+                                    <span v-else>
+                                        Bank Transfer 
+                                    </span>
+                                </td>
+                                <td>
+                                    <span v-if="payment_url.length > 0 && !use_wallet">
+                                        Your order has been placed; <strong>make payment</strong> to complete your order
+                                        <br/><br/>
+                                        <a v-bind:href="payment_url" class="button button-3d nomargin button-black">Pay Online Now</a>
+                                    </span>
+                                    <span v-else-if="use_wallet">
+                                        Your order has been placed; <strong>make payment</strong> to complete your order
+                                        <br/><br/>
+                                        <a v-on:click.prevent="callWalletPaymentProvider" class="button button-3d nomargin button-black">Pay Online Now</a>
+                                    </span>
+                                    <span v-else>
+                                        Amount to Pay: @{{ checkoutCurrency }} @{{ checkoutAmount }}
+                                        <br/><br/>
+                                        @php
+                                            if (isset($payWithDetails) && !empty($payWithDetails["bank_transfer"])) {
+
+                                                $bank_details = $payWithDetails["bank_transfer"];
+                                                
+                                                $bank_name = $banks->where('code', $bank_details["json_data"]["bank_code"])->pluck('name')->first();
+                                                $account_number = $bank_details["account_number"];
+                                                $account_name = $bank_details["account_name"];
+
+                                                $details = "Please make a <strong>Bank Transfer</strong> payment to <br/><br/>";
+                                                $details .= "Bank: <strong>$bank_name</strong><br/>";
+                                                $details .= "Account Number: <strong>$account_number</strong><br/>";
+                                                $details .= "Account Name: <strong>$account_name</strong><br/>";
+
+                                            } else {
+
+                                                $details = "<em>No Bank Details Available</em>";
+
+                                            }
+                                            
+                                            echo $details;
+
+                                        @endphp
+                                    </span>
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+
                 </div>
                 <!-- Cart Review Ends -->
-                <button type="submit" class="button button-3d nomargin button-black">Place Order</button>
+                <button type="submit" class="button button-3d nomargin button-black" v-if="!isOrderCompleted">Place Order</button>
             </form>
 
         </div>
@@ -313,6 +377,7 @@
 @endsection
 @section('body_js')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+<script src="https://checkout.flutterwave.com/v3.js"></script>
     <script>
         var cartView = new Vue({
             el: '#main_content_container',
@@ -329,11 +394,21 @@
                 stages: {!! json_encode($stages) !!},
                 logistics: {!! json_encode($logistics) !!},
                 addressIsConfirmed: false,
+                mapIsConfirmed: false,
                 useAutoComplete: true,
                 env: {!! json_encode($env) !!},
+                states: {!! json_encode($states) !!},
+                countries: {!! json_encode($countries) !!},
+                isOrderCompleted: false,
+                banks: {!! json_encode(!empty($banks) ? $banks : []) !!},
+                checkoutCurrency: 'NGN',
+                checkoutAmount: 0,
+                use_wallet: {!! json_encode($use_wallet) !!},
+                providers: {!! json_encode($providers) !!},
+                provider_payment_link: ''
             },
             mounted: function() {
-                loadGoogleMaps();
+                this.loadGoogleMaps();
 
                 //console.log(this.shop.extra_data.logistics_settings.logistics_shipping);
                 //console.log(this.logistics.settings.logistics_shipping);
@@ -351,6 +426,38 @@
                     }
                     return photo;
                 },
+                callWalletPaymentProvider: function() {
+
+                    let provider = this.providers.payment;
+
+                    if (provider == 'flutterwave') {
+
+                        loadPaymentwithFlutterwave();
+
+                    } else if (provider == 'paystack') {
+
+                        loadPaymentwithPaystack();
+
+                    }
+
+                },
+                loadPaymentwithFlutterwave: function() {
+                    
+                    let url = this.provider_payment_link;
+
+                    if (url.length > 1) {
+                        // redirect to Flutterwave URL
+                        window.location = url;
+                    } else {
+
+                        return swal("Payment Failed", "Invalid Payment Link Generated. Please contact technical support", "warning");
+
+                    }
+
+                },
+                loadPaymentwithPaystack: function() {
+                    
+                },
                 shippingSelected: function() {
                     //check cart if shipping is among
                     let shippingItem = this.cart.items.find( itm => itm.isShipping==='yes')
@@ -364,13 +471,20 @@
                 }
             },
             methods: {
+                providerPhoto: function(shippingRoute) {
+                    var photo = '{{ cdn('apps/webstore/images/products/1.jpg') }}';
+                    if (typeof shippingRoute.logo !== 'undefined') {
+                        photo = shippingRoute.logo;
+                    }
+                    return photo;
+                },
                 loadGoogleMaps: function () {
                     // Load the Google Maps API script
                     const script = document.createElement('script');
                     if (this.useAutoComplete) {
                         script.src = `https://maps.googleapis.com/maps/api/js?key=${this.env.CREDENTIAL_GOOGLE_API_KEY}&libraries=places&callback=Function.prototype`;
                         script.onload = function() {
-                            initAutocomplete();
+                            cartView.initAutocomplete();
                         };
                     } else {
                         script.src = `https://maps.googleapis.com/maps/api/js?key=${this.env.CREDENTIAL_GOOGLE_API_KEY}&callback=Function.prototype`;
@@ -385,7 +499,7 @@
 
                     const mapOptions = {
                         center: { lat: 0, lng: 0 },
-                        zoom: 8
+                        zoom: 18
                     };
                     const map = new google.maps.Map(document.getElementById('address_map'), mapOptions);
                     const geocoder = new google.maps.Geocoder();
@@ -401,11 +515,11 @@
                         const place = autocomplete.getPlace();
                         if (!place.geometry) {
                             console.log('No location data available for this place.');
-                            this.addressIsConfirmed = false;
+                            cartView.mapIsConfirmed = false;
                             return;
                         }
 
-                        this.addressIsConfirmed = true;
+                        cartView.mapIsConfirmed = true;
 
                         // Update the map center and marker
                         map.setCenter(place.geometry.location);
@@ -429,11 +543,14 @@
                         }
 
                         // Log the state and country to the console
-                        this.checkout_form.state = state;
-                        this.checkout_form.country = country;
+                        let stateObject = cartView.states.find( stat => stat.name == state.trim() )
+                        let countryObject = cartView.countries.find( coun => coun.name == country.trim() )
 
-                        this.checkout_form.latitude = place.geometry.location.lat();
-                        this.checkout_form.longitude = place.geometry.location.lng();
+                        cartView.checkout_form.state = stateObject.id;
+                        cartView.checkout_form.country = countryObject.id;
+
+                        cartView.checkout_form.latitude = place.geometry.location.lat();
+                        cartView.checkout_form.longitude = place.geometry.location.lng();
                     });
                 },
 
@@ -445,7 +562,7 @@
 
                     const geocoder = new google.maps.Geocoder();
                     const mapOptions = {
-                        zoom: 15,
+                        zoom: 18,
                         center: new google.maps.LatLng(0, 0) // Default center
                     };
                     const map = new google.maps.Map(document.getElementById('address_map'), mapOptions);
@@ -490,13 +607,28 @@
                     }, function() {
                         axios.post("/xhr/cart/checkout", context.checkout_form)
                             .then(function (response) {
+
+                                context.checkoutCurrency = context.cart.currency;
+                                context.checkoutAmount = context.cart.total.formatted;
+
                                 context.cart = headerView.cart = [];
-                                // remove the deleted item
-                                //console.log(response.data);
+                                
+                                context.isOrderCompleted = true
+
+                                console.log(response.data);
+
+                                // hide order button
+
                                 if (typeof response.data.payment_url !== 'undefined') {
                                     context.payment_url = response.data.payment_url;
                                 }
-                                return swal("Order Placed", "Your order has been submitted, you should get an invoice in your email inbox soon.", "success");
+
+                                if (typeof response.data.provider_payment_link !== 'undefined') {
+                                    context.provider_payment_link = response.data.provider_payment_link;
+                                }
+
+
+                                return swal("Order Placed", "Your order has been submitted and an invoice sent via email. Please proceed to make payment", "success");
                             }).catch(function (error) {
                                 var message = '';
                                 if (error.response) {
@@ -644,17 +776,18 @@
                         shipping_url = "/xhr/cart/get-provider-shipping-routes";
                         shipping_params = {}
                     }
-                    console.log(shippingType)
-                    console.log(shipping_url)
+                    //console.log(shippingType)
+                    //console.log(shipping_url)
+                    //console.log(shipping_params)
 
                     axios.get(shipping_url, {
                         params: shipping_params
                     }).then(function (response) {
-                        console.log(response)
+                        //console.log(response)
                         context.is_processing_shipping = false;
                         context.meta = response.data.meta;
                         context.shippingRoutes = response.data.data;
-                        console.log(context.shippingRoutes)
+                        //console.log(context.shippingRoutes)
                     }).catch(function (error) {
                             var message = '';
                             context.is_fetching = false;

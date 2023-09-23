@@ -10,11 +10,11 @@
 
     <div class="col-md-9 col-xl-9" id="ecommerce-domains">
         <div id="ecommerce-domains-heading">
-            You can reserve your Hub <strong>@{{ domain_title }}</strong>, add or purchase <strong>custom domain name(s)</strong> for your business:
+            You can reserve your eCommerce <strong>@{{ domain_title }}</strong>, add or purchase <strong>custom domain name(s)</strong> (if enabled) for your business:
         </div>
         <ul class="nav nav-tabs nav-justified">
             <li class="nav-item">
-                <a class="nav-link active" data-toggle="tab" href="#dorcas_subdomain">Subdomain</a>
+                <a class="nav-link active" data-toggle="tab" href="#dorcas_subdomain">Store Address</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link disabled" data-toggle="tab" href="#custom_domains">Custom Domains &amp; Web-Hosting</a>
@@ -33,20 +33,20 @@
 							<p>https://@{{ domain_value(domain) }}</p>
 						</div>
 						<div class="card-footer" v-if="show_domain_options">
-							<a class="btn btn-primary btn-sm" target="_blank" v-bind:href="'https://' + domain_value(domain)">Visit</a>
+							<a href="#" v-id="dorcasEdition != 'business'" class="btn btn-warning btn-sm" v-on:click.prevent="releaseDomain(index)">Delete @{{ domain_title }}</a>
 							&nbsp;
-							<a href="#" class="btn btn-warning btn-sm" v-on:click.prevent="releaseDomain(index)">Release</a>
+							<a class="btn btn-primary btn-sm" target="_blank" v-bind:href="'https://' + domain_value(domain)">Visit @{{ domain_title }}</a>
 						</div>
 					</div>
 				</div>
-                <div class="row col-md-12" v-if="domains.length === 0">
+                <div class="row col-md-12" v-if="domains.length === 0 && dorcasEdition != 'business'">
                     @component('layouts.blocks.tabler.empty-fullpage')
                         @slot('title')
                             No @{{ domain_title }}
                         @endslot
-                        Set your FREE Hub @{{ domain_title }} prefix, e.g. <strong>@{{ domain_example }}</strong>
+                        Set your @{{ domain_title }}</strong><!-- , e.g. <strong>@{{ domain_example }} -->
                         @slot('buttons')
-{{--                            <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dorcas-sub-domain-modal">Reserve @{{ domain_title.toUpperCase() }}</a>--}}
+                            <a href="#" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dorcas-sub-domain-modal">Reserve @{{ domain_title.toUpperCase() }}</a>
                         @endslot
                     @endcomponent
                 </div>
@@ -207,7 +207,7 @@
             },
             computed: {
                 domain_title: function() {
-                    return this.dorcasEdition == "business" ? 'primary domain' : 'subdomain';
+                    return this.dorcasEdition == "business" ? 'Store Address' : 'Store Address';
                 },
                 domain_example: function() {
                     return this.dorcasEdition == "business" ? 'mybusiness.com' : 'mybusiness.parentdomain.com';
@@ -231,11 +231,11 @@
                     var name = this.domain_value(subdomain);
                     Swal.fire({
                         title: "Are you sure?",
-                        text: "You are about to release the subdomain " + name,
+                        text: "You are about to delete the address " + name + '\n \n You must choose another after for your store to be active',
                         type: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#DD6B55",
-                        confirmButtonText: "Yes, release it!",
+                        confirmButtonText: "Yes, delete it!",
 		                showLoaderOnConfirm: true,
 		                preConfirm: (domain_release) => {
 		                    return axios.delete("/mec/ecommerce-domains-issuances/" + subdomain.id)

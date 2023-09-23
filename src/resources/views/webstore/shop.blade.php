@@ -1,13 +1,13 @@
 @extends('modules-ecommerce::webstore.layouts.shop')
 @section('body_main_content_container_body')
     <div class="nobottommargin col_last" v-bind:class="{'postcontent': product_categories.length > 0}">
-        <div class="progress" v-if="is_posting">
+        <div class="progress" v-if="verifyReadiness && is_posting">
             <div class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar"
                  aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
                 <span class="sr-only">Processing...</span>
             </div>
         </div>
-        <div id="shop" class="shop product-3 grid-container clearfix" data-layout="fitRows" v-if="products.length > 0">
+        <div id="shop" class="shop product-3 grid-container clearfix" data-layout="fitRows" v-if="verifyReadiness && products.length > 0">
             <webstore-product v-for="product in products" :key="product.id" :product_json="product"
                               v-on:add-to-cart="addToCart"></webstore-product>
             <div class="col_full">
@@ -22,13 +22,13 @@
                 </ul>
             </div>
         </div><!-- #shop end -->
-        <div class="progress" v-if="is_fetching">
+        <div class="progress" v-if="verifyReadiness && is_fetching">
             <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
                  aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
                 <span class="sr-only">Querying store...</span>
             </div>
         </div>
-        <div class="col_full nobottommargin" v-if="products.length === 0 && !is_fetching">
+        <div class="col_full nobottommargin" v-if="verifyReadiness && products.length === 0 && !is_fetching">
             <div class="feature-box center media-box fbox-bg">
                 <div class="fbox-media">
                     <a href="#">
@@ -37,12 +37,32 @@
                     </a>
                 </div>
                 <div class="fbox-desc">
-                    <h3>No products at the moment!<span class="subtitle">The store owner has not added any products to their store.</span></h3>
+                    <h3>No products at the moment!<span class="subtitle">{{ $storeOwner->name }} has not added any products to their store.</span></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col_full nobottommargin" v-if="!verifyReadiness">
+            <div class="feature-box center media-box fbox-bg">
+                <div class="fbox-media">
+                    <a href="#">
+                        <img class="image_fade" src="{{ cdn('images/gallery/rawpixel-com-579246-unsplash.jpg') }}"
+                             alt="No products" style="opacity: 1;">
+                    </a>
+                </div>
+                <div class="fbox-desc">
+                    <h3>{{ $storeOwner->name }} is <strong>currently</strong> SETTING UP and getting ready to LAUNCH shortly.
+                    <br/><br/>
+                    <span class="subtitle">Check back soon.</span></h3>
+                </div>
+                <div class="fbox-desc" v-if="storeAdminLoggedIn">
+                    <h3>Hi {{ $storeOwner->name }}, it appears you are <strong>LOGGED IN</strong>.
+                    <br/><br/>
+                    <span class="subtitle">Please ensure <strong>{{ $setupRemainingMessage }}</strong>.</span></h3>
                 </div>
             </div>
         </div>
     </div>
-    <div class="sidebar nobottommargin" v-if="product_categories.length > 0">
+    <div class="sidebar nobottommargin" v-if="verifyReadiness && product_categories.length > 0">
         <div class="sidebar-widgets-wrap">
             <div class="widget widget-filter-links clearfix">
                 <h4>Select Category</h4>
@@ -56,6 +76,9 @@
                         <span>@{{ category.products_count }}</span>
                     </li>
                 </ul>
+                <br/><br/>
+                <h4>Ready to Checkout</h4>
+                <a href="{{ route('webstore.cart') }}" class="button button-3d nomargin">View Shopping Cart</a>
             </div>
         </div>
     </div>
@@ -80,10 +103,28 @@
                 base_url: "{{ config('dorcas-api.url') }}",
                 page_number: 1,
                 store_settings: {!! json_encode($storeSettings) !!},
-                product_categories: {!! json_encode($productCategories ?: []) !!}
+                product_categories: {!! json_encode($productCategories ?: []) !!},
+                storeIsReady: {!! json_encode($storeIsReady) !!},
+                readinessChecks: {!! json_encode($readinessChecks) !!},
+                storeAdminLoggedIn: '{{ $storeAdminLoggedIn }}',
             },
             mounted: function () {
                 this.searchProducts();
+            },
+            computed: {
+                
+                verifyReadiness: function() {
+                    let readiness = this.readinessChecks;
+                    for (let x in readiness) {
+                        if (typeof readiness[x] === 'boolean') {
+                            if (readiness[x] !== true) {
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    return true;
+                },
             },
             updated: function () {
                 SEMICOLON.initialize.lightbox();
@@ -97,6 +138,7 @@
                 }
             },
             methods: {
+
                 addToCart: function (id, name, price, photo, quantity) {
                     if (this.is_posting) {
                         // a request still running

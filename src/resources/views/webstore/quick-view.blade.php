@@ -58,10 +58,10 @@
             <div class="panel panel-default product-meta nobottommargin">
                 <div class="panel-body">
                     <span itemprop="productID" class="sku_wrapper">SKU: <span class="sku">{{ strtoupper($product->id) }}</span></span>
-                    <span class="posted_in">Store Owner: <a href="{{ $storeDomain }}" rel="tag">{{ $storeOwner->name }}</a>.</span>
+                    <span class="posted_in">Store Owner: <a href="{{ $storeDomain }}" rel="tag">{{ $storeOwner->name }}</a></span>
                     <span class="posted_in">Categories:
                         @foreach ($product->categories->data as $category)
-                            <a href="{{ route('webstore.categories.single', [$category->slug]) }}" rel="tag">{{ $category->name }}</a>.
+                            <a href="{{ route('webstore.categories.single', [$category->slug]) }}" rel="tag">{{ $category->name }}</a>
                         @endforeach
                     </span>
                 </div>
