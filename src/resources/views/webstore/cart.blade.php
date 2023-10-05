@@ -432,11 +432,11 @@
 
                     if (provider == 'flutterwave') {
 
-                        loadPaymentwithFlutterwave();
+                        this.loadPaymentwithFlutterwave();
 
                     } else if (provider == 'paystack') {
 
-                        loadPaymentwithPaystack();
+                        this.loadPaymentwithPaystack();
 
                     }
 

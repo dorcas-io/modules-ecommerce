@@ -23,7 +23,7 @@
         <div><center><img height="50" src="{{ $company_logo }}"/></center></div>
         <h2><center>{{ $company_name }} Store</center></h2>
         <div><br/></div>
-        <h3 class="title">Payment Checkout</h3>
+        <h3 class="title">Payment Status</h3>
         <div class="progress-bar">
             <div class="step active"></div>
             <div class="step active"></div>

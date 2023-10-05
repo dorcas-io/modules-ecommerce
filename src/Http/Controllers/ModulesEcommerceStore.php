@@ -174,22 +174,7 @@ class ModulesEcommerceStore extends Controller
         $isVariant = $product->product_type=="variant" ? true : false;
 
         if ($isParent) {
-            /*$req = $sdk->createStoreService();
-            $req = $req->addQueryArgument('limit', $limit)
-                            ->addQueryArgument('page', get_page_number($offset, $limit));
-            if (!empty($type)) {
-                $req = $req->addQueryArgument('product_type', $type);
-            }
-            if (!empty($parent)) {
-                $req = $req->addQueryArgument('product_parent', $parent);
-            }
-            $variants = $req->send('get');
-            # make the request
-            if (!$variants->isSuccessful()) {
-                # it failed
-                $ms = $variants->errors[0]['title'] ?? '';
-                throw new \RuntimeException('Failed while adding the product. '.$ms);
-            }*/
+
             $this->data['variantProducts'] = [];
 
         }  elseif ($isVariant) {
@@ -235,7 +220,6 @@ class ModulesEcommerceStore extends Controller
 
         # request the data
         if (empty($json->data)) {
-            # something went wrong
             abort(500, 'Something went wrong while getting the product.');
         }
 
@@ -363,6 +347,7 @@ class ModulesEcommerceStore extends Controller
         // Save Seller Address
         $location = ['address' => '', 'address1' => '', 'address2' => '', 'state' => ['data' => ['id' => '']], 'country' => '', 'latitude' => '', 'longitude' => ''];
         # the location information
+        
         $locations = $this->getLocations($sdk, $storeOwner);
 
         $location = !empty($locations) ? $locations->first() : $location;
@@ -612,11 +597,12 @@ class ModulesEcommerceStore extends Controller
         $provider_payment_link = "";
 
         $paymentDataFlutterwave = [
-            "tx_ref" => $data->id,
+            "tx_ref" => $data["id"],
             "amount" => $cart->total['raw'],
             "currency" => $cart->currency,
             "payment_options" => "card, ussd",
-            "redirect_url" => url(route('webstore') . "/orders", [$data->id, 'verify-payment']) . '?' . http_build_query(['channel' => 'flutterwave', 'customer' => $customer->id]),
+            "redirect_url" => url(route('webstore') . "/orders/" . $data["id"] . '/verify-payment') . '?' . http_build_query(['channel' => 'flutterwave', 'customer' => $customer->id]),
+            //https://admin.store.enterprise.demo.dorcas.io/orders?channel=flutterwave&customer=d685ade4-6368-11ee-a756-06d4bd3590d6&status=cancelled&tx_ref=b2f3a52e-6369-11ee-8463-06d4bd3590d6
             // "meta" => [
             //     "consumer_id" => "",
             //     "consumer_mac" => ""
@@ -628,7 +614,7 @@ class ModulesEcommerceStore extends Controller
             ],
             "customizations" => [
                 "title" => $storeOwner->name,
-                "description" => "",
+                "description" => $data["title"],
                 "logo" => $storeOwner->logo
             ],
             "subaccounts" => [
@@ -665,6 +651,9 @@ class ModulesEcommerceStore extends Controller
         $config = require_once($provider_config_path);
         $provider_class_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class);
         require_once($provider_class_path);
+
+        $providerPaymentData = "paymentData" . ucfirst($provider);
+        $paymentData = $$providerPaymentData;
         
         $c = $config["class"];
 
@@ -679,8 +668,8 @@ class ModulesEcommerceStore extends Controller
         $payment_link = $provider->createWalletPaymentLink();
         
         
-        if ($payment_link->status !== "success") {
-            $provider_payment_link = $wallet_creation->data->link;
+        if ($payment_link->status == "success") {
+            $provider_payment_link = $payment_link->data->link;
         }
 
         $data['provider_payment_link'] = $provider_payment_link;
@@ -733,13 +722,25 @@ class ModulesEcommerceStore extends Controller
         ];
 
         // Determine if its bike or car or planne depennding on inter state, 
+        $vehicle_type = 0;
+        /*
+        0 then the vehicle type will be bike,
+        1 then the vehicle type will be small
+        2 then the vehicle type will be medium
+        3 then the vehicle type will be large
+        */
 
+        // Determine if we want a cash on delivery option
+        // DO WE CREATE 2 DELIVERY OPTIONS?!
+        $cod = 1;
 
-        //$provider = new $provider_class();
         $providerParams = [
-            "vendor_id" => env('KWIK_VENDOR_ID', 3152)
+            "vendor_id" => env('KWIK_VENDOR_ID', 3152),
+            "vehicle_type" => $vehicle_type,
+            "cod" => $cod
 
         ];
+
         $c = $config["class"];
         $provider = new $c($providerParams);
 
@@ -756,29 +757,14 @@ class ModulesEcommerceStore extends Controller
             "is_package_insured" => 0
         ];
 
-        $costs = $provider->getCost($from, $to);
+        $costs = $provider->getCost($from, $to, $vehicle_type);
 
         $totalShippingCosts = $costs["ACTUAL_ORDER_PAYABLE_AMOUNT"] + $costs["TOTAL_SERVICE_CHARGE"];
 
-
-        /*
-
-        - /create_task_via_vendor (requires /send_payment_for_task and /get_bill_breakdown)
-
-        - /getVehicle to get details e.g base fare, etc
-        */
-        
-
-        // Estimate Cost
-
-        // What is loader
-
-
         // Parse Cost like route data
-
         $parsedRoutes = [
             [
-                "id" => "provider-xyz",
+                "id" => "provider-" . $provider,
                 "name" => $config["name"],
                 "logo" => asset('vendor/modules-ecommerce/providers/' . $config["logo"]),
                 "description" => "Delivery Estimate by " . $config["name"],
@@ -792,6 +778,11 @@ class ModulesEcommerceStore extends Controller
                             ]
                         ]
                     ]
+                ],
+                "debug" => [
+                    "destination_from" => $from,
+                    "destination_to" => $to,
+                    "costs" => $costs
                 ]
             ]
         ];
@@ -879,6 +870,7 @@ class ModulesEcommerceStore extends Controller
      */
     public function verifyProviderPayment(Request $request, string $id)
     {
+        $final_message = "";
 
         $storeOwner = $this->getCompanyViaDomain();
         if (empty($storeOwner)) {
@@ -918,6 +910,13 @@ class ModulesEcommerceStore extends Controller
             # is this necessary
         }
 
+        // From this point, we can display the payment status
+
+        if ( ($request->has('cancelled') && $request->cancelled == 'true' ) || ($request->has('status') && $request->status == 'cancelled' ) ) {
+            $final_message = 'You cancelled the payment. You may try again at a later time.';
+        }
+        
+
 
         $transaction = null;
         # our transaction object
@@ -928,9 +927,9 @@ class ModulesEcommerceStore extends Controller
                     if (!$request->has('tx_ref')) {
                         abort(400, 'No payment reference was provided by the R payment gateway.');
                     }
-                    if ($request->has('cancelled') && $request->cancelled == 'true') {
-                        return 'You cancelled the payment. You may try again at a later time.';
-                    }
+                    // if ($request->has('cancelled') && $request->cancelled == 'true' || ($request->has('status') && $request->status == 'cancelled' ) ) {
+                    //     return 'You cancelled the payment. You may try again at a later time.';
+                    // }
                     $reference = $request->tx_ref;
                     $transaction_id = $request->transaction_id;
                     $status = $request->status;
@@ -968,6 +967,7 @@ class ModulesEcommerceStore extends Controller
                                 'channel' => 'flutterwave',
                                 'reference' => $reference,
                                 'amount' => null,
+                                'currency' => null,
                                 'response_code' => null,
                                 'response_description' => null,
                                 'json_payload' => '',
@@ -981,6 +981,7 @@ class ModulesEcommerceStore extends Controller
                             'channel' => 'flutterwave',
                             'reference' => $reference,
                             'amount' => null,
+                            'currency' => null,
                             'response_code' => null,
                             'response_description' => null,
                             'json_payload' => '',
