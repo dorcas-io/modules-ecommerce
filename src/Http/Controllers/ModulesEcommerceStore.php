@@ -911,58 +911,80 @@ class ModulesEcommerceStore extends Controller
         }
 
         // From this point, we can display the payment status
+        $reference = $request->tx_ref ?? '';
+        $transaction_id = $request->transaction_id ?? '';
+        $status = $request->status ?? '';
+        $channel = $request->channel ?? 'flutterwave';
+
+        $txn_data = [
+            ['reference' => $reference],
+            ['channel' => $channel],
+            ['customer_id' => $customer_record->id],
+        ];
+
+        $txn = DB::table('payment_transactions')->where($txn_data)->first();
 
         if ( ($request->has('cancelled') && $request->cancelled == 'true' ) || ($request->has('status') && $request->status == 'cancelled' ) ) {
+            
             $final_message = 'You cancelled the payment. You may try again at a later time.';
-        }
-        
+
+        } else {
+
+            $transaction = null;
+            # our transaction object
 
 
-        $transaction = null;
-        # our transaction object
+            $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
+            $country = env('SETTINGS_COUNTRY', 'NG');
+            $provider_config = ucfirst($provider). strtoupper($country) . '.php';
+            $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+            $provider_config_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config);
+            $config = require_once($provider_config_path);
+            $provider_class_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class);
+            require_once($provider_class_path);
+            
+            $c = $config["class"];
 
-        try {
-            switch ($request->channel) {
-                case 'flutterwave':
-                    if (!$request->has('tx_ref')) {
-                        abort(400, 'No payment reference was provided by the R payment gateway.');
-                    }
-                    // if ($request->has('cancelled') && $request->cancelled == 'true' || ($request->has('status') && $request->status == 'cancelled' ) ) {
-                    //     return 'You cancelled the payment. You may try again at a later time.';
-                    // }
-                    $reference = $request->tx_ref;
-                    $transaction_id = $request->transaction_id;
-                    $status = $request->status;
-
-                    if ( $status == 'successful' ) {
-                        
-                        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
-                        $country = env('SETTINGS_COUNTRY', 'NG');
-                        $provider_config = ucfirst($provider). strtoupper($country) . '.php';
-                        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
-                        $provider_config_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config);
-                        $config = require_once($provider_config_path);
-                        $provider_class_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class);
-                        require_once($provider_class_path);
-                        
-                        $c = $config["class"];
     
-                        $providerParams = [
-                            "provider" => $provider,
-                            "path" => "/transactions/verify_by_reference",
-                            "method" => "GET",
-                            "params" => [
-                                "tx_ref" => $reference
-                            ]
-                        ];
-                        
-                        $provider = new $c($providerParams);
-                        
-                        $verify = $provider->verifyTransaction();
-                        
-                        if ($verify->status !== "success") {
-                            $transaction = $verify->data;
+            try {
+                switch ($request->channel) {
+                    case 'flutterwave':
+                        if (!$request->has('tx_ref')) {
+                            abort(400, 'No payment reference was provided by the R payment gateway.');
+                        }
+    
+                        if ( $status == 'successful' ) {
+        
+                            $providerParams = [
+                                "provider" => $provider,
+                                "path" => "/transactions/verify_by_reference",
+                                "method" => "GET",
+                                "params" => [
+                                    "tx_ref" => $reference
+                                ]
+                            ];
+                            
+                            $provider = new $c($providerParams);
+                            
+                            $verify = $provider->verifyTransaction();
+                            
+                            if ($verify->status !== "success") {
+                                $transaction = $verify->data;
+                            } else {
+                                $transaction = [
+                                    'channel' => 'flutterwave',
+                                    'reference' => $reference,
+                                    'amount' => null,
+                                    'currency' => null,
+                                    'response_code' => null,
+                                    'response_description' => null,
+                                    'json_payload' => '',
+                                    'is_successful' => false
+                                ];
+                            }
+    
                         } else {
+    
                             $transaction = [
                                 'channel' => 'flutterwave',
                                 'reference' => $reference,
@@ -973,142 +995,126 @@ class ModulesEcommerceStore extends Controller
                                 'json_payload' => '',
                                 'is_successful' => false
                             ];
-                        }
-
-                    } else {
-
-                        $transaction = [
-                            'channel' => 'flutterwave',
-                            'reference' => $reference,
-                            'amount' => null,
-                            'currency' => null,
-                            'response_code' => null,
-                            'response_description' => null,
-                            'json_payload' => '',
-                            'is_successful' => false
-                        ];
-
-                    }
-
-
-                    
-                    break;
-                case 'paystack':
-                    // if (!$request->has('reference')) {
-                    //     abort(400, 'No payment reference was provided by the P payment gateway.');
-                    // }
-                    // $reference = $request->reference;
-                    // $transaction = payment_verify_paystack($privateKeyDecrypted, $reference, $order);
-                    break;
-            }
-        } catch (\UnexpectedValueException $e) {
-            abort(400, $e->getMessage());
-        } catch (\HttpException $e) {
-            abort(500, $e->getMessage());
-        } catch (\Throwable $e) {
-            abort(500, 'Something went wrong: '. $e->getMessage());
-        }
-
-        // $txn = $order->transactions()->firstOrNew([
-        //     'reference' => $reference,
-        //     'channel' => $transaction['channel']
-        // ]);
-
-        $txn_data = [
-            ['reference' => $reference],
-            ['channel' => $transaction['channel']],
-            ['customer_id' => $customer_record->id],
-        ];
-
-        $txn = DB::table('payment_transactions')->where($data)->first();
-
-        if (!$txn) {
-
-            try {
-
-                $txn_data['uuid'] = Uuid::uuid1()->toString();
-                $txn_data['order_id'] = $order->id;
-                $txn_data['amount'] = $transaction['amount'];
-                $txn_data['currency'] = $transaction['currency'];
-                $txn_data['response_code'] = $transaction['response_code'];
-                $txn_data['response_description'] = $transaction['response_description'];
-                $txn_data['json_payload'] = $transaction['json_payload'] ?? '';
-                $txn_data['is_successful'] = $transaction['is_successful'] ?? false;
     
-                $insertedId = DB::table('payment_transactions')->insertGetId($txn_data);
-                $txn = DB::table('payment_transactions')->find($insertedId);
-
-            } catch (\Exception $e) {
-                abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $e->getMessage());
+                        }
+                        
+                        break;
+                    case 'paystack':
+                        // if (!$request->has('reference')) {
+                        //     abort(400, 'No payment reference was provided by the P payment gateway.');
+                        // }
+                        // $reference = $request->reference;
+                        // $transaction = payment_verify_paystack($privateKeyDecrypted, $reference, $order);
+                        break;
+                }
+            } catch (\UnexpectedValueException $e) {
+                abort(400, $e->getMessage());
+            } catch (\HttpException $e) {
+                abort(500, $e->getMessage());
+            } catch (\Throwable $e) {
+                abort(500, 'Something went wrong: '. $e->getMessage());
             }
-
-        }
-
-
-        # we try to get the instance if necessary
-        if (!empty($txn->customer_id) && $txn->customer_id !== $customer->id) {
-            # a different customer owns this transaction, than the person verifying it
-            throw new AuthorizationException('This transaction does not belong to your account.');
-        }
-
-        # try to create the transaction, if required
-        if (!$txn->is_successful) {
-            abort(400, 'The payment transaction failed, try and make a successful payment to continue.');
-        }
-
-        $customer_order_model = $sdk->createOrderResource($order->id)->addBodyParam('id', $customer->id)
-        ->addBodyParam('paid_at', Carbon::now())
-        ->addBodyParam('is_paid', true);
-        $customer_order_response = $customer_order_model->send('put',  ['customers']);
-        if (!$customer_order_response->isSuccessful()) {
-            $m = $customer_order_response->errors[0]['title'] ?? 'Failed while updating the customer order information.';
-            //throw new \RuntimeException($m);
-            abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $m);
-        }
-
-
-        // $customer = $order->customers()->where('customer_id', $customer->id)->first();
-        // # get the customer with the Pivot
-        // if (!$customer->pivot instanceof CustomerOrder) {
-        //     abort(500, 'Something went wrong, we could not retrieve your purchase. Please report this to support along with your Payment reference: '.$reference);
-        // }
-        // $customerOrder = $customer->pivot;
-        // $customerOrder->is_paid = true;
-        // $customerOrder->paid_at = Carbon::now();
-
-        // if (!$customerOrder->save()) {
-        //     abort(500, 'Something went wrong, we could not mark your purchase as paid. Please report this to support along with your Payment reference: '.$reference);
-        // }
-
-        // http request to post to core endpoint
-        $notification_params = [
-            "user" => $company, //uuid
-            "order" => $order,
-            "customer" => $customer,
-            "txn" => $txn,
-        ];
-        $notification_url = env('DORCAS_HOST_API', 'https://core.sample-dorcas.io') . "/notification-paid-invoice";
+    
+            // $txn = $order->transactions()->firstOrNew([
+            //     'reference' => $reference,
+            //     'channel' => $transaction['channel']
+            // ]);
+    
+            // Transaction & Transaction Data initializers moved outside 
+    
+            if (!$txn) {
+    
+                try {
+    
+                    $txn_data['uuid'] = Uuid::uuid1()->toString();
+                    $txn_data['order_id'] = $order->id;
+                    $txn_data['amount'] = $transaction['amount'];
+                    $txn_data['currency'] = $transaction['currency'];
+                    $txn_data['response_code'] = $transaction['response_code'];
+                    $txn_data['response_description'] = $transaction['response_description'];
+                    $txn_data['json_payload'] = $transaction['json_payload'] ?? '';
+                    $txn_data['is_successful'] = $transaction['is_successful'] ?? false;
         
-        $notification_response = Http::post($notification_url, $notification_params);
-        if ($notification_response->successful()) {
-            $data = $notification_response->json(); // Assuming the response is JSON
-        } else {
-            $statusCode = $notification_response->status();
-            $error = $notification_response->body();
-            abort(500, 'We encountered issues while sending an invoice notification. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $statusCode . ": " . $error);
+                    $insertedId = DB::table('payment_transactions')->insertGetId($txn_data);
+                    $txn = DB::table('payment_transactions')->find($insertedId);
+    
+                } catch (\Exception $e) {
+                    abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $e->getMessage());
+                }
+    
+            }
+    
+    
+            # we try to get the instance if necessary
+            if (!empty($txn->customer_id) && $txn->customer_id !== $customer->id) {
+                # a different customer owns this transaction, than the person verifying it
+                throw new AuthorizationException('This transaction does not belong to your account.');
+            }
+    
+            # try to create the transaction, if required
+            if (!$txn->is_successful) {
+                abort(400, 'The payment transaction failed, try and make a successful payment to continue.');
+            }
+    
+            $customer_order_model = $sdk->createOrderResource($order->id)->addBodyParam('id', $customer->id)
+            ->addBodyParam('paid_at', Carbon::now())
+            ->addBodyParam('is_paid', true);
+            $customer_order_response = $customer_order_model->send('put',  ['customers']);
+            if (!$customer_order_response->isSuccessful()) {
+                $m = $customer_order_response->errors[0]['title'] ?? 'Failed while updating the customer order information.';
+                //throw new \RuntimeException($m);
+                abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $m);
+            }
+    
+    
+            // $customer = $order->customers()->where('customer_id', $customer->id)->first();
+            // # get the customer with the Pivot
+            // if (!$customer->pivot instanceof CustomerOrder) {
+            //     abort(500, 'Something went wrong, we could not retrieve your purchase. Please report this to support along with your Payment reference: '.$reference);
+            // }
+            // $customerOrder = $customer->pivot;
+            // $customerOrder->is_paid = true;
+            // $customerOrder->paid_at = Carbon::now();
+    
+            // if (!$customerOrder->save()) {
+            //     abort(500, 'Something went wrong, we could not mark your purchase as paid. Please report this to support along with your Payment reference: '.$reference);
+            // }
+    
+            // http request to post to core endpoint
+            $notification_params = [
+                "user" => $company, //uuid
+                "order" => $order,
+                "customer" => $customer,
+                "txn" => $txn,
+            ];
+            $notification_url = env('DORCAS_HOST_API', 'https://core.sample-dorcas.io') . "/notification-paid-invoice";
+            
+            $notification_response = Http::post($notification_url, $notification_params);
+            if ($notification_response->successful()) {
+                $data = $notification_response->json(); // Assuming the response is JSON
+            } else {
+                $statusCode = $notification_response->status();
+                $error = $notification_response->body();
+                abort(500, 'We encountered issues while sending an invoice notification. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $statusCode . ": " . $error);
+            }
+            //Notification::send($company->users->first(), new InvoicePaid($order, $customer, $txn));
+            # send the notification to members of the company
+
+            $final_message = 'Successfully completed order payment. Your reference is: ' . $reference;
+
         }
-        //Notification::send($company->users->first(), new InvoicePaid($order, $customer, $txn));
-        # send the notification to members of the company
+
 
         $data = [
             'reference' => $reference,
             'txn' => $txn,
-            'message' => 'Successfully completed order payment. Your reference is: ' . $reference,
+            'message' => $final_message,
             'company_name' => $company->name,
             'company_logo' => $company->logo,
             //'webstore_url' => "https://" . $company->domainIssuances->first()->prefix . ".store.dorcas.io"
             'webstore_url' => "https://" . $company->domainIssuances->first()->prefix . "." . env("DORCAS_BASE_DOMAIN", "store.dorcas.io")
         ];
+        
         //return view('payment.payment-complete-response', $data);
         return view('modules-ecommerce::webstore.payment-response', $data);
     }
