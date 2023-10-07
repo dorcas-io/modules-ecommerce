@@ -21,6 +21,8 @@ class KwikNGClass
     private $userPassword;
 
     private $vendor_id;
+
+    private $order_key;
     
     public function __construct(array $providerParams)
     {
@@ -35,6 +37,8 @@ class KwikNGClass
         if (empty($this->accessToken)) {
             $this->getToken();
         }
+
+        $this->order_key = $providerParams["order_key"];
 
     }
 
@@ -92,7 +96,8 @@ class KwikNGClass
         ];
 
         $paramsVehicle = $this->getProviderParams('getVehicle', $input_get_vehicle);
-        $responseVehicle = (array) $this->connect('/getVehicle', $paramsVehicle, 'GET');
+        $response0 = $this->connect('/getVehicle', $paramsVehicle, 'GET');
+        $responseVehicle = (array) $response0;
 
         $input_send_payment_for_task = [
             'from_address' => [
@@ -105,9 +110,9 @@ class KwikNGClass
         ];
 
         $params1 = $this->getProviderParams('send_payment_for_task', $input_send_payment_for_task);
-        $response = $this->connect('/send_payment_for_task', $params1, 'POST');
+        $response1 = $this->connect('/send_payment_for_task', $params1, 'POST');
 
-        $input_get_bill_breakdown = (array) $response->data;
+        $input_get_bill_breakdown = (array) $response1->data;
 
 /*
 
@@ -176,9 +181,9 @@ array:17 [
 
 
         $params2 = $this->getProviderParams('get_bill_breakdown', $input_get_bill_breakdown);
-        $response = $this->connect('/get_bill_breakdown', $params2, 'POST');
+        $response2 = $this->connect('/get_bill_breakdown', $params2, 'POST');
 
-        $output = (array) $response->data;
+        $output = (array) $response2->data;
 
 
         /*
@@ -221,6 +226,12 @@ array:17 [
             +"NET_CREDITS_PAYABLE_AMOUNT": 0
             +"WALLET_ENABLE": 0
         */
+
+        $tempOrder = Cache::get($this->order_key);
+        $tempOrder["logistics"]["meta"]["getVehicle"] = $response0->data;
+        $tempOrder["logistics"]["meta"]["send_payment_for_task"] = $response1->data;
+        $tempOrder["logistics"]["meta"]["get_bill_breakdown"] = $response2->data;
+        Cache::put($this->order_key, $tempOrder);
 
         return $output;
 

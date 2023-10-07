@@ -20,6 +20,10 @@ use Ramsey\Uuid\Uuid;
 
 class ModulesEcommerceStore extends Controller
 {
+
+    public $COMPANY_DAILY_ORDER_MANAGEMENT_KEY;
+
+
     public function __construct()
     {
         parent::__construct();
@@ -27,7 +31,20 @@ class ModulesEcommerceStore extends Controller
         $this->data['page']['header'] = ['title' => 'Store'];
     }
 
+    public function getCompanyDailyOrderManagementKey($company)
+    {
+       return 'cacheOrderManagement_' . $company->id . "." . Carbon::now()->format('Y_m_d');
+    }
 
+    public function getRandomOrderKey($order)
+    {
+       return Uuid::uuid1()->toString();
+    }
+
+    public function getOrderManagementKey($order)
+    {
+       return 'cacheOrderManagement_' . $order->id;
+    }
 
     /**
      * @param Request     $request
@@ -364,9 +381,6 @@ class ModulesEcommerceStore extends Controller
         $cartCache["address_seller"] = $location;
 
 
-        // Save ALL to session
-        session(['cartCache' => $cartCache]);
-
         // Process Cart Stages
         $cart_stages = [
             "address" => [
@@ -450,6 +464,45 @@ class ModulesEcommerceStore extends Controller
             'payment' => env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave'),
             'logistics' => env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik'),
         ];
+
+
+        //Initiatialize Cache Storage For Order Management for this Company (for today)
+        // $companyOrderManagementDailyKey = $this->getCompanyDailyOrderManagementKey($storeOwner);
+        // if ( !Cache::has($companyOrderManagementDailyKey) ) {
+        //     Cache::forever($companyOrderManagementDailyKey, [
+        //         "orders" => [],
+        //         "meta" => []
+        //     ]);
+        // }
+        # Depreciated in favour of per order cache
+
+        $getRandomOrderKey = 'tempOrderManagement_' . $this->getRandomOrderKey();
+        Cache::put($getRandomOrderKey, [
+            "order" => [],
+            "payment" => [
+                "status" => false,
+                "provider" => [
+                    "id" => env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave'),
+                    "meta" = > []
+                ],
+                "meta" => []
+            ],
+            "logistics" => [
+                "status" => false,
+                "provider" => [
+                    "id" => env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik'),
+                    "meta" = > []
+                ],
+                "meta" => []
+            ],
+        ], 60*60*24)
+
+        $this->data['random_order_key'] = $cartCache["random_order_key"] = $getRandomOrderKey;
+
+
+        // Save ALL to session
+        session(['cartCache' => $cartCache]);
+
 
         return view('modules-ecommerce::webstore.cart', $this->data);
     }
@@ -558,7 +611,7 @@ class ModulesEcommerceStore extends Controller
                     "dorcas" => 7.5
                 ],
                 "subaccounts" => [
-                    "sales_sme" => "", //tthis is a joint escrow type for all SMEs
+                    "sales_sme" => "", //this is a joint escrow type for all SMEs
                     "sales_vas" => "",
                     "logistics" => "",
                     "partner" => "",
@@ -663,9 +716,9 @@ class ModulesEcommerceStore extends Controller
             "params" => $paymentData
         ];
         
-        $provider = new $c($providerParams);
+        $providerClass = new $c($providerParams);
         
-        $payment_link = $provider->createWalletPaymentLink();
+        $payment_link = $providerClass->createWalletPaymentLink();
         
         
         if ($payment_link->status == "success") {
@@ -674,8 +727,25 @@ class ModulesEcommerceStore extends Controller
 
         $data['provider_payment_link'] = $provider_payment_link;
 
+
+        // Update Daily Order Cache with temp order data
+        $cC = session('cartCache');
+        $temporaryOrderKey = $cC["random_order_key"];
+        $temporaryOrderData = Cache::get($temporaryOrderKey);
+
+        $orderManagementKey = $this->getOrderManagementKey($data);
+        $thisOrder = [
+            "order" => $data,
+            "payment" => $temporaryOrderData["payment"],
+            "logistics" => $temporaryOrderData["logstics"],
+        ];
+        Cache::forever($orderManagementKey, $thisOrder);
+
+
         // CLEAN UP TASKS
         Cache::forget('crm.customers.'.$storeOwner->id);
+        
+        Cache::forget($temporaryOrderKey); //temporary order cache removal
         $request->session()->forget('cartCache');
         # clear the cache
         $cartManager->clear();
@@ -737,8 +807,8 @@ class ModulesEcommerceStore extends Controller
         $providerParams = [
             "vendor_id" => env('KWIK_VENDOR_ID', 3152),
             "vehicle_type" => $vehicle_type,
-            "cod" => $cod
-
+            "cod" => $cod,
+            "order_key" => $cartCache["random_order_key"] //$request->random_order_key
         ];
 
         $c = $config["class"];
@@ -756,6 +826,11 @@ class ModulesEcommerceStore extends Controller
             "has_return_task" => false,
             "is_package_insured" => 0
         ];
+
+        $tempOrder = Cache::get($cartCache["random_order_key"]);
+        $tempOrder["logistics"]["meta"]["address_from"] = $sellerAdddress;
+        $tempOrder["logistics"]["meta"]["address_to"] = $to;
+        Cache::put($cartCache["random_order_key"], $tempOrder);
 
         $costs = $provider->getCost($from, $to, $vehicle_type);
 

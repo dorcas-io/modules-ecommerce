@@ -405,7 +405,8 @@
                 checkoutAmount: 0,
                 use_wallet: {!! json_encode($use_wallet) !!},
                 providers: {!! json_encode($providers) !!},
-                provider_payment_link: ''
+                provider_payment_link: '',
+                random_order_key: {!! $random_order_key !!}
             },
             mounted: function() {
                 this.loadGoogleMaps();
@@ -774,7 +775,9 @@
                         }
                     } else if (shippingType == 'shipping_provider') {
                         shipping_url = "/xhr/cart/get-provider-shipping-routes";
-                        shipping_params = {}
+                        shipping_params = {
+                            random_order_key: this.random_order_key 
+                        }
                     }
                     //console.log(shippingType)
                     //console.log(shipping_url)
