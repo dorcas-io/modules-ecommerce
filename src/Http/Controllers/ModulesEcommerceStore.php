@@ -36,7 +36,7 @@ class ModulesEcommerceStore extends Controller
        return 'cacheOrderManagement_' . $company->id . "." . Carbon::now()->format('Y_m_d');
     }
 
-    public function getRandomOrderKey($order)
+    public function getRandomOrderKey()
     {
        return Uuid::uuid1()->toString();
     }
@@ -483,7 +483,7 @@ class ModulesEcommerceStore extends Controller
                 "status" => false,
                 "provider" => [
                     "id" => env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave'),
-                    "meta" = > []
+                    "meta" => []
                 ],
                 "meta" => []
             ],
@@ -491,11 +491,11 @@ class ModulesEcommerceStore extends Controller
                 "status" => false,
                 "provider" => [
                     "id" => env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik'),
-                    "meta" = > []
+                    "meta" => []
                 ],
                 "meta" => []
             ],
-        ], 60*60*24)
+        ], 60*60*24);
 
         $this->data['random_order_key'] = $cartCache["random_order_key"] = $getRandomOrderKey;
 
