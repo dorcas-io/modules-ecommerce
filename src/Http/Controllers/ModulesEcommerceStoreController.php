@@ -768,11 +768,12 @@ class ModulesEcommerceStoreController extends Controller {
 
         if ($total_available > 0) {
             // estimate amount to transfer that
-            $te = $this->getTransferEstimate()->getData()->data;
+            $te = $this->getTransferEstimate($request, $total_available)->getData()->data;
             //$transfer_estimate = $te->getData()->data;
             // "currency": "NGN",
             // "fee_type": "value",
             // "fee": 26.875
+            $te = (array) $te[0];
             $transfer_fee = $te["fee"];
             $transfer_net = $total_available - $transfer_fee;
             $transfer_amount_available = $transfer_net > 0 ? $transfer_net : 0;
@@ -781,7 +782,7 @@ class ModulesEcommerceStoreController extends Controller {
             $transfer_status = "Transfer Unavailable -> Insufficient Balance | ";
         }
 
-        if (!empty($wallet_balances)) {
+        if (empty($wallet_balances)) {
             $transfer_status = "Transfer Unavailable -> Wallet Not Yet Setup ";
         }
 
@@ -794,7 +795,7 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['bank_details'] = $bank_details;
         $this->data['transfer_available'] = $transfer_available;
         $this->data['transfer_amount_available'] = $transfer_amount_available;
-        $this->data['transfer_amount_maximum'] = $transfer_amount_maximum;
+        $this->data['transfer_amount_maximum'] = $transfer_amount_maximum = $transfer_amount_available;
         $this->data['transfer_currency'] = $transfer_currency;
         $this->data['transfer_status'] = $transfer_status;
         $this->data['transfer_fee'] = $transfer_fee;
@@ -828,7 +829,7 @@ class ModulesEcommerceStoreController extends Controller {
 
             if (!empty($accounts) && $accounts->count() > 0) {
     
-                $bank = $accounts->first();
+                $bank = (array) $accounts->first();
     
                 $banks = collect(Banks::BANK_CODES)->sort()->map(function ($name, $code) {
                     return ['name' => $name, 'code' => $code];
@@ -858,15 +859,20 @@ class ModulesEcommerceStoreController extends Controller {
                 $transfer_issue = "Transfer Unavailable -> Unable to Get Wallet Account Reference | ";
             }
 
+            $platformName = !empty($appUiSettings['product_name']) ? $appUiSettings['product_name'] : config('app.name');
+
+            $transactionReference = strtolower(substr(preg_replace('/[^a-zA-Z0-9]/', '', $platformName), 0, 10));
+            $transactionReference .= '-dorcas-' . substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 10);
+
             $transfer_params = [
                 "debit_subaccount" => $debit_subaccount,
                 "account_bank" => $bank_code, //$bank_name,
                 "account_number" => $account_number,
                 "amount" => $request->amount,
-                "narration" => "Wallet Transfer",
+                "narration" => $platformName . " Wallet Transfer",
                 "currency" => $request->currency,
                 "beneficiary_name" => $account_name,
-                "reference" => "Wallet Transfer",
+                "reference" => $transactionReference,
                 "debit_currency" => $request->currency,
                 "meta" => [
                     "first_name" => $user->firstname,
@@ -880,7 +886,7 @@ class ModulesEcommerceStoreController extends Controller {
 
             if (empty($transfer_issue)) {
 
-                $transfer = $this->transferFromWallet($request, $request->destination, $transfer_params);
+                $transfer = $this->transferFromWallet($request, $request->destination, $transfer_params)->getData();
 
             }
             
@@ -912,7 +918,7 @@ class ModulesEcommerceStoreController extends Controller {
      */
     private function setupProvider(Request $request)
     {
-        // Determine active Paayment provider
+        // Determine active  provider
         $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
         $country = env('SETTINGS_COUNTRY', 'NG');
 
@@ -920,7 +926,7 @@ class ModulesEcommerceStoreController extends Controller {
         $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
 
         $provider_config_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config;
-        $config = require_once($provider_config_path);
+        $config = require($provider_config_path);
 
         $provider_class_path = __DIR__.'/../../Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class;
         require_once($provider_class_path);
@@ -992,7 +998,7 @@ class ModulesEcommerceStoreController extends Controller {
      */
     public function getWalletBalances(Request $request, $accountReference)
     {
-        // Determine active Logistics provider
+        // Determine active Payment provider
         $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
         $country = env('SETTINGS_COUNTRY', 'NG');
 
@@ -1091,8 +1097,6 @@ class ModulesEcommerceStoreController extends Controller {
             "destination" => $destination,
             "params_transfer" => $params
         ];
-
-        $c = $config["class"];
 
         $provider = new $c($providerParams);
 
