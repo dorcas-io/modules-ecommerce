@@ -965,6 +965,7 @@ class ModulesEcommerceStore extends Controller
         $order = $response->getData(true);
         # try to get the order
         $company = $storeOwner; //$order->company;
+        $company_admin = (object) $company->users["data"][0];
         $order_customer = $order->customers["data"][0]; //$order->company;
         # retrieve the company
         if (!$request->has('channel') || !in_array($request->has('channel'), ['flutterwave', 'paystack'])) {
@@ -987,6 +988,10 @@ class ModulesEcommerceStore extends Controller
         }
 
         $customer = (object) $customer;
+
+        //Eloquent IDs
+        $customer_id = DB::connection('core_mysql')->table('customers')->where('uuid', $customer->id)->select('id')->first()->id;
+        $order_id = DB::connection('core_mysql')->table('orders')->where('uuid', $order->id)->select('id')->first()->id;
 
         // From this point, we can display the payment status
         $reference = $request->tx_ref ?? '';
@@ -1122,7 +1127,7 @@ class ModulesEcommerceStore extends Controller
                     $txn_data['response_code'] = $transaction['response_code'];
                     $txn_data['response_description'] = $transaction['response_description'];
                     $txn_data['json_payload'] = $transaction['json_payload'] ?? '';
-                    $txn_data['is_successful'] = $transaction['is_successful'] ?? false;
+                    $txn_data['is_successful'] = (bool) $transaction['is_successful'] ?? 0;
         
                     $insertedId = DB::connection('core_mysql')->table('payment_transactions')->insertGetId($txn_data);
                     $txn = DB::connection('core_mysql')->table('payment_transactions')->find($insertedId);
@@ -1137,7 +1142,7 @@ class ModulesEcommerceStore extends Controller
             # we try to get the instance if necessary
             if (!empty($txn->customer_id) && $txn->customer_id !== $customer->id) {
                 # a different customer owns this transaction, than the person verifying it
-                throw new AuthorizationException('This transaction does not belong to your account.');
+                abort(401, 'This transaction does not belong to your account.');
             }
     
             # try to create the transaction, if required
@@ -1170,8 +1175,9 @@ class ModulesEcommerceStore extends Controller
             // }
     
             // http request to post to core endpoint
+            
             $notification_params = [
-                "user" => $company, //uuid
+                "user" => $company_admin, //uuid
                 "order" => $order,
                 "customer" => $customer,
                 "txn" => $txn,
@@ -1180,7 +1186,7 @@ class ModulesEcommerceStore extends Controller
             
             $notification_response = Http::post($notification_url, $notification_params);
             if ($notification_response->successful()) {
-                $data = $notification_response->json(); // Assuming the response is JSON
+                $re = $notification_response->json(); // Assuming the response is JSON
             } else {
                 $statusCode = $notification_response->status();
                 $error = $notification_response->body();
@@ -1193,15 +1199,17 @@ class ModulesEcommerceStore extends Controller
 
         }
 
+        $company_prefix = $company_admin->partner["data"]["domain_issuances"]["data"][0]["prefix"];
 
         $data = [
+            'pageTitle' => 'Payment Confirmation',
             'reference' => $reference,
-            'txn' => $txn,
+            'txn' => (array) $txn,
             'message' => $final_message,
             'company_name' => $company->name,
             'company_logo' => $company->logo,
             //'webstore_url' => "https://" . $company->domainIssuances->first()->prefix . ".store.dorcas.io"
-            'webstore_url' => "https://" . $company->domainIssuances->first()->prefix . "." . env("DORCAS_BASE_DOMAIN", "store.dorcas.io")
+            'webstore_url' => "https://" . $company_prefix . ".store." . env("DORCAS_BASE_DOMAIN", "store.dorcas.io")
         ];
         
         //return view('payment.payment-complete-response', $data);
