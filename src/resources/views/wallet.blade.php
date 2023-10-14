@@ -101,7 +101,7 @@
                             
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label class="form-label" for="transfer_amount">Amount to Transfer</label>
+                                    <label class="form-label" for="transfer_amount">Amount to Transfer (Maximum)</label>
                                     <input id="transfer_amount" type="text" name="transfer_amount" maxlength="30" v-model="transfer_amount_available" required class="form-control">
                                 </div>
                             </div>
@@ -188,12 +188,22 @@
                         icon: 'error',
                         title: 'Oops...',
                         text: "You can't transfer more than the available balance!",
-                        footer: '<a href="#">Reduce Transfer amount to not exceed ' + this.transfer_currency + ' ' + transfer_amount_maximum.toLocaleString("en-US") + '</a>'
+                        footer: '<a href="javascript:void">Reduce Transfer amount to not exceed ' + this.transfer_currency + ' ' + transfer_amount_maximum.toLocaleString("en-US") + '</a>'
                     });
                     this.is_transferring = false;
                 }
 
-                Swal.fire({
+                if (transfer_amount < 100) {
+                    return Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "You can't transfer less than  " + this.transfer_currency + "100!",
+                        footer: '<a href="javascript:void">Enter more than ' + this.transfer_currency + ' 100</a>'
+                    });
+                    this.is_transferring = false;
+                }
+
+                return Swal.fire({
                     title: 'Are you sure you wish to transfer ' + this.transfer_currency + ' ' + transfer_amount.toLocaleString("en-US") + ' to your Bank Account?',
                     text: "You won't be able to revert this!",
                     icon: 'warning',
@@ -228,10 +238,9 @@
                                         '<p>Remarks: ' + transfer_amount + '</p>' +
                                         '</div>',
                                     showCloseButton: true,
-                                    showCancelButton: true,
-                                    focusConfirm: false,
-                                    confirmButtonText:
-                                        '<i class="fa fa-thumbs-up"></i> Great!',
+                                    //showCancelButton: true,
+                                    focusConfirm: true,
+                                    confirmButtonText: '<i class="fa fa-thumbs-up"></i> Great!',
                                     confirmButtonAriaLabel: 'Thumbs up, great!',
                                     // cancelButtonText:
                                     //     '<i class="fa fa-thumbs-down"></i>',
@@ -239,9 +248,8 @@
                                 }).then((result) => {
                                     if (result.isConfirmed) {
                                         console.log('Confirmed!');
+                                        //window.location = '{{ url()->current() }}';
 
-                                    } else if (result.dismiss === Swal.DismissReason.cancel) {
-                                        console.log('Canceled!');
                                     }
                                 });
 

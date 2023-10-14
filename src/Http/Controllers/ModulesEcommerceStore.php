@@ -43,7 +43,7 @@ class ModulesEcommerceStore extends Controller
 
     public function getOrderManagementKey($order)
     {
-       return 'cacheOrderManagement_' . $order->id;
+       return 'cacheOrderManagement_' . $order["id"];
     }
 
     /**
@@ -737,7 +737,7 @@ class ModulesEcommerceStore extends Controller
         $thisOrder = [
             "order" => $data,
             "payment" => $temporaryOrderData["payment"],
-            "logistics" => $temporaryOrderData["logstics"],
+            "logistics" => $temporaryOrderData["logistics"],
         ];
         Cache::forever($orderManagementKey, $thisOrder);
 
@@ -812,7 +812,7 @@ class ModulesEcommerceStore extends Controller
         ];
 
         $c = $config["class"];
-        $provider = new $c($providerParams);
+        $providerClass = new $c($providerParams);
 
         $from = $sellerAdddress;
 
@@ -832,7 +832,7 @@ class ModulesEcommerceStore extends Controller
         $tempOrder["logistics"]["meta"]["address_to"] = $to;
         Cache::put($cartCache["random_order_key"], $tempOrder);
 
-        $costs = $provider->getCost($from, $to, $vehicle_type);
+        $costs = $providerClass->getCost($from, $to, $vehicle_type);
 
         $totalShippingCosts = $costs["ACTUAL_ORDER_PAYABLE_AMOUNT"] + $costs["TOTAL_SERVICE_CHARGE"];
 
@@ -943,7 +943,7 @@ class ModulesEcommerceStore extends Controller
      * @return string
      * @throws AuthorizationException
      */
-    public function verifyProviderPayment(Request $request, string $id)
+    public function verifyProviderPayment(Request $request, Sdk $sdk, string $id)
     {
         $final_message = "";
 
@@ -964,7 +964,8 @@ class ModulesEcommerceStore extends Controller
         }
         $order = $response->getData(true);
         # try to get the order
-        $company = $order->company;
+        $company = $storeOwner; //$order->company;
+        $order_customer = $order->customers["data"][0]; //$order->company;
         # retrieve the company
         if (!$request->has('channel') || !in_array($request->has('channel'), ['flutterwave', 'paystack'])) {
             abort(400, 'No valid payment channel was provided in the payment URL.');
@@ -981,9 +982,11 @@ class ModulesEcommerceStore extends Controller
                 abort(500, 'We could not retrieve the customer information for this payment.');
             }
             $customer_record = $response_customer->getData();
-            $customer = $customer->id === $customer_record->id ? $customer_record : $customer;
+            $customer = $request->customer === $order_customer["id"] ? (object) $customer_record : (object) $order_customer;
             # is this necessary
         }
+
+        $customer = (object) $customer;
 
         // From this point, we can display the payment status
         $reference = $request->tx_ref ?? '';
@@ -992,12 +995,12 @@ class ModulesEcommerceStore extends Controller
         $channel = $request->channel ?? 'flutterwave';
 
         $txn_data = [
-            ['reference' => $reference],
-            ['channel' => $channel],
-            ['customer_id' => $customer_record->id],
+            'reference' => $reference,
+            'channel' => $channel,
+            'customer_id' => $customer->id,
         ];
 
-        $txn = DB::table('payment_transactions')->where($txn_data)->first();
+        $txn = DB::connection('core_mysql')->table('payment_transactions')->where($txn_data)->first();
 
         if ( ($request->has('cancelled') && $request->cancelled == 'true' ) || ($request->has('status') && $request->status == 'cancelled' ) ) {
             
@@ -1039,12 +1042,23 @@ class ModulesEcommerceStore extends Controller
                                 ]
                             ];
                             
-                            $provider = new $c($providerParams);
+                            $providerClass = new $c($providerParams);
                             
-                            $verify = $provider->verifyTransaction();
+                            $verify = $providerClass->verifyTransaction();
                             
-                            if ($verify->status !== "success") {
-                                $transaction = $verify->data;
+                            if ($verify->status == "success") {
+                                //$transaction = (array) $verify->data;
+                                $d = $verify->data;
+                                $transaction = [
+                                    'channel' => 'flutterwave',
+                                    'reference' => $d->tx_ref,
+                                    'amount' => $d->charged_amount,
+                                    'currency' => $d->currency,
+                                    'response_code' => "00",
+                                    'response_description' => $d->processor_response,
+                                    'json_payload' => json_encode($d),
+                                    'is_successful' => true
+                                ];
                             } else {
                                 $transaction = [
                                     'channel' => 'flutterwave',
@@ -1110,8 +1124,8 @@ class ModulesEcommerceStore extends Controller
                     $txn_data['json_payload'] = $transaction['json_payload'] ?? '';
                     $txn_data['is_successful'] = $transaction['is_successful'] ?? false;
         
-                    $insertedId = DB::table('payment_transactions')->insertGetId($txn_data);
-                    $txn = DB::table('payment_transactions')->find($insertedId);
+                    $insertedId = DB::connection('core_mysql')->table('payment_transactions')->insertGetId($txn_data);
+                    $txn = DB::connection('core_mysql')->table('payment_transactions')->find($insertedId);
     
                 } catch (\Exception $e) {
                     abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $e->getMessage());

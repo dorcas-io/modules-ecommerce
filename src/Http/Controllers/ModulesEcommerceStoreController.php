@@ -897,11 +897,13 @@ class ModulesEcommerceStoreController extends Controller {
             
         }
 
-        $response_status = empty($transfer_issue) ? true : false;
+        $transfer_issue = $transfer->status !== true ? $transfer->message : "";
 
-        $response_message = empty($transfer_issue) ? "Transfer Succcessful" : "Transfer Failed with Error: " . $transfer_issue;
+        $response_status = empty($transfer_issue) && $transfer->status == true  ? true : false;
 
-        $response_data = empty($transfer_issue) ? $transfer->data : [];
+        $response_message = empty($transfer_issue) && $transfer->status == true ? "Transfer Succcessful" : "Transfer Error: " . $transfer_issue;
+
+        $response_data = empty($transfer_issue) && $transfer->status ? $transfer->data : [];
 
         $response = [
             "status" => $response_status,
