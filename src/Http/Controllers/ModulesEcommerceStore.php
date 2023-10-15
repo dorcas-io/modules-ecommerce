@@ -376,6 +376,33 @@ class ModulesEcommerceStore extends Controller
             $location['address'] = $sOwner["extra_data"]['location']['address'] ?? '';
             $location['latitude'] = $sOwner["extra_data"]['location']['latitude'] ?? '';
             $location['longitude'] = $sOwner["extra_data"]['location']['longitude'] ?? '';
+        } else {
+            // probably a change was recently made and not yet saved in domain session from which getCompanyViaDomain fetches
+
+            $dom = null;
+            // to re-cache, we need slug
+            $slug = $storeOwner->domain_issuance[0]["prefix"];
+
+            //$resource = $sdk->createCompanyService()->addQueryArgument('limit', 1)->send('get');
+            
+            $queryDomainData = $sdk->createDomainResource()->addQueryArgument('id', $slug)
+            ->addQueryArgument('include', 'owner,owner.users')
+            //->addQueryArgument('include', 'owner,owner.users:limit(1|0)')
+            //should we limit the use fetch? There must be other ways to get SMEs under a tenant partner
+            //upon more investigation, this appears to be users of a specific SME o, usually the admin and possibly other employees so its ok
+            ->send('get', ['resolver']);
+            # send the query
+
+            if ($queryDomainData->isSuccessful()) {
+                $dom = $queryDomainData->getData();
+
+                $domainOwnerData = $dom["owner"]["data"];
+
+                $location['address'] = $domainOwnerData["extra_data"]['location']['address'] ?? '';
+                $location['latitude'] = $domainOwnerData["extra_data"]['location']['latitude'] ?? '';
+                $location['longitude'] = $domainOwnerData["extra_data"]['location']['longitude'] ?? '';
+            }
+
         }
 
         $cartCache["address_seller"] = $location;
@@ -1199,7 +1226,8 @@ class ModulesEcommerceStore extends Controller
 
         }
 
-        $company_prefix = $company_admin->partner["data"]["domain_issuances"]["data"][0]["prefix"];
+        //$company_prefix = $company_admin->partner["data"]["domain_issuances"]["data"][0]["prefix"];
+        $company_prefix = $company->domain_issuances["data"][0]["prefix"];
 
         $data = [
             'pageTitle' => 'Payment Confirmation',
