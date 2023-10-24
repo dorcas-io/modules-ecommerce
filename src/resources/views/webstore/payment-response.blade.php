@@ -32,8 +32,13 @@
         </div>
         <div class="payment-method">
             <label for="card" class="method card {{ $txn['is_successful'] ? 'success-box' : 'error-box' }}" style="width: 100%;">
-                <h4>Payment of <strong>{{ $txn['currency'] }} {{ number_format($txn['amount']) }}</strong> for your order is <strong>successful</strong></h4>
+            @if ($txn['is_successful'])
+                <h4>Payment of <strong>{{ $txn['currency'] }} {{ number_format($txn['amount']) }}</strong> for your order was <strong>successful</strong></h4>
                 <p>Details: {{ $message }}</p>
+            @else
+                <h4>Payment for your order was <strong>not</strong></h4>
+                <p>Details: {{ $message }}</p>
+            @endif
             </label>
         </div>
         <div class="payment-method">
