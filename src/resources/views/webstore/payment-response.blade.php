@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $pageTitle || 'Payment Confirmation' }}</title>
+    <title>{{ $pageTitle ?? 'Payment Confirmation' }}</title>
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
     <link rel="stylesheet" href="{{ cdn('apps/webstore/css/pay-form-style.css') }}" type="text/css" />
     <meta name="robots" content="noindex,follow" />
