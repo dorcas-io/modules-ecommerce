@@ -1029,14 +1029,14 @@ class ModulesEcommerceStore extends Controller
         $txn_data = [
             'reference' => $reference,
             'channel' => $channel,
-            'customer_id' => $customer->id,
+            'customer_id' => $customer_id,
         ];
 
         $txn = DB::connection('core_mysql')->table('payment_transactions')->where($txn_data)->first();
 
         if ( ($request->has('cancelled') && $request->cancelled == 'true' ) || ($request->has('status') && $request->status == 'cancelled' ) ) {
             
-            $final_message = 'You cancelled the payment. You may try again at a later time.';
+            $final_message .= ' You cancelled the payment. You may try again at a later time.';
 
         } else {
 
@@ -1062,8 +1062,10 @@ class ModulesEcommerceStore extends Controller
                         if (!$request->has('tx_ref')) {
                             abort(400, 'No payment reference was provided by the R payment gateway.');
                         }
+
+                        $success_messages = ['successful', 'completed'];
     
-                        if ( $status == 'successful' ) {
+                        if ( in_array($status, $success_messages) ) {
         
                             $providerParams = [
                                 "provider" => $provider,
@@ -1148,7 +1150,7 @@ class ModulesEcommerceStore extends Controller
                 try {
     
                     $txn_data['uuid'] = Uuid::uuid1()->toString();
-                    $txn_data['order_id'] = $order->id;
+                    $txn_data['order_id'] = $order_id;
                     $txn_data['amount'] = $transaction['amount'];
                     $txn_data['currency'] = $transaction['currency'];
                     $txn_data['response_code'] = $transaction['response_code'];
@@ -1167,14 +1169,18 @@ class ModulesEcommerceStore extends Controller
     
     
             # we try to get the instance if necessary
-            if (!empty($txn->customer_id) && $txn->customer_id !== $customer->id) {
+            if (!empty($txn->customer_id) && $request->customer !== $customer->id) {
                 # a different customer owns this transaction, than the person verifying it
-                abort(401, 'This transaction does not belong to your account.');
+                $errorMessage401 = 'This transaction does not belong to your account.';
+                //abort(401, $errorMessage401);
+                $final_message = $errorMessage401;
             }
     
             # try to create the transaction, if required
             if (!$txn->is_successful) {
-                abort(400, 'The payment transaction failed, try and make a successful payment to continue.');
+                $errorMessage400 = 'The payment transaction failed, try and make a successful payment to continue.';
+                //abort(400, $errorMessage400);
+                $final_message .= $errorMessage400;
             }
     
             $customer_order_model = $sdk->createOrderResource($order->id)->addBodyParam('id', $customer->id)
@@ -1203,31 +1209,35 @@ class ModulesEcommerceStore extends Controller
     
             // http request to post to core endpoint
             
-            $notification_params = [
-                "user" => $company_admin, //uuid
-                "order" => $order,
-                "customer" => $customer,
-                "txn" => $txn,
-            ];
-            $notification_url = env('DORCAS_HOST_API', 'https://core.sample-dorcas.io') . "/notification-paid-invoice";
-            
-            $notification_response = Http::post($notification_url, $notification_params);
-            if ($notification_response->successful()) {
-                $re = $notification_response->json(); // Assuming the response is JSON
-            } else {
-                $statusCode = $notification_response->status();
-                $error = $notification_response->body();
-                abort(500, 'We encountered issues while sending an invoice notification. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $statusCode . ": " . $error);
+            if ($txn->is_successful) {
+                $notification_params = [
+                    "user" => $company_admin, //uuid
+                    "order" => $order,
+                    "customer" => $customer,
+                    "txn" => $txn,
+                ];
+                $notification_url = env('DORCAS_HOST_API', 'https://core.sample-dorcas.io') . "/notification-paid-invoice";
+                
+                $notification_response = Http::post($notification_url, $notification_params);
+                if ($notification_response->successful()) {
+                    $re = $notification_response->json(); // Assuming the response is JSON
+                } else {
+                    $statusCode = $notification_response->status();
+                    $error = $notification_response->body();
+                    $errorMessage = 'We encountered issues while sending an invoice notification. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $statusCode . ": " . $error;
+                    //abort(500, $errorMessage);
+                    $final_message = $errorMessage;
+                }
+                //Notification::send($company->users->first(), new InvoicePaid($order, $customer, $txn));
+                # send the notification to members of the company
             }
-            //Notification::send($company->users->first(), new InvoicePaid($order, $customer, $txn));
-            # send the notification to members of the company
 
             $final_message = 'Successfully completed order payment. Your reference is: ' . $reference;
 
         }
 
         //$company_prefix = $company_admin->partner["data"]["domain_issuances"]["data"][0]["prefix"];
-        $company_prefix = $company->domain_issuances["data"][0]["prefix"];
+        $company_prefix = $company->domain_issuance[0]["prefix"];
 
         $data = [
             'pageTitle' => 'Payment Confirmation',
