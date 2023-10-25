@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $pageTitle || 'Payment Confirmation' }}</title>
+    <title>{{ $pageTitle ?? 'Payment Confirmation' }}</title>
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
     <link rel="stylesheet" href="{{ cdn('apps/webstore/css/pay-form-style.css') }}" type="text/css" />
     <meta name="robots" content="noindex,follow" />
@@ -23,7 +23,7 @@
         <div><center><img height="50" src="{{ $company_logo }}"/></center></div>
         <h2><center>{{ $company_name }} Store</center></h2>
         <div><br/></div>
-        <h3 class="title">Payment Checkout</h3>
+        <h3 class="title">Payment Status</h3>
         <div class="progress-bar">
             <div class="step active"></div>
             <div class="step active"></div>
@@ -32,8 +32,8 @@
         </div>
         <div class="payment-method">
             <label for="card" class="method card {{ $txn['is_successful'] ? 'success-box' : 'error-box' }}" style="width: 100%;">
-                <h4>Payment Reference: {{ $reference }}</h4>
-                <p>{{ $message }}</p>
+                <h4>Payment of <strong>{{ $txn['currency'] }} {{ number_format($txn['amount']) }}</strong> for your order is <strong>successful</strong></h4>
+                <p>Details: {{ $message }}</p>
             </label>
         </div>
         <div class="payment-method">

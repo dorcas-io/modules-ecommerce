@@ -101,7 +101,7 @@
                             
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label class="form-label" for="transfer_amount">Amount to Transfer</label>
+                                    <label class="form-label" for="transfer_amount">Amount to Transfer (Maximum)</label>
                                     <input id="transfer_amount" type="text" name="transfer_amount" maxlength="30" v-model="transfer_amount_available" required class="form-control">
                                 </div>
                             </div>
@@ -188,12 +188,23 @@
                         icon: 'error',
                         title: 'Oops...',
                         text: "You can't transfer more than the available balance!",
-                        footer: '<a href="#">Reduce Transfer amount to not exceed ' + this.transfer_currency + ' ' + this.transfer_amount_maximum.toLocaleString("en-US") + '</a>'
+                        footer: '<a href="javascript:void">Reduce Transfer amount to not exceed ' + this.transfer_currency + ' ' + transfer_amount_maximum.toLocaleString("en-US") + '</a>'
                     });
+                    this.is_transferring = false;
                 }
 
-                Swal.fire({
-                    title: 'Are you sure you wish to transfer ' + this.transfer_currency + ' ' + this.transfer_amount.toLocaleString("en-US") + ' to your Bank Account?',
+                if (transfer_amount < 100) {
+                    return Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "You can't transfer less than  " + this.transfer_currency + "100!",
+                        footer: '<a href="javascript:void">Enter more than ' + this.transfer_currency + ' 100</a>'
+                    });
+                    this.is_transferring = false;
+                }
+
+                return Swal.fire({
+                    title: 'Are you sure you wish to transfer ' + this.transfer_currency + ' ' + transfer_amount.toLocaleString("en-US") + ' to your Bank Account?',
                     text: "You won't be able to revert this!",
                     icon: 'warning',
                     showCancelButton: true,
@@ -202,48 +213,55 @@
                     confirmButtonText: 'Yes, proceeed!',
                     showLoaderOnConfirm: true,
                     preConfirm: (login) => {
-                        return axios.put("/mec/ecommerce-wallet-transfer/", {
-                            amount: this.transfer_amount,
+                        return axios.post("/mec/ecommerce-wallet-transfer/", {
+                            amount: transfer_amount,
                             currency: this.transfer_currency,
                             destination: 'bank'
                         }).then(function (response) {
 
-                            console.log(response);
-
                             let wallet_response = response.data;
-                            //wallet_response.message
-                            //wallet_response.data
+
+                            console.log(wallet_response);
                             
                             if (wallet_response.status) {
 
-                                return Swal.fire({
-                                    title: '<strong>Transfer Done</strong>',
-                                    icon: 'success',
+                                let wallet_data = wallet_response.data;
+
+                                Swal.fire({
+                                    title: '<strong>Transfer Successful</strong>',
+                                    type: 'success',
                                     html:
-                                        '<p>Amount ' + this.transfer_currency + '<b>' + this.transfer_amount + '</b></p><br/>' +
-                                        '<p>Reference <b>' + this.transfer_amount + '</b></p><br/>' +
-                                        '<p>Amount <b>' + this.transfer_amount + '</b></p><br/>',
+                                        '<div align="left">' +
+                                        '<p>Amount: ' + '<b>' + wallet_data.currency + wallet_data.amount + '</b></p>' +
+                                        '<p>Reference: <b>' + wallet_data.reference + '</b></p>' +
+                                        '<p>Destination: <em>' + wallet_data.bank_name + ' ' + wallet_data.account_number + ' (' + wallet_data.full_name + ')</em></p>' +
+                                        '<p>Remarks: ' + transfer_amount + '</p>' +
+                                        '</div>',
                                     showCloseButton: true,
-                                    showCancelButton: true,
-                                    focusConfirm: false,
-                                    confirmButtonText:
-                                        '<i class="fa fa-thumbs-up"></i> Great!',
+                                    //showCancelButton: true,
+                                    focusConfirm: true,
+                                    confirmButtonText: '<i class="fa fa-thumbs-up"></i> Great!',
                                     confirmButtonAriaLabel: 'Thumbs up, great!',
                                     // cancelButtonText:
                                     //     '<i class="fa fa-thumbs-down"></i>',
                                     // cancelButtonAriaLabel: 'Thumbs down'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        console.log('Confirmed!');
+                                        //window.location = '{{ url()->current() }}';
+
+                                    }
                                 });
-                                //return swal("Success", "The transfer was successfull", "success");
-                                //return response.json() //return it to upper then
 
                             } else {
 
-                                return Swal.fire({
+                                Swal.fire({
                                     icon: 'error',
                                     title: 'Oops...',
                                     text: "Your Transfer has not been made due to an error!",
                                     footer: '<a href="#">Error: ' + wallet_response.message + '</a>'
                                 });
+                                this.is_transferring = false;
 
                             }
 
@@ -258,10 +276,15 @@
                             } else {
                                 message = error.message;
                             }
+                            this.is_transferring = false;
                             return swal("Oops!", message, "warning");
                             //Swal.showValidationMessage(`Request failed: ${message}`)
+                            
                         });
 
+                    },
+                    didClose: () => {
+                        this.is_transferring = false;
                     },
                     allowOutsideClick: () => !Swal.isLoading()
                 })

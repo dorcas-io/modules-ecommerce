@@ -21,6 +21,8 @@ class KwikNGClass
     private $userPassword;
 
     private $vendor_id;
+
+    private $order_key;
     
     public function __construct(array $providerParams)
     {
@@ -36,19 +38,29 @@ class KwikNGClass
             $this->getToken();
         }
 
+        $this->order_key = $providerParams["order_key"];
+
     }
 
 
-    private function connect($path, $postParams, $accessToken = null)
+    private function connect($path, $params, $method = 'POST')
     {
         // Connect To API
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->baseUrl . $path);
+
+        if ($method == 'GET') {
+            curl_setopt($ch, CURLOPT_URL, $this->baseUrl . $path . '?' . http_build_query($params));
+        } else {
+            curl_setopt($ch, CURLOPT_URL, $this->baseUrl . $path);
+        }
+
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HEADER, FALSE);
         curl_setopt($ch, CURLOPT_ENCODING, '');
-        curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postParams));
+        if ($method == 'POST') {
+            curl_setopt($ch, CURLOPT_POST, TRUE);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
+        }
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             "Content-Type: application/json"
         ));
@@ -64,7 +76,7 @@ class KwikNGClass
     {
         // Connect To API
         $params = $this->getProviderParams('vendor_login');
-        $response = $this->connect('/vendor_login', $params, null);
+        $response = $this->connect('/vendor_login', $params, 'POST');
         
         $this->accessToken = $response->data->access_token;
 
@@ -76,12 +88,16 @@ class KwikNGClass
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getCost($fromAddress, $toAddress)
+    public function getCost($fromAddress, $toAddress, $vehicleSize)
     {
-        /*
-        - /send_payment_for_task (get charge details according to google distance)
-        - /get_bill_breakdown (get bill details)
-        */
+
+        $input_get_vehicle = [
+            'size' => $vehicleSize
+        ];
+
+        $paramsVehicle = $this->getProviderParams('getVehicle', $input_get_vehicle);
+        $response0 = $this->connect('/getVehicle', $paramsVehicle, 'GET');
+        $responseVehicle = (array) $response0;
 
         $input_send_payment_for_task = [
             'from_address' => [
@@ -89,13 +105,14 @@ class KwikNGClass
             ],
             'to_address' => [
                 0 => $toAddress
-            ]
+            ],
+            'vehicle_id' => ($responseVehicle["data"][0])->vehicle_id
         ];
 
         $params1 = $this->getProviderParams('send_payment_for_task', $input_send_payment_for_task);
-        $response = $this->connect('/send_payment_for_task', $params1, null);
+        $response1 = $this->connect('/send_payment_for_task', $params1, 'POST');
 
-        $input_get_bill_breakdown = (array) $response->data;
+        $input_get_bill_breakdown = (array) $response1->data;
 
 /*
 
@@ -164,9 +181,9 @@ array:17 [
 
 
         $params2 = $this->getProviderParams('get_bill_breakdown', $input_get_bill_breakdown);
-        $response = $this->connect('/get_bill_breakdown', $params2, null);
+        $response2 = $this->connect('/get_bill_breakdown', $params2, 'POST');
 
-        $output = (array) $response->data;
+        $output = (array) $response2->data;
 
 
         /*
@@ -210,6 +227,12 @@ array:17 [
             +"WALLET_ENABLE": 0
         */
 
+        $tempOrder = Cache::get($this->order_key);
+        $tempOrder["logistics"]["meta"]["getVehicle"] = $response0->data;
+        $tempOrder["logistics"]["meta"]["send_payment_for_task"] = $response1->data;
+        $tempOrder["logistics"]["meta"]["get_bill_breakdown"] = $response2->data;
+        Cache::put($this->order_key, $tempOrder);
+
         return $output;
 
     }
@@ -252,12 +275,12 @@ array:17 [
                     "user_id" => 1,
                     "payment_method" => 32,
                     "form_id" => 2,
-                    "vehicle_id" => 4,
+                    "vehicle_id" => $input['vehicle_id'],
                     "delivery_instruction" => "Hey, please deliver the parcel with safety. Thanks in advance",
                     "delivery_images" => "https://s3.ap-south-1.amazonaws.com/kwik-project/task_images/kjjX1603884709732-stripeconnect.png",
-                    "is_loader_required" => 1,
-                    "loaders_amount" => 40,
-                    "loaders_count" => 4,
+                    "is_loader_required" => 0,
+                    "loaders_amount" => 0,
+                    "loaders_count" => 0,
                     "is_cod_job" => 0,
                     "parcel_amount" => 1000
                 ];
@@ -286,6 +309,14 @@ array:17 [
                     "is_cod_job" => 0,
                     "parcel_amount" => 1000,
                     "delivery_charge_by_buyer" => 0
+                ];
+            break;
+
+            case 'getVehicle':
+                $params = [
+                    "access_token" => $this->accessToken,
+                    "is_vendor" => 1,
+                    "size" => $input['size']
                 ];
             break;
 

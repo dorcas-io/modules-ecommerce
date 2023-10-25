@@ -30,7 +30,7 @@
                     <form method="get" action="/cart">
                         {{ csrf_field() }}
                         <div class="col_full">
-                            <input v-if="useAutoComplete" type="text" class="sm-form-control" name="address_address" id="address_address" required placeholder="Enter Delivery Address" v-model="checkout_form.address">
+                            <input v-if="useAutoComplete" type="text" class="sm-form-control" v-model="geolocate_address" name="address_address" id="address_address" required placeholder="Enter Delivery Address" v-model="checkout_form.address">
                         </div>
                         <div v-if="useAutoComplete" id="address_map" style="width:100%; height: 300px;" class="col_full"></div>
                         <a v-if="useAutoComplete && mapIsConfirmed" id="address_confirm" href="#" v-on:click.prevent="confirmAddress" class="button button-3d nomargin button-green">Yes, Address On Map Is Correct</a>
@@ -405,7 +405,9 @@
                 checkoutAmount: 0,
                 use_wallet: {!! json_encode($use_wallet) !!},
                 providers: {!! json_encode($providers) !!},
-                provider_payment_link: ''
+                provider_payment_link: '',
+                random_order_key: "{!! $random_order_key !!}",
+                geolocate_address: ''
             },
             mounted: function() {
                 this.loadGoogleMaps();
@@ -432,11 +434,11 @@
 
                     if (provider == 'flutterwave') {
 
-                        loadPaymentwithFlutterwave();
+                        this.loadPaymentwithFlutterwave();
 
                     } else if (provider == 'paystack') {
 
-                        loadPaymentwithPaystack();
+                        this.loadPaymentwithPaystack();
 
                     }
 
@@ -532,15 +534,24 @@
                         let state = '';
                         let country = '';
                         let countryCode = '';
+                        let streetAddress = '';
                         for (const component of place.address_components) {
                             const componentType = component.types[0];
                             if (componentType === 'administrative_area_level_1') {
                                 state = component.long_name;
-                            } else if (componentType === 'country') {
+                            }
+                            if (componentType === 'country') {
                                 country = component.long_name;
                                 countryCode = component.short_name; // Two-digit ISO country code
                             }
+                            if (componentType === 'street_number') {
+                                streetAddress += component.long_name + ' ';
+                            }
+                            if (componentType === 'route') {
+                                streetAddress += component.long_name;
+                            }
                         }
+                        cartView.geolocate_address = streetAddress;
 
                         // Log the state and country to the console
                         let stateObject = cartView.states.find( stat => stat.name == state.trim() )
@@ -774,7 +785,9 @@
                         }
                     } else if (shippingType == 'shipping_provider') {
                         shipping_url = "/xhr/cart/get-provider-shipping-routes";
-                        shipping_params = {}
+                        shipping_params = {
+                            random_order_key: this.random_order_key 
+                        }
                     }
                     //console.log(shippingType)
                     //console.log(shipping_url)

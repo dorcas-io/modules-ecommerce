@@ -41,18 +41,24 @@ class FlutterwaveNGClass
     }
 
 
-    public function connect($path, $method = 'POST', $postParams)
+    public function connect($path, $method = 'POST', $params)
     {
         // Connect To API
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->baseUrl . $path);
+
+        if ($method == 'GET') {
+            curl_setopt($ch, CURLOPT_URL, $this->baseUrl . $path . '?' . http_build_query($params));
+        } else {
+            curl_setopt($ch, CURLOPT_URL, $this->baseUrl . $path);
+        }
+
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HEADER, FALSE);
         curl_setopt($ch, CURLOPT_ENCODING, '');
 
         if ($method == 'POST') {
             curl_setopt($ch, CURLOPT_POST, TRUE);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postParams));
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
         }
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(

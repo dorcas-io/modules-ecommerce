@@ -35,6 +35,6 @@ return [
     'ecommerce-wallet' => [
     	'title' => 'Wallet',
     	'route' => 'ecommerce-wallet',
-        'icon' => 'fe fe-cash',
+        'icon' => 'fe fe-credit-card',
     ],
 ];
