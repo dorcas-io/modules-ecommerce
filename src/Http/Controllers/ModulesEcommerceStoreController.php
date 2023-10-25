@@ -262,7 +262,8 @@ class ModulesEcommerceStoreController extends Controller {
 
             // $scheme = app()->environment() === 'production' ? 'https://' : 'http://';
             // $storeUrl = $scheme . $storeUrl;
-            $storeUrl = $storeURL;
+            Cache::get('checklist_score_'.auth()->user()->id) == 100 ?
+            $storeUrl = $storeURL : $storeUrl = 'Ensure to tick all checklist on the dashboard to see your store address';
             
 
             $this->data['storeUrl'] = $storeUrl;

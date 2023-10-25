@@ -96,7 +96,11 @@
 	    				<span class="stamp stamp-md bg-blue mr-3"><i class="fe fe-grid"></i></span>
 	    				<div>
 	    					<h4 class="m-0"><a href="{{ route('ecommerce-domains') }}">Store Address</a></h4>
+                            @if(Cache::get('checklist_score_'.auth()->user()->id) == 100)
 	    					<small class="text-muted"><a href="{{ !empty($subdomain) ? $storeUrl : '#' }}" target="_blank">{{ !empty($subdomain) ? \Illuminate\Support\Str::limit($storeUrl, 45, $end='...') : 'Not Reserved' }}</a> | <a href="{{ route('ecommerce-domains') }}">Edit</a></small>
+                            @else
+                                <small class="text-muted">Ensure to tick all checklist on the dashboard to see your store address</small>
+                            @endif
                             <!-- str_replace("https://", "", $storeUrl) -->
 	    				</div>
 	    			</div>
