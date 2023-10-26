@@ -153,9 +153,9 @@ class KwikNGClass
      */
     public function createPickupTask($orderID)
     {
-        $cachedOrder = Cache::get($orderID);
+        $cachedOrder = Cache::get('cacheOrderManagement_' . $orderID);
 
-        dd($cachedOrder);
+        //dd($cachedOrder);
 
         $input_create_task_via_vendor = [
             "getVehicle" => (array) $cachedOrder["logistics"]["meta"]["getVehicle"],

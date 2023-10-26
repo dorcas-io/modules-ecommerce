@@ -551,7 +551,7 @@
                                 streetAddress += component.long_name;
                             }
                         }
-                        cartView.geolocate_address = streetAddress;
+                        cartView.geolocate_address = place.name + ", " + streetAddress;
 
                         // Log the state and country to the console
                         let stateObject = cartView.states.find( stat => stat.name == state.trim() )
