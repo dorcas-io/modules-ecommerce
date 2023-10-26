@@ -763,7 +763,13 @@ class ModulesEcommerceStore extends Controller
         $orderManagementKey = $this->getOrderManagementKey($data);
         $thisOrder = [
             "order" => $data,
-            "payment" => $temporaryOrderData["payment"],
+            //"payment" => $temporaryOrderData["payment"],
+            "payment" => [
+                "provider" => $provider,
+                "meta" => [
+                    "payload" => $paymentData
+                ]
+            ],
             "logistics" => $temporaryOrderData["logistics"],
         ];
         Cache::forever($orderManagementKey, $thisOrder);
@@ -855,6 +861,7 @@ class ModulesEcommerceStore extends Controller
         ];
 
         $tempOrder = Cache::get($cartCache["random_order_key"]);
+        $tempOrder["logistics"]["provider"] = $provider;
         $tempOrder["logistics"]["meta"]["address_from"] = $sellerAdddress;
         $tempOrder["logistics"]["meta"]["address_to"] = $to;
         Cache::put($cartCache["random_order_key"], $tempOrder);
@@ -1186,7 +1193,7 @@ class ModulesEcommerceStore extends Controller
 
         $customer_order_model = $sdk->createOrderResource($order->id)->addBodyParam('id', $customer->id)
         ->addBodyParam('paid_at', Carbon::now())
-        ->addBodyParam('is_paid', true);
+        ->addBodyParam('is_paid', $txn->is_successful ? true : false);
         $customer_order_response = $customer_order_model->send('put',  ['customers']);
         if (!$customer_order_response->isSuccessful()) {
             $m = $customer_order_response->errors[0]['title'] ?? 'Failed while updating the customer order information.';

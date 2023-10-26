@@ -23,8 +23,16 @@ class KwikNGClass
     private $vendor_id;
 
     private $order_key;
+
+    private $timezone;
+
+    private $cod;
+
+    private $codAmount;
+
+    private $returnResponse = false;
     
-    public function __construct(array $providerParams)
+    public function __construct(array $providerParams, bool $returnResponse = false)
     {
         $this->baseUrl = env('CREDENTIAL_ECOMMERCE_PROVIDER_URL', 'provider.com');
         $this->domainName = env('CREDENTIAL_ECOMMERCE_PROVIDER_DOMAIN', 'provider.com');
@@ -33,12 +41,20 @@ class KwikNGClass
 
         $this->vendor_id = $providerParams["vendor_id"];
 
+        $this->timezone = 60; //take from controller or params later
+
+        $this->cod = 0; //take from controller or params later
+
+        $this->codAmount = 1000; //take from controller or params later
+
+        $this->order_key = $providerParams["order_key"] ?? null;
+
+        $this->returnResponse = $returnResponse;
+
         // Get Access Token
         if (empty($this->accessToken)) {
             $this->getToken();
         }
-
-        $this->order_key = $providerParams["order_key"];
 
     }
 
@@ -114,118 +130,10 @@ class KwikNGClass
 
         $input_get_bill_breakdown = (array) $response1->data;
 
-/*
-
-array:17 [
-  "currency" => {#844
-    +"currency_id": 29
-    +"code": "NGN"
-    +"name": "Nigerian Naira"
-    +"symbol": "₦"
-    +"is_zero_decimal_currency": 0
-    +"minimum_amount": 10
-  }
-  "per_task_cost" => "16730.1"
-  "pickups" => array:1 [
-    0 => {#843
-      +"address": ""
-      +"name": "Demo"
-      +"latitude": "6.616106599999999"
-      +"longitude": "3.3684495"
-      +"time": "2023-06-28T19:41:45.367181Z"
-      +"phone": null
-      +"has_return_task": false
-      +"is_package_insured": 0
-    }
-  ]
-  "deliveries" => array:1 [
-    0 => {#842
-      +"address": "federal university of tec"
-      +"name": "BOlaji Olawoye"
-      +"latitude": "7.307042000000001"
-      +"longitude": "5.1397549"
-      +"time": "2023-06-29T00:05:10.567Z"
-      +"phone": "081822334434"
-      +"has_return_task": false
-      +"is_package_insured": 0
-      +"hadVairablePayment": 1
-    }
-  ]
-  "insurance_amount" => 0
-  "total_no_of_tasks" => 1
-  "total_service_charge" => 0
-  "delivery_charge_by_buyer" => 0
-  "is_cod_job" => 0
-  "is_loader_required" => 1
-  "loaders_amount" => 40
-  "delivery_instruction" => "Hey, please deliver the parcel with safety. Thanks in advance"
-  "delivery_images" => "https://s3.ap-south-1.amazonaws.com/kwik-project/task_images/kjjX1603884709732-stripeconnect.png"
-  "vehicle_id" => 4
-  "loaders_count" => 4
-  "sareaId" => 3
-  "backupDeliveries" => array:1 [
-    0 => {#841
-      +"address": "federal university of tec"
-      +"name": "BOlaji Olawoye"
-      +"latitude": "7.307042000000001"
-      +"longitude": "5.1397549"
-      +"time": "2023-06-28T19:41:45.436341Z"
-      +"phone": "081822334434"
-      +"has_return_task": false
-      +"is_package_insured": 0
-    }
-  ]
-]
-
-*/
-
-
         $params2 = $this->getProviderParams('get_bill_breakdown', $input_get_bill_breakdown);
         $response2 = $this->connect('/get_bill_breakdown', $params2, 'POST');
 
         $output = (array) $response2->data;
-
-
-        /*
-            +"ACTUAL_AMOUNT": "1974.50"
-            +"DISCOUNT": "0.00"
-            +"CREDITS_TO_ADD": 0
-            +"VAT": "151.09"
-            +"PENDING_AMOUNT": 0
-            +"SERVICE_TAX": 0
-            +"BENEFIT_TYPE": null
-            +"PAYABLE_AMOUNT_WITHOUT_CREDITS": 0
-            +"TIP": "0.00"
-            +"DEFAULT_VAT_PERCENT": 7.5
-            +"DEFAULT_SERVICE_TAX_PERCENT": 0
-            +"INSURANCE_AMOUNT": 0
-            +"AMOUNT_PER_TASK": "1974.50"
-            +"TOTAL_NO_OF_TASKS": 1
-            +"AMOUNT_FOR_FIRST_TASK": "2165.59"
-            +"TOTAL_SERVICE_CHARGE": 500
-            +"SURGE_PRICING": 0
-            +"SURGE_TYPE": 0
-            +"CREDITS_USED": "0.00"
-            +"LOADER_CHARGES": 40
-            +"LOADER_REQUIRED": 1
-            +"LOADERS_INSTRUCTION": "Hey, please handover parcel with safety. Thanks"
-            +"LOADERS_IMAGES": "https://s3.ap-south-1.amazonaws.com/kwik-project/task_images/wPqj1603886372690-stripeconnect.png"
-            +"VEHICLE_ID": 4
-            +"PENDING_CANCELLATION_CHARGE": 0
-            +"PENDING_WAITING_CHARGES": 0
-            +"LOADERS_COUNT": 4
-            +"SAREA_ID": 0
-            +"CURRENT_CREDITS": "60000.00"
-            +"PROMO_VALUE": null
-            +"DISCOUNTED_AMOUNT": "2014.50"
-            +"PAYABLE_AMOUNT": "2165.59"
-            +"NET_PAYABLE_AMOUNT": 2200
-            +"ORDER_PAYABLE_AMOUNT": 1700
-            +"ACTUAL_ORDER_PAYABLE_AMOUNT": 2200
-            +"VENDOR_CREDITS": 60000
-            +"NET_CREDITS_PAYABLE_AMOUNT": 0
-            +"WALLET_ENABLE": 0
-        */
 
         $tempOrder = Cache::get($this->order_key);
         $tempOrder["logistics"]["meta"]["getVehicle"] = $response0->data;
@@ -233,7 +141,37 @@ array:17 [
         $tempOrder["logistics"]["meta"]["get_bill_breakdown"] = $response2->data;
         Cache::put($this->order_key, $tempOrder);
 
-        return $output;
+        return $this->returnResponse ? $response2 : $output;
+
+    }
+
+
+    /**
+     * @param Request     $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function createPickupTask($orderID)
+    {
+        $cachedOrder = Cache::get($orderID);
+
+        dd($cachedOrder);
+
+        $input_create_task_via_vendor = [
+            "getVehicle" => (array) $cachedOrder["logistics"]["meta"]["getVehicle"],
+            "send_payment_for_task" => (array) $cachedOrder["logistics"]["meta"]["send_payment_for_task"],
+            "get_bill_breakdown" => (array) $cachedOrder["logistics"]["meta"]["get_bill_breakdown"],
+        ];
+
+        dd($input_create_task_via_vendor);
+
+        $params_create_task_via_vendor = $this->getProviderParams('create_task_via_vendor', $input_create_task_via_vendor);
+        dd($params_create_task_via_vendor);
+        $response = $this->connect('/create_task_via_vendor', $params_create_task_via_vendor, 'POST');
+
+        $output = (array) $response->data;
+
+        return $this->returnResponse ? $response : $output;
 
     }
 
@@ -266,9 +204,10 @@ array:17 [
                     "custom_field_template" => "pricing-template",
                     "pickup_custom_field_template" => "pricing-template",
                     "vendor_id" => $this->vendor_id,
+                    "timezone" => $this->timezone,
+                    "is_cod_job" => $this->cod,
                     "auto_assignment" => 1,
                     "layout_type" => 0,
-                    "timezone" => -330,
                     "is_multiple_tasks" => 1,
                     "has_pickup" => 1,
                     "has_delivery" => 1,
@@ -281,8 +220,7 @@ array:17 [
                     "is_loader_required" => 0,
                     "loaders_amount" => 0,
                     "loaders_count" => 0,
-                    "is_cod_job" => 0,
-                    "parcel_amount" => 1000
+                    "parcel_amount" => $this->codAmount
                 ];
             break;
 
@@ -301,13 +239,13 @@ array:17 [
                     "loaders_amount" => $input['loaders_amount'],
                     "loaders_count" => $input['loaders_count'],
                     "delivery_instruction" => $input['delivery_instruction'],
-                    "pickup_time" => "2020-10-28 17:35:37",
+                    "pickup_time" => \Carbon\Carbon::now()->format('Y-m-d H:i:s'),
                     "user_id" => 1,
                     "form_id" => 2,
                     "promo_value" => null,
                     "credits" => 0,
                     "is_cod_job" => 0,
-                    "parcel_amount" => 1000,
+                    "parcel_amount" => $this->codAmount,
                     "delivery_charge_by_buyer" => 0
                 ];
             break;
@@ -317,6 +255,55 @@ array:17 [
                     "access_token" => $this->accessToken,
                     "is_vendor" => 1,
                     "size" => $input['size']
+                ];
+            break;
+
+            case 'create_task_via_vendor':
+
+                // modify pickup and delivery times ?
+                //$input['send_payment_for_task']['pickups']['time'] = \Carbon\Carbon::now();
+                //$input['send_payment_for_task']['deliveries']['time'] = \Carbon\Carbon::now();
+
+                $params = [
+                    "access_token" => $this->accessToken,
+                    "domain_name" => $this->domainName,
+                    "vendor_id" => $this->vendor_id,
+                    "is_multiple_tasks" => 1,
+                    "fleet_id" => $input[''][''], //"",
+                    "latitude" => $input[''][''], //0,
+                    "longitude" => $input[''][''], //0,
+                    "timezone" => $this->timezone,
+                    "is_cod_job" => $this->cod,
+                    "has_pickup" => 1,
+                    "has_delivery" => 1,
+                    "layout_type" => 0,
+                    "auto_assignment" => 1,
+                    "insurance_amount" => $input['send_payment_for_task']['insurance_amount'],
+                    "total_no_of_tasks" => $input['send_payment_for_task']['total_no_of_tasks'],
+                    "total_service_charge" => $input['send_payment_for_task']['total_service_charge'],
+                    "payment_method" => 32,
+                    "amount" => $input['send_payment_for_task']['per_task_cost'],
+                    "loaders_amount" => $input['send_payment_for_task']['loaders_amount'],
+                    "loaders_count" => $input['send_payment_for_task']['loaders_count'],
+                    "is_loader_required" => $input['send_payment_for_task']['is_loader_required'],
+                    "delivery_instruction" => $input['send_payment_for_task']['delivery_instruction'],
+                    "vehicle_id" => $input["send_payment_for_task"]['vehicle_id'],
+                    "delivery_images" => $input['send_payment_for_task']['delivery_images'],
+                    "pickup_delivery_relationship" => $input[''][''], //0,
+                    "team_id" => $input[''][''], //"",
+                    "parcel_amount" => $input['input_get_bill_breakdown']['PARCEL_AMOUNT'],
+                    "pickups" => $input['send_payment_for_task']['pickups'],
+                    "deliveries" => $input['send_payment_for_task']['deliveries'],
+                    "surge_cost" => $input['input_get_bill_breakdown']['SURGE_PRICING'],
+                    "surge_type" => $input['input_get_bill_breakdown']['SURGE_TYPE'],
+                    // "is_task_otp_required" => 0,
+                    // "cash_handling_charges" => 0,
+                    // "cash_handling_percentage" => 0,
+                    // "net_processed_amount" => 0,
+                    // "kwister_cash_handling_charge" => "0",
+                    // "delivery_charge_by_buyer" => 1,
+                    // "delivery_charge" => 0,
+                    // "collect_on_delivery" => 0,
                 ];
             break;
 
