@@ -139,7 +139,7 @@ class KwikNGClass
         $tempOrder["logistics"]["meta"]["getVehicle"] = $response0->data;
         $tempOrder["logistics"]["meta"]["send_payment_for_task"] = $response1->data;
         $tempOrder["logistics"]["meta"]["get_bill_breakdown"] = $response2->data;
-        Cache::put($this->order_key, $tempOrder);
+        Cache::forever($this->order_key, $tempOrder);
 
         return $this->returnResponse ? $response2 : $output;
 

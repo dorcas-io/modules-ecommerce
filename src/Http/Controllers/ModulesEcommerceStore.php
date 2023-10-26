@@ -503,29 +503,20 @@ class ModulesEcommerceStore extends Controller
         // }
         # Depreciated in favour of per order cache
 
-        $getRandomOrderKey = 'tempOrderManagement_' . $this->getRandomOrderKey();
-        Cache::put($getRandomOrderKey, [
-            "order" => [],
-            "payment" => [
-                "status" => false,
-                "provider" => [
-                    "id" => env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave'),
+        if (!isset($cartCache["random_order_key"])) {
+            $getRandomOrderKey = 'tempOrderManagement_' . $this->getRandomOrderKey();
+            Cache::put($getRandomOrderKey, [
+                "order" => [],
+                "payment" => [],
+                "logistics" => [
                     "meta" => []
                 ],
-                "meta" => []
-            ],
-            "logistics" => [
-                "status" => false,
-                "provider" => [
-                    "id" => env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik'),
-                    "meta" => []
-                ],
-                "meta" => []
-            ],
-        ], 60*60*24);
-
-        $this->data['random_order_key'] = $cartCache["random_order_key"] = $getRandomOrderKey;
-
+            ], 60*60*24);
+    
+            $this->data['random_order_key'] = $cartCache["random_order_key"] = $getRandomOrderKey;
+        } else {
+            $this->data['random_order_key'] = $cartCache["random_order_key"];
+        }
 
         // Save ALL to session
         session(['cartCache' => $cartCache]);
@@ -818,7 +809,7 @@ class ModulesEcommerceStore extends Controller
             "name" => $s["name"],
             "latitude" => $sAddress["latitude"],
             "longitude" => $sAddress["longitude"],
-            "time" => Carbon::now(), //Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))
+            "time" => \Carbon\Carbon::now()->format('Y-m-d H:i:s'), //Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))
             "phone" => $s["phone"],
             "has_return_task" => false,
             "is_package_insured" => 0
@@ -854,7 +845,7 @@ class ModulesEcommerceStore extends Controller
             "name" => $cartCache["address"]["firstname"] . " " . $cartCache["address"]["lastname"],
             "latitude" => $cartCache["address"]["latitude"],
             "longitude" => $cartCache["address"]["longitude"],
-            "time" => Carbon::now(),
+            "time" => \Carbon\Carbon::now()->format('Y-m-d H:i:s'),
             "phone" => $cartCache["address"]["phone"],
             "has_return_task" => false,
             "is_package_insured" => 0
