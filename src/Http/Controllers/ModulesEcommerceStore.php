@@ -817,7 +817,7 @@ class ModulesEcommerceStore extends Controller
             "name" => $s["name"],
             "latitude" => $sAddress["latitude"],
             "longitude" => $sAddress["longitude"],
-            "time" => \Carbon\Carbon::now()->format('Y-m-d H:i:s'), //Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))
+            "time" => \Carbon\Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))->format('Y-m-d H:i:s'), //Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))
             "phone" => $sAddress["seller_phone"],
             "has_return_task" => false,
             "is_package_insured" => 0

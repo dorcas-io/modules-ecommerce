@@ -626,7 +626,7 @@
                                 
                                 context.isOrderCompleted = true
 
-                                console.log(response.data);
+                                //console.log(response.data);
 
                                 // hide order button
 

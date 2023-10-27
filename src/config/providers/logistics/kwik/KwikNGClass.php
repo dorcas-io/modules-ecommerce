@@ -135,11 +135,19 @@ class KwikNGClass
 
         $output = (array) $response2->data;
 
-        $tempOrder = Cache::get($this->order_key);
-        $tempOrder["logistics"]["meta"]["getVehicle"] = $response0->data;
-        $tempOrder["logistics"]["meta"]["send_payment_for_task"] = $response1->data;
-        $tempOrder["logistics"]["meta"]["get_bill_breakdown"] = $response2->data;
-        Cache::forever($this->order_key, $tempOrder);
+        if ($returnOutputs) {
+            $realOrder = Cache::get($this->order_key);
+            $realOrder["logistics"]["output"]["getVehicle"] = $response0->data;
+            $realOrder["logistics"]["output"]["send_payment_for_task"] = $response1->data;
+            $realOrder["logistics"]["output"]["get_bill_breakdown"] = $response2->data;
+            Cache::forever($this->order_key, $realOrder);
+        } else {
+            $tempOrder = Cache::get($this->order_key);
+            $tempOrder["logistics"]["meta"]["getVehicle"] = $response0->data;
+            $tempOrder["logistics"]["meta"]["send_payment_for_task"] = $response1->data;
+            $tempOrder["logistics"]["meta"]["get_bill_breakdown"] = $response2->data;
+            Cache::forever($this->order_key, $tempOrder);
+        }
 
         if ($returnOutputs) {
 
@@ -177,7 +185,7 @@ class KwikNGClass
 
             $freshOrder = $this->getCost($fromAddress, $toAddress, $vehicleSize, true);
 
-            dd($freshOrder);
+            //dd($freshOrder);
 
             $input_create_task_via_vendor = [
                 "getVehicle" => (array) $freshOrder["getVehicle"][0],
@@ -200,6 +208,9 @@ class KwikNGClass
         $response = $this->connect('/create_task_via_vendor', $params_create_task_via_vendor, 'POST');
 
         $output = (array) $response->data;
+        
+        $cachedOrder["logistics"]["output"]["create_task_via_vendor"] = $response->data;
+        Cache::forever($this->order_key, $cachedOrder);
 
         return $this->returnResponse ? $response : $output;
 
@@ -291,8 +302,8 @@ class KwikNGClass
             case 'create_task_via_vendor':
 
                 // modify pickup and delivery times ?
-                //$input['send_payment_for_task']['pickups']['time'] = \Carbon\Carbon::now();
-                //$input['send_payment_for_task']['deliveries']['time'] = \Carbon\Carbon::now();
+                ($input['send_payment_for_task']['pickups'][0])->time = \Carbon\Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))->addMinutes(30)->format('Y-m-d H:i:s');
+                ($input['send_payment_for_task']['deliveries'][0])->time = \Carbon\Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))->addHours(2)->format('Y-m-d H:i:s');
 
                 $params = [
                     "access_token" => $this->accessToken,
