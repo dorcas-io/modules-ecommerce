@@ -104,7 +104,7 @@ class KwikNGClass
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getCost($fromAddress, $toAddress, $vehicleSize)
+    public function getCost($fromAddress, $toAddress, $vehicleSize, $returnOutputs = false)
     {
 
         $input_get_vehicle = [
@@ -141,7 +141,21 @@ class KwikNGClass
         $tempOrder["logistics"]["meta"]["get_bill_breakdown"] = $response2->data;
         Cache::forever($this->order_key, $tempOrder);
 
-        return $this->returnResponse ? $response2 : $output;
+        if ($returnOutputs) {
+
+            $finalResponse = [
+                "getVehicle" => $response0->data,
+                "send_payment_for_task" => $response1->data,
+                "get_bill_breakdown" =>$response2->data
+            ];
+
+        } else {
+
+            $finalResponse = $response2;
+
+        }
+
+        return $this->returnResponse ? $finalResponse : $output;
 
     }
 
@@ -151,22 +165,38 @@ class KwikNGClass
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function createPickupTask($orderID)
+    public function createPickupTask($orderID, $reOrder = false)
     {
         $cachedOrder = Cache::get('cacheOrderManagement_' . $orderID);
 
-        //dd($cachedOrder);
+        if ($reOrder) {
 
-        $input_create_task_via_vendor = [
-            "getVehicle" => (array) $cachedOrder["logistics"]["meta"]["getVehicle"],
-            "send_payment_for_task" => (array) $cachedOrder["logistics"]["meta"]["send_payment_for_task"],
-            "get_bill_breakdown" => (array) $cachedOrder["logistics"]["meta"]["get_bill_breakdown"],
-        ];
+            $fromAddress = $cachedOrder["logistics"]["meta"]["address_from"];
+            $toAddress = $cachedOrder["logistics"]["meta"]["address_to"];
+            $vehicleSize = $cachedOrder["logistics"]["meta"]["vehicle_type"];
 
-        dd($input_create_task_via_vendor);
+            $freshOrder = $this->getCost($fromAddress, $toAddress, $vehicleSize, true);
+
+            dd($freshOrder);
+
+            $input_create_task_via_vendor = [
+                "getVehicle" => (array) $freshOrder["getVehicle"][0],
+                "send_payment_for_task" => (array) $freshOrder["send_payment_for_task"],
+                "get_bill_breakdown" => (array) $freshOrder["get_bill_breakdown"],
+            ];
+
+        } else {
+
+            $input_create_task_via_vendor = [
+                "getVehicle" => (array) $cachedOrder["logistics"]["meta"]["getVehicle"][0],
+                "send_payment_for_task" => (array) $cachedOrder["logistics"]["meta"]["send_payment_for_task"],
+                "get_bill_breakdown" => (array) $cachedOrder["logistics"]["meta"]["get_bill_breakdown"],
+            ];
+
+        }
 
         $params_create_task_via_vendor = $this->getProviderParams('create_task_via_vendor', $input_create_task_via_vendor);
-        dd($params_create_task_via_vendor);
+        
         $response = $this->connect('/create_task_via_vendor', $params_create_task_via_vendor, 'POST');
 
         $output = (array) $response->data;
@@ -269,9 +299,9 @@ class KwikNGClass
                     "domain_name" => $this->domainName,
                     "vendor_id" => $this->vendor_id,
                     "is_multiple_tasks" => 1,
-                    "fleet_id" => $input[''][''], //"",
-                    "latitude" => $input[''][''], //0,
-                    "longitude" => $input[''][''], //0,
+                    "fleet_id" => "",
+                    "latitude" => 0,
+                    "longitude" => 0,
                     "timezone" => $this->timezone,
                     "is_cod_job" => $this->cod,
                     "has_pickup" => 1,
@@ -281,7 +311,7 @@ class KwikNGClass
                     "insurance_amount" => $input['send_payment_for_task']['insurance_amount'],
                     "total_no_of_tasks" => $input['send_payment_for_task']['total_no_of_tasks'],
                     "total_service_charge" => $input['send_payment_for_task']['total_service_charge'],
-                    "payment_method" => 32,
+                    "payment_method" => 524288,
                     "amount" => $input['send_payment_for_task']['per_task_cost'],
                     "loaders_amount" => $input['send_payment_for_task']['loaders_amount'],
                     "loaders_count" => $input['send_payment_for_task']['loaders_count'],
@@ -289,13 +319,12 @@ class KwikNGClass
                     "delivery_instruction" => $input['send_payment_for_task']['delivery_instruction'],
                     "vehicle_id" => $input["send_payment_for_task"]['vehicle_id'],
                     "delivery_images" => $input['send_payment_for_task']['delivery_images'],
-                    "pickup_delivery_relationship" => $input[''][''], //0,
-                    "team_id" => $input[''][''], //"",
-                    "parcel_amount" => $input['input_get_bill_breakdown']['PARCEL_AMOUNT'],
-                    "pickups" => $input['send_payment_for_task']['pickups'],
-                    "deliveries" => $input['send_payment_for_task']['deliveries'],
-                    "surge_cost" => $input['input_get_bill_breakdown']['SURGE_PRICING'],
-                    "surge_type" => $input['input_get_bill_breakdown']['SURGE_TYPE'],
+                    "pickup_delivery_relationship" => 0,
+                    "team_id" => "",
+                    "pickups" => (array) $input['send_payment_for_task']['pickups'],
+                    "deliveries" => (array) $input['send_payment_for_task']['deliveries'],
+                    "surge_cost" => $input['get_bill_breakdown']['SURGE_PRICING'],
+                    "surge_type" => $input['get_bill_breakdown']['SURGE_TYPE'],
                     // "is_task_otp_required" => 0,
                     // "cash_handling_charges" => 0,
                     // "cash_handling_percentage" => 0,

@@ -405,6 +405,15 @@ class ModulesEcommerceStore extends Controller
 
         }
 
+        // add phone to seller address
+        $business_phone = trim($sOwner["phone"]);
+        $seller_phone = $business_phone;
+        if (empty($seller_phone)) {
+            $admin_phone = trim($sOwner["users"]["data"][0]["phone"]);
+            $seller_phone = $admin_phone;
+        }
+        $location['seller_phone'] = $seller_phone;
+
         $cartCache["address_seller"] = $location;
 
 
@@ -754,7 +763,6 @@ class ModulesEcommerceStore extends Controller
         $orderManagementKey = $this->getOrderManagementKey($data);
         $thisOrder = [
             "order" => $data,
-            //"payment" => $temporaryOrderData["payment"],
             "payment" => [
                 "provider" => $provider,
                 "meta" => [
@@ -810,7 +818,7 @@ class ModulesEcommerceStore extends Controller
             "latitude" => $sAddress["latitude"],
             "longitude" => $sAddress["longitude"],
             "time" => \Carbon\Carbon::now()->format('Y-m-d H:i:s'), //Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))
-            "phone" => $s["phone"],
+            "phone" => $sAddress["seller_phone"],
             "has_return_task" => false,
             "is_package_insured" => 0
         ];
@@ -853,8 +861,9 @@ class ModulesEcommerceStore extends Controller
 
         $tempOrder = Cache::get($cartCache["random_order_key"]);
         $tempOrder["logistics"]["provider"] = $provider;
-        $tempOrder["logistics"]["meta"]["address_from"] = $sellerAdddress;
+        $tempOrder["logistics"]["meta"]["address_from"] = $from;
         $tempOrder["logistics"]["meta"]["address_to"] = $to;
+        $tempOrder["logistics"]["meta"]["vehicle_type"] = $vehicle_type;
         Cache::put($cartCache["random_order_key"], $tempOrder);
 
         $costs = $providerClass->getCost($from, $to, $vehicle_type);
