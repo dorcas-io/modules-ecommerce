@@ -217,6 +217,60 @@ class KwikNGClass
     }
 
 
+    /**
+     * @param Request     $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function cancelPickupTask($orderID, $reOrder = false)
+    {
+        $cachedOrder = Cache::get('cacheOrderManagement_' . $orderID);
+
+        $d = (array) ($cachedOrder["logistics"]["output"]["create_task_via_vendor"])->data;
+
+        $cancel_vendor_task = [
+            "job_id" => ($d["pickups"][0])->job_id . "," . ($d["deliveries"][0])->job_id,
+        ];
+
+        $params_create_task_via_vendor = $this->getProviderParams('cancel_vendor_task', $cancel_vendor_task);
+        
+        $response = $this->connect('/create_task_via_vendor', $params_create_task_via_vendor, 'POST');
+
+        $output = (array) $response->data;
+
+
+        if ($reOrder) {
+
+            $fromAddress = $cachedOrder["logistics"]["meta"]["address_from"];
+            $toAddress = $cachedOrder["logistics"]["meta"]["address_to"];
+            $vehicleSize = $cachedOrder["logistics"]["meta"]["vehicle_type"];
+
+            $freshOrder = $this->getCost($fromAddress, $toAddress, $vehicleSize, true);
+
+            //dd($freshOrder);
+
+            $input_create_task_via_vendor = [
+                "getVehicle" => (array) $freshOrder["getVehicle"][0],
+                "send_payment_for_task" => (array) $freshOrder["send_payment_for_task"],
+                "get_bill_breakdown" => (array) $freshOrder["get_bill_breakdown"],
+            ];
+
+            $params_create_task_via_vendor = $this->getProviderParams('create_task_via_vendor', $input_create_task_via_vendor);
+        
+            $responseNew = $this->connect('/create_task_via_vendor', $params_create_task_via_vendor, 'POST');
+    
+            $output = (array) $responseNew->data;
+
+            $cachedOrder["logistics"]["output"]["create_task_via_vendor"] = $responseNew->data;
+            Cache::forever($this->order_key, $cachedOrder);
+
+        }
+
+        return $this->returnResponse ? $response : $output;
+
+    }
+
+
 
     /**
      * @param array $route
@@ -344,6 +398,17 @@ class KwikNGClass
                     // "delivery_charge_by_buyer" => 1,
                     // "delivery_charge" => 0,
                     // "collect_on_delivery" => 0,
+                ];
+            break;
+
+            case 'cancel_vendor_task':
+
+                $params = [
+                    "access_token" => $this->accessToken,
+                    "domain_name" => $this->domainName,
+                    "vendor_id" => $this->vendor_id,
+                    "job_id" => $input['job_id'],
+                    "job_status" => 9,
                 ];
             break;
 
