@@ -181,7 +181,7 @@ class KwikNGClass
 
             $fromAddress = $cachedOrder["logistics"]["meta"]["address_from"];
             $toAddress = $cachedOrder["logistics"]["meta"]["address_to"];
-            $vehicleSize = $cachedOrder["logistics"]["meta"]["vehicle_type"];
+            $vehicleSize = isset($cachedOrder["logistics"]["meta"]["vehicle_type"]) ? $cachedOrder["logistics"]["meta"]["vehicle_type"] : 0;
 
             $freshOrder = $this->getCost($fromAddress, $toAddress, $vehicleSize, true);
 
@@ -234,7 +234,7 @@ class KwikNGClass
 
         $params_create_task_via_vendor = $this->getProviderParams('cancel_vendor_task', $cancel_vendor_task);
         
-        $response = $this->connect('/create_task_via_vendor', $params_create_task_via_vendor, 'POST');
+        $response = $this->connect('/cancel_vendor_task', $params_create_task_via_vendor, 'POST');
 
         $output = (array) $response->data;
 
@@ -243,7 +243,7 @@ class KwikNGClass
 
             $fromAddress = $cachedOrder["logistics"]["meta"]["address_from"];
             $toAddress = $cachedOrder["logistics"]["meta"]["address_to"];
-            $vehicleSize = $cachedOrder["logistics"]["meta"]["vehicle_type"];
+            $vehicleSize = isset($cachedOrder["logistics"]["meta"]["vehicle_type"]) ? $cachedOrder["logistics"]["meta"]["vehicle_type"] : 0;
 
             $freshOrder = $this->getCost($fromAddress, $toAddress, $vehicleSize, true);
 
