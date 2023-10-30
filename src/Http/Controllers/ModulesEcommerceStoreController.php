@@ -82,6 +82,7 @@ class ModulesEcommerceStoreController extends Controller {
         $this->data['logisticsSettings'] = $settingsLogistics = self::getLogisticsSettings((array) $this->getCompany()->extra_data);
         $this->data['logisticsFulfilmentCentre'] = env("SETTINGS_ECOMMERCE_LOGISTICS_FULFILMENT_CENTRE", false);
         $paymentSettings = self::getPaymentsSettings((array) $this->getCompany()->extra_data);
+
         $this->data['paymentSettings'] = $settingsPayments = $paymentSettings;
         # our store, logistics & payment settings container
 
@@ -129,6 +130,7 @@ class ModulesEcommerceStoreController extends Controller {
         # get all the available integrations
 
         $installed = $this->getIntegrations($sdk);
+
         $installedNames = !empty($installed) && $installed->count() > 0 ? $installed->pluck('name')->all() : [];
 
         $paymentIntegrations = collect($availableIntegrations);
