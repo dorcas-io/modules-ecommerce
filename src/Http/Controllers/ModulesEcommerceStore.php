@@ -405,6 +405,15 @@ class ModulesEcommerceStore extends Controller
 
         }
 
+        // add phone to seller address
+        $business_phone = trim($sOwner["phone"]);
+        $seller_phone = $business_phone;
+        if (empty($seller_phone)) {
+            $admin_phone = trim($sOwner["users"]["data"][0]["phone"]);
+            $seller_phone = $admin_phone;
+        }
+        $location['seller_phone'] = $seller_phone;
+
         $cartCache["address_seller"] = $location;
 
 
@@ -503,29 +512,20 @@ class ModulesEcommerceStore extends Controller
         // }
         # Depreciated in favour of per order cache
 
-        $getRandomOrderKey = 'tempOrderManagement_' . $this->getRandomOrderKey();
-        Cache::put($getRandomOrderKey, [
-            "order" => [],
-            "payment" => [
-                "status" => false,
-                "provider" => [
-                    "id" => env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave'),
+        if (!isset($cartCache["random_order_key"])) {
+            $getRandomOrderKey = 'tempOrderManagement_' . $this->getRandomOrderKey();
+            Cache::put($getRandomOrderKey, [
+                "order" => [],
+                "payment" => [],
+                "logistics" => [
                     "meta" => []
                 ],
-                "meta" => []
-            ],
-            "logistics" => [
-                "status" => false,
-                "provider" => [
-                    "id" => env('SETTINGS_ECOMMERCE_LOGISTICS_PROVIDER', 'kwik'),
-                    "meta" => []
-                ],
-                "meta" => []
-            ],
-        ], 60*60*24);
-
-        $this->data['random_order_key'] = $cartCache["random_order_key"] = $getRandomOrderKey;
-
+            ], 60*60*24);
+    
+            $this->data['random_order_key'] = $cartCache["random_order_key"] = $getRandomOrderKey;
+        } else {
+            $this->data['random_order_key'] = $cartCache["random_order_key"];
+        }
 
         // Save ALL to session
         session(['cartCache' => $cartCache]);
@@ -763,7 +763,12 @@ class ModulesEcommerceStore extends Controller
         $orderManagementKey = $this->getOrderManagementKey($data);
         $thisOrder = [
             "order" => $data,
-            "payment" => $temporaryOrderData["payment"],
+            "payment" => [
+                "provider" => $provider,
+                "meta" => [
+                    "payload" => $paymentData
+                ]
+            ],
             "logistics" => $temporaryOrderData["logistics"],
         ];
         Cache::forever($orderManagementKey, $thisOrder);
@@ -812,8 +817,8 @@ class ModulesEcommerceStore extends Controller
             "name" => $s["name"],
             "latitude" => $sAddress["latitude"],
             "longitude" => $sAddress["longitude"],
-            "time" => Carbon::now(), //Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))
-            "phone" => $s["phone"],
+            "time" => \Carbon\Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))->format('Y-m-d H:i:s'), //Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))
+            "phone" => $sAddress["seller_phone"],
             "has_return_task" => false,
             "is_package_insured" => 0
         ];
@@ -848,15 +853,17 @@ class ModulesEcommerceStore extends Controller
             "name" => $cartCache["address"]["firstname"] . " " . $cartCache["address"]["lastname"],
             "latitude" => $cartCache["address"]["latitude"],
             "longitude" => $cartCache["address"]["longitude"],
-            "time" => Carbon::now(),
+            "time" => \Carbon\Carbon::now()->format('Y-m-d H:i:s'),
             "phone" => $cartCache["address"]["phone"],
             "has_return_task" => false,
             "is_package_insured" => 0
         ];
 
         $tempOrder = Cache::get($cartCache["random_order_key"]);
-        $tempOrder["logistics"]["meta"]["address_from"] = $sellerAdddress;
+        $tempOrder["logistics"]["provider"] = $provider;
+        $tempOrder["logistics"]["meta"]["address_from"] = $from;
         $tempOrder["logistics"]["meta"]["address_to"] = $to;
+        $tempOrder["logistics"]["meta"]["vehicle_type"] = $vehicle_type;
         Cache::put($cartCache["random_order_key"], $tempOrder);
 
         $costs = $providerClass->getCost($from, $to, $vehicle_type);
@@ -1030,6 +1037,7 @@ class ModulesEcommerceStore extends Controller
             'reference' => $reference,
             'channel' => $channel,
             'customer_id' => $customer_id,
+            "is_successful" => false
         ];
 
         $txn = DB::connection('core_mysql')->table('payment_transactions')->where($txn_data)->first();
@@ -1038,203 +1046,201 @@ class ModulesEcommerceStore extends Controller
             
             $final_message .= ' You cancelled the payment. You may try again at a later time.';
 
-        } else {
+        }
 
-            $transaction = null;
-            # our transaction object
+        $transaction = null;
+        # our transaction object
 
 
-            $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
-            $country = env('SETTINGS_COUNTRY', 'NG');
-            $provider_config = ucfirst($provider). strtoupper($country) . '.php';
-            $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
-            $provider_config_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config);
-            $config = require_once($provider_config_path);
-            $provider_class_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class);
-            require_once($provider_class_path);
-            
-            $c = $config["class"];
-
-    
-            try {
-                switch ($request->channel) {
-                    case 'flutterwave':
-                        if (!$request->has('tx_ref')) {
-                            abort(400, 'No payment reference was provided by the R payment gateway.');
-                        }
-
-                        $success_messages = ['successful', 'completed'];
-    
-                        if ( in_array($status, $success_messages) ) {
+        $provider = env('SETTINGS_ECOMMERCE_PAYMENT_PROVIDER', 'flutterwave');
+        $country = env('SETTINGS_COUNTRY', 'NG');
+        $provider_config = ucfirst($provider). strtoupper($country) . '.php';
+        $provider_class = ucfirst($provider). strtoupper($country) . 'Class.php';
+        $provider_config_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_config);
+        $config = require_once($provider_config_path);
+        $provider_class_path = base_path('vendor/dorcas/modules-ecommerce/src/Config/Providers/Payments/' . ucfirst($provider). '/' . $provider_class);
+        require_once($provider_class_path);
         
-                            $providerParams = [
-                                "provider" => $provider,
-                                "path" => "/transactions/verify_by_reference",
-                                "method" => "GET",
-                                "params" => [
-                                    "tx_ref" => $reference
-                                ]
+        $c = $config["class"];
+
+
+        try {
+            switch ($request->channel) {
+                case 'flutterwave':
+                    if (!$request->has('tx_ref')) {
+                        abort(400, 'No payment reference was provided by the R payment gateway.');
+                    }
+
+                    $success_messages = ['successful', 'completed'];
+
+                    if ( in_array($status, $success_messages) ) {
+    
+                        $providerParams = [
+                            "provider" => $provider,
+                            "path" => "/transactions/verify_by_reference",
+                            "method" => "GET",
+                            "params" => [
+                                "tx_ref" => $reference
+                            ]
+                        ];
+                        
+                        $providerClass = new $c($providerParams);
+                        
+                        $verify = $providerClass->verifyTransaction();
+                        
+                        if ($verify->status == "success") {
+                            //$transaction = (array) $verify->data;
+                            $d = $verify->data;
+                            $transaction = [
+                                'channel' => 'flutterwave',
+                                'reference' => $d->tx_ref,
+                                'amount' => $d->charged_amount,
+                                'currency' => $d->currency,
+                                'response_code' => "00",
+                                'response_description' => $d->processor_response,
+                                'json_payload' => json_encode($d),
+                                'is_successful' => true
                             ];
-                            
-                            $providerClass = new $c($providerParams);
-                            
-                            $verify = $providerClass->verifyTransaction();
-                            
-                            if ($verify->status == "success") {
-                                //$transaction = (array) $verify->data;
-                                $d = $verify->data;
-                                $transaction = [
-                                    'channel' => 'flutterwave',
-                                    'reference' => $d->tx_ref,
-                                    'amount' => $d->charged_amount,
-                                    'currency' => $d->currency,
-                                    'response_code' => "00",
-                                    'response_description' => $d->processor_response,
-                                    'json_payload' => json_encode($d),
-                                    'is_successful' => true
-                                ];
-                            } else {
-                                $transaction = [
-                                    'channel' => 'flutterwave',
-                                    'reference' => $reference,
-                                    'amount' => null,
-                                    'currency' => null,
-                                    'response_code' => null,
-                                    'response_description' => null,
-                                    'json_payload' => '',
-                                    'is_successful' => false
-                                ];
-                            }
-    
                         } else {
-    
                             $transaction = [
                                 'channel' => 'flutterwave',
                                 'reference' => $reference,
-                                'amount' => null,
-                                'currency' => null,
+                                'amount' => 0,
+                                'currency' => env('SETTINGS_CURRENCY', 'NGN'),
                                 'response_code' => null,
                                 'response_description' => null,
                                 'json_payload' => '',
                                 'is_successful' => false
                             ];
-    
                         }
-                        
-                        break;
-                    case 'paystack':
-                        // if (!$request->has('reference')) {
-                        //     abort(400, 'No payment reference was provided by the P payment gateway.');
-                        // }
-                        // $reference = $request->reference;
-                        // $transaction = payment_verify_paystack($privateKeyDecrypted, $reference, $order);
-                        break;
-                }
-            } catch (\UnexpectedValueException $e) {
-                abort(400, $e->getMessage());
-            } catch (\HttpException $e) {
-                abort(500, $e->getMessage());
-            } catch (\Throwable $e) {
-                abort(500, 'Something went wrong: '. $e->getMessage());
-            }
-    
-            // $txn = $order->transactions()->firstOrNew([
-            //     'reference' => $reference,
-            //     'channel' => $transaction['channel']
-            // ]);
-    
-            // Transaction & Transaction Data initializers moved outside 
-    
-            if (!$txn) {
-    
-                try {
-    
-                    $txn_data['uuid'] = Uuid::uuid1()->toString();
-                    $txn_data['order_id'] = $order_id;
-                    $txn_data['amount'] = $transaction['amount'];
-                    $txn_data['currency'] = $transaction['currency'];
-                    $txn_data['response_code'] = $transaction['response_code'];
-                    $txn_data['response_description'] = $transaction['response_description'];
-                    $txn_data['json_payload'] = $transaction['json_payload'] ?? '';
-                    $txn_data['is_successful'] = (bool) $transaction['is_successful'] ?? 0;
-        
-                    $insertedId = DB::connection('core_mysql')->table('payment_transactions')->insertGetId($txn_data);
-                    $txn = DB::connection('core_mysql')->table('payment_transactions')->find($insertedId);
-    
-                } catch (\Exception $e) {
-                    abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $e->getMessage());
-                }
-    
-            }
-    
-    
-            # we try to get the instance if necessary
-            if (!empty($txn->customer_id) && $request->customer !== $customer->id) {
-                # a different customer owns this transaction, than the person verifying it
-                $errorMessage401 = 'This transaction does not belong to your account.';
-                //abort(401, $errorMessage401);
-                $final_message = $errorMessage401;
-            }
-    
-            # try to create the transaction, if required
-            if (!$txn->is_successful) {
-                $errorMessage400 = 'The payment transaction failed, try and make a successful payment to continue.';
-                //abort(400, $errorMessage400);
-                $final_message .= $errorMessage400;
-            }
-    
-            $customer_order_model = $sdk->createOrderResource($order->id)->addBodyParam('id', $customer->id)
-            ->addBodyParam('paid_at', Carbon::now())
-            ->addBodyParam('is_paid', true);
-            $customer_order_response = $customer_order_model->send('put',  ['customers']);
-            if (!$customer_order_response->isSuccessful()) {
-                $m = $customer_order_response->errors[0]['title'] ?? 'Failed while updating the customer order information.';
-                //throw new \RuntimeException($m);
-                abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $m);
-            }
-    
-    
-            // $customer = $order->customers()->where('customer_id', $customer->id)->first();
-            // # get the customer with the Pivot
-            // if (!$customer->pivot instanceof CustomerOrder) {
-            //     abort(500, 'Something went wrong, we could not retrieve your purchase. Please report this to support along with your Payment reference: '.$reference);
-            // }
-            // $customerOrder = $customer->pivot;
-            // $customerOrder->is_paid = true;
-            // $customerOrder->paid_at = Carbon::now();
-    
-            // if (!$customerOrder->save()) {
-            //     abort(500, 'Something went wrong, we could not mark your purchase as paid. Please report this to support along with your Payment reference: '.$reference);
-            // }
-    
-            // http request to post to core endpoint
-            
-            if ($txn->is_successful) {
-                $notification_params = [
-                    "user" => $company_admin, //uuid
-                    "order" => $order,
-                    "customer" => $customer,
-                    "txn" => $txn,
-                ];
-                $notification_url = env('DORCAS_HOST_API', 'https://core.sample-dorcas.io') . "/notification-paid-invoice";
-                
-                $notification_response = Http::post($notification_url, $notification_params);
-                if ($notification_response->successful()) {
-                    $re = $notification_response->json(); // Assuming the response is JSON
-                } else {
-                    $statusCode = $notification_response->status();
-                    $error = $notification_response->body();
-                    $errorMessage = 'We encountered issues while sending an invoice notification. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $statusCode . ": " . $error;
-                    //abort(500, $errorMessage);
-                    $final_message = $errorMessage;
-                }
-                //Notification::send($company->users->first(), new InvoicePaid($order, $customer, $txn));
-                # send the notification to members of the company
-            }
 
-            $final_message = 'Successfully completed order payment. Your reference is: ' . $reference;
+                    } else {
+
+                        $transaction = [
+                            'channel' => 'flutterwave',
+                            'reference' => $reference,
+                            'amount' => 0,
+                            'currency' => env('SETTINGS_CURRENCY', 'NGN'),
+                            'response_code' => null,
+                            'response_description' => null,
+                            'json_payload' => '',
+                            'is_successful' => false
+                        ];
+
+                    }
+                    
+                    break;
+                case 'paystack':
+                    // if (!$request->has('reference')) {
+                    //     abort(400, 'No payment reference was provided by the P payment gateway.');
+                    // }
+                    // $reference = $request->reference;
+                    // $transaction = payment_verify_paystack($privateKeyDecrypted, $reference, $order);
+                    break;
+            }
+        } catch (\UnexpectedValueException $e) {
+            abort(400, $e->getMessage());
+        } catch (\HttpException $e) {
+            abort(500, $e->getMessage());
+        } catch (\Throwable $e) {
+            abort(500, 'Something went wrong: '. $e->getMessage());
+        }
+
+        // $txn = $order->transactions()->firstOrNew([
+        //     'reference' => $reference,
+        //     'channel' => $transaction['channel']
+        // ]);
+
+        // Transaction & Transaction Data initializers moved outside 
+
+        if (!$txn) {
+
+            try {
+
+                $txn_data['uuid'] = Uuid::uuid1()->toString();
+                $txn_data['order_id'] = $order_id;
+                $txn_data['amount'] = $transaction['amount'];
+                $txn_data['currency'] = $transaction['currency'];
+                $txn_data['response_code'] = $transaction['response_code'];
+                $txn_data['response_description'] = $transaction['response_description'];
+                $txn_data['json_payload'] = $transaction['json_payload'] ?? '';
+                $txn_data['is_successful'] = (bool) $transaction['is_successful'] ?? 0;
+    
+                $insertedId = DB::connection('core_mysql')->table('payment_transactions')->insertGetId($txn_data);
+                $txn = DB::connection('core_mysql')->table('payment_transactions')->find($insertedId);
+
+            } catch (\Exception $e) {
+                abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $e->getMessage());
+            }
 
         }
+
+
+        # we try to get the instance if necessary
+        if (!empty($txn->customer_id) && $request->customer !== $customer->id) {
+            # a different customer owns this transaction, than the person verifying it
+            $errorMessage401 = 'This transaction does not belong to your account.';
+            //abort(401, $errorMessage401);
+            $final_message = $errorMessage401;
+        }
+
+        # try to create the transaction, if required
+        if (!$txn->is_successful) {
+            $errorMessage400 = 'The payment transaction failed, try and make a successful payment to continue.';
+            //abort(400, $errorMessage400);
+            $final_message .= $errorMessage400;
+        }
+
+        $customer_order_model = $sdk->createOrderResource($order->id)->addBodyParam('id', $customer->id)
+        ->addBodyParam('paid_at', Carbon::now())
+        ->addBodyParam('is_paid', $txn->is_successful ? true : false);
+        $customer_order_response = $customer_order_model->send('put',  ['customers']);
+        if (!$customer_order_response->isSuccessful()) {
+            $m = $customer_order_response->errors[0]['title'] ?? 'Failed while updating the customer order information.';
+            //throw new \RuntimeException($m);
+            abort(500, 'We encountered issues while saving the transaction. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $m);
+        }
+
+
+        // $customer = $order->customers()->where('customer_id', $customer->id)->first();
+        // # get the customer with the Pivot
+        // if (!$customer->pivot instanceof CustomerOrder) {
+        //     abort(500, 'Something went wrong, we could not retrieve your purchase. Please report this to support along with your Payment reference: '.$reference);
+        // }
+        // $customerOrder = $customer->pivot;
+        // $customerOrder->is_paid = true;
+        // $customerOrder->paid_at = Carbon::now();
+
+        // if (!$customerOrder->save()) {
+        //     abort(500, 'Something went wrong, we could not mark your purchase as paid. Please report this to support along with your Payment reference: '.$reference);
+        // }
+
+        // http request to post to core endpoint
+        
+        if ($txn->is_successful) {
+            $notification_params = [
+                "user" => $company_admin, //uuid
+                "order" => $order,
+                "customer" => $customer,
+                "txn" => $txn,
+            ];
+            $notification_url = env('DORCAS_HOST_API', 'https://core.sample-dorcas.io') . "/notification-paid-invoice";
+            
+            $notification_response = Http::post($notification_url, $notification_params);
+            if ($notification_response->successful()) {
+                $re = $notification_response->json(); // Assuming the response is JSON
+            } else {
+                $statusCode = $notification_response->status();
+                $error = $notification_response->body();
+                $errorMessage = 'We encountered issues while sending an invoice notification. Kindly email your transaction reference (' . $reference . ') to support along with the message: '. $statusCode . ": " . $error;
+                //abort(500, $errorMessage);
+                $final_message = $errorMessage;
+            }
+            //Notification::send($company->users->first(), new InvoicePaid($order, $customer, $txn));
+            # send the notification to members of the company
+        }
+
+        $final_message = 'Successfully completed order payment. Your reference is: ' . $reference;
 
         //$company_prefix = $company_admin->partner["data"]["domain_issuances"]["data"][0]["prefix"];
         $company_prefix = $company->domain_issuance[0]["prefix"];
