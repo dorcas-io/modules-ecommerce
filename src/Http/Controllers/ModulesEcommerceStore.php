@@ -414,6 +414,21 @@ class ModulesEcommerceStore extends Controller
         }
         $location['seller_phone'] = $seller_phone;
 
+        // add email to seller address
+        $business_email = trim($sOwner["email"]);
+        $seller_email = $business_email;
+        if (empty($seller_email)) {
+            $admin_email = trim($sOwner["users"]["data"][0]["email"]);
+            $seller_email = $admin_email;
+        }
+        $location['seller_email'] = $seller_email;
+
+        // add name to seller address
+        $seller_name = trim($sOwner["users"]["data"][0]["firstname"]) . " " . trim($sOwner["users"]["data"][0]["lastname"]);
+        $seller_name .= " / " . trim($sOwner["name"]);
+        $location['seller_name'] = $seller_name;
+
+
         $cartCache["address_seller"] = $location;
 
 
@@ -814,11 +829,12 @@ class ModulesEcommerceStore extends Controller
         $sAddress = $cartCache["address_seller"];
         $sellerAdddress = [
             "address" => $sAddress["address"],
-            "name" => $s["name"],
+            "name" => $sAddress["seller_name"],
             "latitude" => $sAddress["latitude"],
             "longitude" => $sAddress["longitude"],
             "time" => \Carbon\Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))->format('Y-m-d H:i:s'), //Carbon::now()->setTimezone(env('SETTINGS_TIMEZONE', 'Africa/Lagos'))
             "phone" => $sAddress["seller_phone"],
+            "email" => $sAddress["seller_email"],
             "has_return_task" => false,
             "is_package_insured" => 0
         ];

@@ -94,7 +94,7 @@ class KwikNGClass
         $params = $this->getProviderParams('vendor_login');
         $response = $this->connect('/vendor_login', $params, 'POST');
         
-        $this->accessToken = $response->data->access_token;
+        $this->accessToken = isset($response->data->access_token) ? $response->data->access_token : null;
 
     }
 
@@ -226,7 +226,7 @@ class KwikNGClass
     {
         $cachedOrder = Cache::get('cacheOrderManagement_' . $orderID);
 
-        $d = (array) ($cachedOrder["logistics"]["output"]["create_task_via_vendor"])->data;
+        $d = (array) ($cachedOrder["logistics"]["output"]["create_task_via_vendor"]);
 
         $cancel_vendor_task = [
             "job_id" => ($d["pickups"][0])->job_id . "," . ($d["deliveries"][0])->job_id,
